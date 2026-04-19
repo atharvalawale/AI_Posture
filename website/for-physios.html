@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PhysioAI for Physiotherapists — Monitor Patients Remotely</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.dashboard-preview{background:var(--ink);border-radius:20px;padding:24px;margin-top:40px}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.dash-title{font-family:'Clash Display',sans-serif;font-size:16px;color:var(--paper)}
+.patient-row{background:rgba(255,255,255,0.04);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.patient-name{font-size:14px;color:var(--paper);font-weight:500}
+.patient-meta{font-size:12px;color:rgba(245,242,235,0.4);margin-top:2px}
+.score-badge{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;padding:4px 12px;border-radius:8px}
+.score-good{background:rgba(45,158,107,0.15);color:#2d9e6b}
+.score-warn{background:rgba(255,107,53,0.15);color:#ff6b35}
+.score-low{background:rgba(239,68,68,0.15);color:#ef4444}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Physio<span>AI</span></a>
+  <div class="nav-links">
+    <a href="for-physios.html" class="active">For Physios</a>
+    <a href="for-patients.html">For Patients</a>
+    <a href="session.html">Try demo</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html" class="nav-cta">Get a demo</a>
+  </div>
+  <button class="nav-hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="for-physios.html">For Physios</a>
+  <a href="for-patients.html">For Patients</a>
+  <a href="session.html">Try demo</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="about.html">About</a>
+  <a href="blog.html">Blog</a>
+  <a href="contact.html">Get a demo</a>
+</div>
+
+<section class="page-hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="container">
+    <div class="hero-anim" style="max-width:680px">
+      <div class="hero-badge"><span class="dot"></span>For Physiotherapists</div>
+      <h1>Grow your practice.<br><em class="highlight">Beyond the clinic.</em></h1>
+      <p class="lead">Monitor all your patients remotely, get data you've never had before, and spend your clinic time on patients who truly need hands-on care.</p>
+      <div class="btn-actions">
+        <a href="contact.html" class="btn-primary">Start free trial →</a>
+        <a href="session.html" class="btn-secondary">See live demo</a>
+      </div>
+    </div>
+    <div class="dashboard-preview reveal">
+      <div class="dash-header"><div class="dash-title">Patient overview — today</div><span class="tag tag-dark">Live</span></div>
+      <div class="patient-row"><div><div class="patient-name">Rajesh Kumar</div><div class="patient-meta">Knee Extension · 10 reps · Just now</div></div><div class="score-badge score-good">92</div></div>
+      <div class="patient-row"><div><div class="patient-name">Priya Sharma</div><div class="patient-meta">Shoulder Raises · 8 reps · 14 mins ago</div></div><div class="score-badge score-good">88</div></div>
+      <div class="patient-row"><div><div class="patient-name">Amit Patel</div><div class="patient-meta">Straight Leg Raise · 5 reps · 1 hr ago</div></div><div class="score-badge score-warn">67</div></div>
+      <div class="patient-row"><div><div class="patient-name">Sunita Desai</div><div class="patient-meta">⚠️ Missed today's session</div></div><div class="score-badge score-low">—</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="container">
+    <div class="grid-4">
+      <div class="stat reveal"><div class="stat-num">10<span>x</span></div><div class="stat-label">More patients monitored vs traditional practice</div></div>
+      <div class="stat reveal"><div class="stat-num">92<span>%</span></div><div class="stat-label">Average patient compliance on our platform</div></div>
+      <div class="stat reveal"><div class="stat-num">3<span>hrs</span></div><div class="stat-label">Saved per week on manual progress tracking</div></div>
+      <div class="stat reveal"><div class="stat-num">₹0</div><div class="stat-label">Hardware cost — works on patient's existing phone</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <span class="section-tag reveal">Features</span>
+    <h2 class="reveal">Everything you need to run<br>a remote physio practice</h2>
+    <div class="grid-3" style="margin-top:48px">
+      <div class="card reveal"><span class="card-icon">📊</span><h3>Real-time dashboard</h3><p>See all your patients in one place. Rep scores, angle data, session history, and compliance rate — updated live.</p></div>
+      <div class="card reveal"><span class="card-icon">💊</span><h3>Exercise prescription</h3><p>Assign exercises from our library of physio-validated movements. Set reps, hold time, and difficulty per patient.</p></div>
+      <div class="card reveal"><span class="card-icon">🔔</span><h3>Smart alerts</h3><p>Get notified instantly when a patient misses a session, scores below threshold, or needs your attention.</p></div>
+      <div class="card reveal"><span class="card-icon">📈</span><h3>Progress reports</h3><p>Auto-generated weekly PDF reports for each patient. Share with them or use for insurance documentation.</p></div>
+      <div class="card reveal"><span class="card-icon">💬</span><h3>In-app messaging</h3><p>Chat directly with patients inside the app. Send voice notes, corrections, and encouragement.</p></div>
+      <div class="card reveal"><span class="card-icon">📹</span><h3>Teleconsultation</h3><p>Schedule and run video consultations directly in the app. No third-party tools needed. Coming Q4 2025.</p></div>
+      <div class="card reveal"><span class="card-icon">🤖</span><h3>AI form analysis</h3><p>Our AI watches every rep your patient does at home. Joint angles, range of motion, smoothness — all measured automatically.</p></div>
+      <div class="card reveal"><span class="card-icon">📅</span><h3>Appointment booking</h3><p>Patients can book in-clinic or teleconsult appointments directly through the app.</p></div>
+      <div class="card reveal"><span class="card-icon">🏥</span><h3>Multi-clinic support</h3><p>Running multiple locations? Manage all clinics, physios, and patients under one account.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-dark">
+  <div class="container">
+    <span class="section-tag reveal">Use cases</span>
+    <h2 class="reveal" style="color:var(--paper)">Built for every type<br>of physio practice</h2>
+    <div class="grid-3" style="margin-top:48px">
+      <div class="card-dark reveal"><span class="card-icon">🏢</span><h3>Standalone clinics</h3><p>Scale your patient capacity without hiring more staff. Monitor home exercise compliance and focus clinic time on complex cases.</p></div>
+      <div class="card-dark reveal"><span class="card-icon">🏨</span><h3>Hospital departments</h3><p>Streamline post-operative rehab. Discharge patients earlier knowing they have AI supervision at home.</p></div>
+      <div class="card-dark reveal"><span class="card-icon">🏠</span><h3>Independent physios</h3><p>Build your personal brand and expand your reach digitally. Accept patients from anywhere in India.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container" style="text-align:center">
+    <span class="section-tag reveal">Get started</span>
+    <h2 class="reveal">Join our founding physio network</h2>
+    <p class="lead reveal" style="margin:16px auto 0;text-align:center">We are onboarding 50 founding physio partners across Pune and Mumbai. Get 3 months free + dedicated onboarding support.</p>
+    <div class="btn-actions reveal" style="justify-content:center;margin-top:32px">
+      <a href="contact.html" class="btn-primary">Apply as founding partner →</a>
+      <a href="session.html" class="btn-secondary">Try live demo</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="container">
+  <div class="footer-top">
+    <div><span class="footer-logo">Physio<span>AI</span></span><p class="footer-tagline">AI-powered physiotherapy for every Indian.</p></div>
+    <div class="footer-col"><h4>Product</h4><a href="for-physios.html">For Physios</a><a href="for-patients.html">For Patients</a><a href="session.html">Try demo</a><a href="pricing.html">Pricing</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@physioai.in">hello@physioai.in</a><a href="#">Pune, India 🇮🇳</a></div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 PhysioAI. All rights reserved.</p><p>Made with ❤️ in Pune</p></div>
+</div></footer>
+<script src="assets/nav.js"></script>
+</body></html>

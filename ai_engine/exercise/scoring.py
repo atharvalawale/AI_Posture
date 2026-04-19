@@ -47,9 +47,10 @@ class ExerciseScorer:
         self._peak_angle: Optional[float] = None
         self._start_angle: Optional[float] = None
 
-        # View detection — stabilise over 10 frames to avoid flipping
-        self._view_buffer = deque(maxlen=10)
+        # View detection — lock after 15 frames so it doesn't flip mid-session
+        self._view_buffer = deque(maxlen=15)
         self._current_view = "front"
+        self._view_locked = False    # once locked, never changes
 
         # Angle smoothing
         self._angle_buffer = deque(maxlen=5)

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysioAI — Your Exercise Session</title>
+<meta name="description" content="AI-guided physiotherapy session with real-time rep counting and form feedback.">
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+
+/* ── Phase system ── */
+#phaseSelect,#phaseMirror,#phaseSession,#phaseReport { display:none; }
+#phaseSelect.active,#phaseMirror.active,#phaseSession.active,#phaseReport.active { display:flex; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes popIn  { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes ptPulse{ 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ══════════════════════════════
+   PHASE 1 — SELECT
+══════════════════════════════ */
+#phaseSelect {
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:140px 24px 80px;
+  position:relative;
+  overflow:hidden;
+}
+.ex-cards {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+  max-width:900px;
+  width:100%;
+  margin-bottom:36px;
+}
+@media(max-width:700px){ .ex-cards{ grid-template-columns:1fr; } }
+
+.ex-card {
+  background:var(--paper);
+  border:1.5px solid var(--border);
+  border-radius:20px;
+  padding:28px 24px;
+  cursor:pointer;
+  transition:all .25s;
+  position:relative;
+  text-align:left;
+}
+.ex-card:hover { border-color:var(--green);transform:translateY(-4px);box-shadow:0 16px 40px rgba(26,107,71,0.08); }
+.ex-card.active { border-color:var(--green);background:var(--green-pale); }
+.ex-card-icon {
+  width:52px;height:52px;border-radius:14px;
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:16px;transition:background .2s;
+}
+.ex-card.active .ex-card-icon { background:var(--green); }
+.ex-card h3 { margin-bottom:8px; }
+.ex-card p  { font-size:13px;color:var(--muted);line-height:1.6;margin:0; }
+.ex-card-check {
+  position:absolute;top:14px;right:14px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s;
+}
+.ex-card.active .ex-card-check { opacity:1; }
+
+.opt-row { display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;margin-bottom:32px; }
+.opt-group { display:flex;align-items:center;gap:10px; }
+.opt-label { font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace; }
+.opt-btns  { display:flex;gap:6px; }
+.opt-btn {
+  padding:7px 18px;border-radius:100px;
+  border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  cursor:pointer;transition:all .15s;
+}
+.opt-btn.active { border-color:var(--green);color:var(--green);background:var(--green-pale); }
+
+/* ══════════════════════════════
+   PHASE 2 — MIRROR
+══════════════════════════════ */
+#phaseMirror {
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  padding:120px 24px 60px;
+}
+.mirror-header { text-align:center;margin-bottom:28px; }
+.mirror-header .phase-tag {
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--green);font-family:'DM Mono',monospace;
+  margin-bottom:10px;display:block;
+}
+.mirror-header h2 { margin-bottom:8px; }
+.mirror-header p  { font-size:14px;color:var(--muted);max-width:460px;margin:0 auto;line-height:1.7; }
+
+.mirror-cam-wrap {
+  position:relative;width:100%;max-width:700px;
+  aspect-ratio:4/3;border-radius:24px;overflow:hidden;
+  background:var(--ink);border:1.5px solid var(--border);
+  box-shadow:0 24px 60px rgba(0,0,0,0.1);
+}
+#mirrorVideo  { width:100%;height:100%;object-fit:cover;transform:scaleX(-1); }
+#mirrorCanvas { position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1); }
+
+.cam-corners { position:absolute;inset:0;pointer-events:none; }
+.cc { position:absolute;width:28px;height:28px;border-color:var(--green-light);border-style:solid;opacity:0.7; }
+.cc.tl { top:16px;left:16px;border-width:2px 0 0 2px; }
+.cc.tr { top:16px;right:16px;border-width:2px 2px 0 0; }
+.cc.bl { bottom:16px;left:16px;border-width:0 0 2px 2px; }
+.cc.br { bottom:16px;right:16px;border-width:0 2px 2px 0; }
+
+.align-meter {
+  position:absolute;bottom:0;left:0;right:0;
+  padding:16px 20px;
+  background:linear-gradient(transparent,rgba(10,15,13,0.9));
+}
+.align-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:8px; }
+.align-top span { font-size:12px;color:rgba(245,242,235,0.55);font-family:'DM Mono',monospace; }
+.align-pct { font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;color:var(--green-light); }
+.align-track { height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden; }
+.align-fill  { height:100%;background:var(--green-light);border-radius:3px;width:0%;transition:width .15s; }
+
+.mirror-status {
+  margin-top:18px;
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--paper);border:1.5px solid var(--border);
+  border-radius:100px;padding:9px 20px;
+  font-size:13px;color:var(--muted);
+}
+.status-blink { width:6px;height:6px;border-radius:50%;background:var(--accent);animation:ptPulse 1.5s infinite;flex-shrink:0; }
+.status-blink.go { background:var(--green);animation:none; }
+.mirror-skip {
+  margin-top:14px;background:transparent;border:none;
+  color:var(--muted);font-size:13px;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;
+  text-decoration:underline;text-underline-offset:3px;display:block;
+}
+.mirror-skip:hover { color:var(--ink); }
+
+/* ══════════════════════════════
+   PHASE 3 — SESSION
+   Camera panel stays dark (better for pose visibility)
+   Sidebar uses site light theme
+══════════════════════════════ */
+#phaseSession { flex-direction:column;min-height:100vh;padding-top:64px; }
+.session-layout { display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 64px); }
+@media(max-width:900px){ .session-layout{ grid-template-columns:1fr;height:auto; } }
+
+.session-cam { position:relative;background:var(--ink);overflow:hidden; }
+#sessionVideo  { display:none; }
+#sessionCanvas { width:100%;height:100%;object-fit:cover;transform:scaleX(-1); }
+
+.rep-flash { position:absolute;inset:0;background:rgba(26,107,71,0.2);opacity:0;pointer-events:none;transition:opacity .08s; }
+.rep-flash.flash { opacity:1; }
+
+.cam-rep-pill {
+  position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  background:rgba(10,15,13,0.8);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.1);border-radius:100px;
+  padding:8px 20px;display:flex;align-items:center;gap:10px;
+}
+.crp-reps   { font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;color:var(--green-light);line-height:1; }
+.crp-sep    { color:rgba(255,255,255,0.2); }
+.crp-target { font-size:13px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace; }
+.crp-stage  { font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:100px;color:#d4790a;background:rgba(212,121,10,0.15); }
+.crp-stage.good { color:var(--green-light);background:rgba(45,158,107,0.18); }
+
+/* Sidebar — light theme matching the rest of the site */
+.session-sidebar { background:var(--paper);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto; }
+.ss-ex-bar { display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border); }
+.ss-ex-icon { width:40px;height:40px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.ss-ex-name { font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.3px;color:var(--ink); }
+.ss-ex-sub  { font-size:12px;color:var(--muted);margin-top:2px; }
+
+.ss-block { padding:16px 20px;border-bottom:1px solid var(--border); }
+.ss-lbl   { font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px; }
+
+.metrics-2x2 { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+.m-box { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px; }
+.m-lbl { font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:5px; }
+.m-val { font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:var(--muted);line-height:1;transition:color .3s; }
+.m-val.good   { color:var(--green); }
+.m-val.warn   { color:#d4790a; }
+.m-val.danger { color:#c0392b; }
+
+.prog-wrap  { margin-top:10px; }
+.prog-lbl   { font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:5px; }
+.prog-track { height:4px;background:var(--border);border-radius:2px;overflow:hidden; }
+.prog-fill  { height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .1s; }
+.prog-fill.amber { background:#d4790a; }
+
+.feedback-bubble { background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.6;color:var(--muted);min-height:56px;transition:all .25s; }
+.feedback-bubble.good    { border-color:var(--green);background:var(--green-pale);color:var(--green); }
+.feedback-bubble.warning { border-color:#d4790a;background:#fff7ed;color:#d4790a; }
+.feedback-bubble.error   { border-color:#c0392b;background:#fef2f2;color:#c0392b; }
+
+.rep-dot-row { display:flex;flex-wrap:wrap;gap:5px; }
+.rep-dot { width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);animation:popIn .3s ease; }
+.rep-dot.good   { background:var(--green);border-color:var(--green);color:#fff; }
+.rep-dot.ok     { background:#d4790a;border-color:#d4790a;color:#fff; }
+.rep-dot.bad    { background:#c0392b;border-color:#c0392b;color:#fff; }
+
+.stop-btn { width:100%;padding:11px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s; }
+.stop-btn:hover { border-color:#c0392b;color:#c0392b; }
+
+/* ══════════════════════════════
+   PHASE 4 — REPORT
+══════════════════════════════ */
+#phaseReport { flex-direction:column;align-items:center;min-height:100vh;padding:130px 24px 80px;position:relative; }
+
+.report-card { background:var(--paper);border:1.5px solid var(--border);border-radius:28px;padding:40px;max-width:720px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.05);position:relative;z-index:1; }
+
+.report-top { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:20px; }
+.report-tag  { font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-family:'DM Mono',monospace;margin-bottom:8px;display:block; }
+.report-name { font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;letter-spacing:-1px;color:var(--ink);margin-bottom:4px; }
+.report-meta { font-size:13px;color:var(--muted); }
+
+.score-ring-wrap { position:relative;width:110px;height:110px;flex-shrink:0; }
+.score-ring-wrap svg { transform:rotate(-90deg); }
+.ring-bg       { fill:none;stroke:var(--border);stroke-width:8; }
+.ring-progress { fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset 1.5s ease; }
+.ring-center   { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column; }
+.ring-num      { font-family:'Clash Display',sans-serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1; }
+.ring-lbl      { font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px; }
+
+.stats-4 { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px; }
+@media(max-width:520px){ .stats-4{ grid-template-columns:1fr 1fr; } }
+.stat-box { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center; }
+.stat-val { font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;color:var(--green);line-height:1;margin-bottom:4px; }
+.stat-lbl { font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace; }
+
+.rep-graph { background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px; }
+.rep-graph-lbl { font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px; }
+.rep-bars     { display:flex;align-items:flex-end;gap:6px;height:80px; }
+.rep-bar-wrap { display:flex;flex-direction:column;align-items:center;gap:4px;flex:1; }
+.rep-bar      { width:100%;border-radius:4px 4px 0 0;min-height:4px;background:var(--green); }
+.rep-bar.ok   { background:#d4790a; }
+.rep-bar.bad  { background:#c0392b; }
+.rep-bar-num  { font-size:9px;font-family:'DM Mono',monospace;color:var(--muted); }
+
+.motivation-box { background:var(--green-pale);border:1.5px solid rgba(26,107,71,0.2);border-radius:14px;padding:16px 20px;margin-bottom:28px;font-size:14px;color:var(--green);line-height:1.6; }
+.motivation-box strong { display:block;font-size:16px;margin-bottom:4px;font-family:'Clash Display',sans-serif;font-weight:600;letter-spacing:-0.3px;color:var(--green); }
+
+.report-actions { display:flex;gap:12px;flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<!-- Nav — identical to all other pages -->
+<nav>
+  <a href="index.html" class="nav-logo">Physio<span>AI</span></a>
+  <div class="nav-links">
+    <a href="for-physios.html">For Physios</a>
+    <a href="for-patients.html" class="active">For Patients</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html" class="nav-cta">Get started</a>
+  </div>
+  <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="for-physios.html">For Physios</a>
+  <a href="for-patients.html">For Patients</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="about.html">About</a>
+  <a href="contact.html">Get started</a>
+</div>
+
+<!-- ══════════════
+     PHASE 1 — SELECT
+══════════════ -->
+<div id="phaseSelect" class="active">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="container" style="display:flex;flex-direction:column;align-items:center;width:100%">
+
+    <div style="text-align:center;margin-bottom:52px;max-width:600px">
+      <div class="hero-badge"><span class="dot"></span>AI Physiotherapy Session</div>
+      <h1 style="margin-bottom:16px">Choose your <em class="highlight">exercise</em></h1>
+      <p class="lead" style="text-align:center;margin:0 auto">Select an exercise, align with the camera guide, and let the AI count your reps and coach your form live.</p>
+    </div>
+
+    <div class="ex-cards">
+      <div class="ex-card active" data-key="knee_extension" data-icon="🦵" onclick="selectExercise(this)">
+        <div class="ex-card-icon">🦵</div>
+        <h3>Knee Extension</h3>
+        <p>Sit upright and slowly straighten your knee. Builds quad strength and improves mobility.</p>
+        <div class="ex-card-check"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+      <div class="ex-card" data-key="shoulder_raises" data-icon="💪" onclick="selectExercise(this)">
+        <div class="ex-card-icon">💪</div>
+        <h3>Shoulder Raises</h3>
+        <p>Stand facing the camera and raise your arm to shoulder height. Rehabs the rotator cuff.</p>
+        <div class="ex-card-check"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+      <div class="ex-card" data-key="straight_leg_raise" data-icon="🦶" onclick="selectExercise(this)">
+        <div class="ex-card-icon">🦶</div>
+        <h3>Straight Leg Raise</h3>
+        <p>Lie flat and raise your leg to 45°. Strengthens hip flexors and core stability.</p>
+        <div class="ex-card-check"><svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+      </div>
+    </div>
+
+    <div class="opt-row">
+      <div class="opt-group">
+        <span class="opt-label">Side</span>
+        <div class="opt-btns">
+          <button class="opt-btn active" data-side="left" onclick="selectSide(this)">Left</button>
+          <button class="opt-btn" data-side="right" onclick="selectSide(this)">Right</button>
+        </div>
+      </div>
+      <div class="opt-group">
+        <span class="opt-label">Target reps</span>
+        <div class="opt-btns">
+          <button class="opt-btn" data-reps="5" onclick="selectReps(this)">5</button>
+          <button class="opt-btn active" data-reps="10" onclick="selectReps(this)">10</button>
+          <button class="opt-btn" data-reps="15" onclick="selectReps(this)">15</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="font-size:16px;padding:15px 40px" onclick="goToMirror()">Begin Session →</button>
+  </div>
+</div>
+
+<!-- ══════════════
+     PHASE 2 — MIRROR
+══════════════ -->
+<div id="phaseMirror">
+  <div class="container" style="display:flex;flex-direction:column;align-items:center;width:100%">
+    <div class="mirror-header">
+      <div class="phase-tag">Step 1 of 2 — Alignment</div>
+      <h2>Get into position</h2>
+      <p id="mirrorInstruction">Stand so your full body is visible. The AI will guide you into the correct starting position.</p>
+    </div>
+    <div class="mirror-cam-wrap">
+      <video id="mirrorVideo" autoplay playsinline muted></video>
+      <canvas id="mirrorCanvas"></canvas>
+      <div class="cam-corners">
+        <div class="cc tl"></div><div class="cc tr"></div>
+        <div class="cc bl"></div><div class="cc br"></div>
+      </div>
+      <div class="align-meter">
+        <div class="align-top">
+          <span>Body alignment</span>
+          <span class="align-pct" id="alignPct">0%</span>
+        </div>
+        <div class="align-track"><div class="align-fill" id="alignFill"></div></div>
+      </div>
+    </div>
+    <div class="mirror-status">
+      <div class="status-blink" id="statusBlink"></div>
+      <span id="statusText">Waiting for camera...</span>
+    </div>
+    <button class="mirror-skip" onclick="goToSession()">Skip alignment → go straight to session</button>
+  </div>
+</div>
+
+<!-- ══════════════
+     PHASE 3 — SESSION
+══════════════ -->
+<div id="phaseSession">
+  <div class="session-layout">
+
+    <div class="session-cam">
+      <video id="sessionVideo" autoplay playsinline muted></video>
+      <canvas id="sessionCanvas"></canvas>
+      <div class="rep-flash" id="repFlash"></div>
+      <div class="cam-rep-pill">
+        <div class="crp-reps" id="crpReps">0</div>
+        <div class="crp-sep">/</div>
+        <div class="crp-target" id="crpTarget">10</div>
+        <div class="crp-stage" id="crpStage">waiting</div>
+      </div>
+      <div class="cam-corners">
+        <div class="cc tl"></div><div class="cc tr"></div>
+        <div class="cc bl"></div><div class="cc br"></div>
+      </div>
+    </div>
+
+    <div class="session-sidebar">
+      <div class="ss-ex-bar">
+        <div class="ss-ex-icon" id="ssIcon">🦵</div>
+        <div>
+          <div class="ss-ex-name" id="ssName">Knee Extension</div>
+          <div class="ss-ex-sub" id="ssSide">Left side</div>
+        </div>
+      </div>
+
+      <div class="ss-block">
+        <div class="ss-lbl">Live metrics</div>
+        <div class="metrics-2x2">
+          <div class="m-box"><div class="m-lbl">Reps</div><div class="m-val" id="mReps">0</div></div>
+          <div class="m-box"><div class="m-lbl">Last score</div><div class="m-val" id="mScore">--</div></div>
+          <div class="m-box"><div class="m-lbl">Avg score</div><div class="m-val" id="mAvg">--</div></div>
+          <div class="m-box"><div class="m-lbl">Angle</div><div class="m-val" id="mAngle">--°</div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-lbl">Range of motion</div>
+          <div class="prog-track"><div class="prog-fill" id="angleBar"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-lbl">Hold progress</div>
+          <div class="prog-track"><div class="prog-fill amber" id="holdBar"></div></div>
+        </div>
+      </div>
+
+      <div class="ss-block" style="flex:1">
+        <div class="ss-lbl">AI Coach</div>
+        <div class="feedback-bubble" id="feedbackBubble">Get ready — session starting.</div>
+      </div>
+
+      <div class="ss-block">
+        <div class="ss-lbl">Rep history</div>
+        <div class="rep-dot-row" id="repDotRow"></div>
+      </div>
+
+      <div style="padding:16px 20px">
+        <button class="stop-btn" onclick="stopSession()">End session early</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════
+     PHASE 4 — REPORT
+══════════════ -->
+<div id="phaseReport">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="report-card">
+    <div class="report-top">
+      <div>
+        <span class="report-tag">Session complete</span>
+        <div class="report-name" id="reportName">Knee Extension</div>
+        <div class="report-meta" id="reportMeta">Left side · 10 reps</div>
+      </div>
+      <div class="score-ring-wrap">
+        <svg viewBox="0 0 100 100" width="110" height="110">
+          <circle class="ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="ring-progress" id="ringProgress" cx="50" cy="50" r="45"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" id="ringNum">--</div>
+          <div class="ring-lbl">avg score</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-4">
+      <div class="stat-box"><div class="stat-val" id="sReps">--</div><div class="stat-lbl">Reps done</div></div>
+      <div class="stat-box"><div class="stat-val" id="sBest">--</div><div class="stat-lbl">Best rep</div></div>
+      <div class="stat-box"><div class="stat-val" id="sWorst">--</div><div class="stat-lbl">Needs work</div></div>
+      <div class="stat-box"><div class="stat-val" id="sCompletion">--%</div><div class="stat-lbl">Completion</div></div>
+    </div>
+
+    <div class="rep-graph">
+      <div class="rep-graph-lbl">Rep-by-rep scores</div>
+      <div class="rep-bars" id="repBars"></div>
+    </div>
+
+    <div class="motivation-box" id="motivationBox">
+      <strong>Great effort!</strong>Keep up the consistency and you'll see real results.
+    </div>
+
+    <div class="report-actions">
+      <button class="btn-primary" onclick="retrySession()">Try again →</button>
+      <a href="for-patients.html" class="btn-secondary">Back to patients page</a>
+    </div>
+  </div>
+</div>
+
+<script src="assets/nav.js"></script>
+<script>
+const WS_BASE = 'ws://localhost:8000/ws/pose';
+let selEx='knee_extension', selSide='left', selReps=10;
+let selIcon='🦵', selName='Knee Extension';
+let ws=null, stream=null, sendInterval=null;
+let isRunning=false, repScores=[], lastRepCount=0;
+let mirrorStream=null, alignInterval=null;
+
+function showPhase(id){
+  ['phaseSelect','phaseMirror','phaseSession','phaseReport'].forEach(p=>{
+    const el=document.getElementById(p);
+    el.classList.remove('active');
+    el.style.animation='none';
+  });
+  const el=document.getElementById(id);
+  el.classList.add('active');
+  void el.offsetWidth;
+  el.style.animation='fadeUp .45s ease both';
+  window.scrollTo(0,0);
+}
+
+function selectExercise(card){
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('active'));
+  card.classList.add('active');
+  selEx=card.dataset.key; selIcon=card.dataset.icon;
+  selName=card.querySelector('h3').textContent;
+}
+function selectSide(btn){
+  document.querySelectorAll('[data-side]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); selSide=btn.dataset.side;
+}
+function selectReps(btn){
+  document.querySelectorAll('[data-reps]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); selReps=parseInt(btn.dataset.reps);
+}
+
+async function goToMirror(){
+  showPhase('phaseMirror');
+  const inst={
+    knee_extension:'Sit in a chair with your leg bent. Make sure your full leg and hip are visible.',
+    shoulder_raises:'Stand facing the camera with your arm at your side. Ensure shoulder and elbow are visible.',
+    straight_leg_raise:'Lie flat on your back. Point the camera so your full body is in view.',
+  };
+  document.getElementById('mirrorInstruction').textContent=inst[selEx]||'Position yourself so your full body is visible.';
+  try{
+    mirrorStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+    const vid=document.getElementById('mirrorVideo');
+    vid.srcObject=mirrorStream;
+    await new Promise(r=>vid.onloadedmetadata=r);
+    vid.play();
+    startAlignSim();
+  }catch(e){
+    document.getElementById('statusText').textContent='Camera denied — click skip below.';
+  }
+}
+
+function startAlignSim(){
+  let pct=0;
+  const fill=document.getElementById('alignFill');
+  const pctEl=document.getElementById('alignPct');
+  const txt=document.getElementById('statusText');
+  const dot=document.getElementById('statusBlink');
+  txt.textContent='Detecting your body...';
+  alignInterval=setInterval(()=>{
+    pct=Math.min(pct+Math.random()*3,100);
+    fill.style.width=pct+'%'; pctEl.textContent=Math.round(pct)+'%';
+    if(pct<40){ txt.textContent='Move closer to the camera...'; fill.style.background='#c0392b'; dot.style.background='#c0392b'; }
+    else if(pct<70){ txt.textContent='Almost there — adjust your position...'; fill.style.background='#d4790a'; dot.style.background='#d4790a'; }
+    else if(pct<90){ txt.textContent='Looking good — hold this position!'; fill.style.background='var(--green)'; dot.style.background='var(--green)'; }
+    else{
+      txt.textContent='Perfect! Starting session...';
+      dot.classList.add('go'); fill.style.background='var(--green)';
+      clearInterval(alignInterval);
+      setTimeout(()=>goToSession(),1200);
+    }
+  },120);
+}
+
+async function goToSession(){
+  if(alignInterval){ clearInterval(alignInterval); alignInterval=null; }
+  if(mirrorStream){ mirrorStream.getTracks().forEach(t=>t.stop()); mirrorStream=null; }
+  document.getElementById('ssIcon').textContent=selIcon;
+  document.getElementById('ssName').textContent=selName;
+  document.getElementById('ssSide').textContent=cap(selSide)+' side';
+  document.getElementById('crpTarget').textContent=selReps;
+  showPhase('phaseSession');
+  await startSession();
+}
+
+async function startSession(){
+  repScores=[]; lastRepCount=0;
+  document.getElementById('repDotRow').innerHTML='';
+  resetMetrics();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+    const vid=document.getElementById('sessionVideo');
+    vid.srcObject=stream;
+    await new Promise(r=>vid.onloadedmetadata=r);
+    vid.play();
+    const cnv=document.getElementById('sessionCanvas');
+    cnv.width=vid.videoWidth||640; cnv.height=vid.videoHeight||480;
+    vid.style.display='none';
+  }catch(e){ setFeedback('Camera access denied.','error'); return; }
+
+  ws=new WebSocket(`${WS_BASE}/${selEx}/${selSide}?reps_target=${selReps}`);
+  ws.onopen=()=>{ isRunning=true; startSendLoop(); setFeedback('Session started — get into position!',''); };
+  ws.onmessage=(e)=>{ try{ const d=JSON.parse(e.data); if(d.error){ setFeedback(d.error,'error'); return; } updateUI(d); }catch(ex){} };
+  ws.onclose=()=>cleanupSession();
+  ws.onerror=()=>{ setFeedback('Cannot reach backend on port 8000. Make sure the server is running.','error'); cleanupSession(); };
+}
+
+function startSendLoop(){
+  const vid=document.getElementById('sessionVideo');
+  const cnv=document.getElementById('sessionCanvas');
+  const ctx=cnv.getContext('2d');
+  sendInterval=setInterval(()=>{
+    if(!ws||ws.readyState!==WebSocket.OPEN) return;
+    ctx.drawImage(vid,0,0,cnv.width,cnv.height);
+    cnv.toBlob(blob=>{ if(!blob) return; const r=new FileReader(); r.onloadend=()=>ws.send(JSON.stringify({frame:r.result.split(',')[1]})); r.readAsDataURL(blob); },'image/jpeg',0.75);
+  },100);
+}
+
+function updateUI(d){
+  const pill=document.getElementById('crpStage');
+  pill.textContent=d.stage||'waiting';
+  const s=d.stage||'';
+  if(['moving','raising','extending'].includes(s)) pill.className='crp-stage good';
+  else if(s==='holding'){ pill.className='crp-stage'; pill.style.color='#d4790a'; pill.style.background='rgba(212,121,10,0.12)'; }
+  else { pill.className='crp-stage'; pill.style.color=''; pill.style.background=''; }
+
+  document.getElementById('crpReps').textContent=d.rep_count||0;
+  setM('mReps', d.rep_count||0, d.rep_count>0?'good':'');
+  setM('mScore', d.last_rep_score!==null?d.last_rep_score:'--', scoreC(d.last_rep_score));
+  setM('mAvg', d.session_avg_score!==null?d.session_avg_score:'--', scoreC(d.session_avg_score));
+  setM('mAngle', d.angle!==null?d.angle+'°':'--°', '');
+  document.getElementById('angleBar').style.width=(d.angle?Math.min(d.angle/180*100,100):0)+'%';
+  document.getElementById('holdBar').style.width=((d.hold_progress||0)*100)+'%';
+  setFeedback(d.feedback||'', d.severity||'');
+
+  if(d.rep_count>lastRepCount && d.last_rep_score!==null){
+    lastRepCount=d.rep_count; repScores.push(d.last_rep_score);
+    addDot(d.last_rep_score); doFlash();
+  }
+  if(d.complete && d.summary){ cleanupSession(); showReport(d.summary); }
+}
+
+function doFlash(){ const f=document.getElementById('repFlash'); f.classList.add('flash'); setTimeout(()=>f.classList.remove('flash'),150); }
+function addDot(score){ const dot=document.createElement('div'); dot.className='rep-dot '+(score>=80?'good':score>=55?'ok':'bad'); dot.textContent=Math.round(score); document.getElementById('repDotRow').appendChild(dot); }
+function setM(id,val,cls){ const el=document.getElementById(id); if(el){ el.textContent=val; el.className='m-val '+(cls||''); } }
+function scoreC(s){ if(s===null||s===undefined) return ''; if(s>=80) return 'good'; if(s>=55) return 'warn'; return 'danger'; }
+function setFeedback(text,severity){ const b=document.getElementById('feedbackBubble'); b.textContent=text||''; b.className='feedback-bubble '+(severity==='good'||severity==='success'?'good':severity==='warning'?'warning':severity==='error'?'error':''); }
+function resetMetrics(){ setM('mReps','0',''); setM('mScore','--',''); setM('mAvg','--',''); setM('mAngle','--°',''); document.getElementById('angleBar').style.width='0%'; document.getElementById('holdBar').style.width='0%'; document.getElementById('crpReps').textContent='0'; document.getElementById('crpStage').textContent='waiting'; document.getElementById('crpStage').className='crp-stage'; }
+
+function stopSession(){
+  cleanupSession();
+  if(repScores.length>0){
+    showReport({ avg_score:Math.round(repScores.reduce((a,b)=>a+b,0)/repScores.length), max_score:Math.round(Math.max(...repScores)), min_score:Math.round(Math.min(...repScores)), reps_completed:repScores.length, completion_pct:Math.round(repScores.length/selReps*100), scores:repScores });
+  } else showPhase('phaseSelect');
+}
+function cleanupSession(){ isRunning=false; if(sendInterval){ clearInterval(sendInterval); sendInterval=null; } if(ws&&ws.readyState===WebSocket.OPEN) ws.close(); if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
+
+function showReport(s){
+  showPhase('phaseReport');
+  const avg=s.avg_score||0;
+  document.getElementById('reportName').textContent=selName;
+  document.getElementById('reportMeta').textContent=cap(selSide)+' side · '+selReps+' reps target';
+  document.getElementById('ringNum').textContent=avg;
+  document.getElementById('sReps').textContent=s.reps_completed||0;
+  document.getElementById('sBest').textContent=s.max_score||0;
+  document.getElementById('sWorst').textContent=s.min_score||0;
+  document.getElementById('sCompletion').textContent=(s.completion_pct||0)+'%';
+  setTimeout(()=>{ const ring=document.getElementById('ringProgress'); ring.style.strokeDashoffset=283-(283*avg/100); ring.style.stroke=avg>=80?'var(--green)':avg>=55?'#d4790a':'#c0392b'; },300);
+  const barsEl=document.getElementById('repBars'); barsEl.innerHTML='';
+  (s.scores||repScores).forEach((sc,i)=>{ const wrap=document.createElement('div'); wrap.className='rep-bar-wrap'; const bar=document.createElement('div'); bar.className='rep-bar '+(sc>=80?'good':sc>=55?'ok':'bad'); bar.style.height='0px'; const num=document.createElement('div'); num.className='rep-bar-num'; num.textContent=Math.round(sc); wrap.appendChild(bar); wrap.appendChild(num); barsEl.appendChild(wrap); setTimeout(()=>{ bar.style.height=(sc/100*80)+'px'; bar.style.transition='height .8s ease'; },300+i*80); });
+  const mb=document.getElementById('motivationBox');
+  if(avg>=85) mb.innerHTML='<strong>Outstanding session!</strong>Excellent form throughout. Your physio will be impressed.';
+  else if(avg>=70) mb.innerHTML='<strong>Great work!</strong>Solid form on most reps. Focus on fully extending at the peak next time.';
+  else if(avg>=55) mb.innerHTML='<strong>Good effort!</strong>Try holding each rep for 2 seconds at the top to improve your score.';
+  else mb.innerHTML='<strong>Keep going!</strong>Move more slowly and deliberately — form always improves with practice.';
+}
+
+function retrySession(){ repScores=[]; lastRepCount=0; showPhase('phaseSelect'); }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+</script>
+</body>
+</html>

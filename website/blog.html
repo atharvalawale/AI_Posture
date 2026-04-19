@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PhysioAI Blog — Physiotherapy Tips and Recovery Guides</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.blog-card{border:1.5px solid var(--border);border-radius:20px;overflow:hidden;transition:all .3s;text-decoration:none;color:var(--ink);display:block}
+.blog-card:hover{border-color:var(--green);transform:translateY(-3px);box-shadow:0 16px 40px rgba(26,107,71,0.08)}
+.blog-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:64px}
+.blog-body{padding:24px}
+.blog-tag{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);font-weight:500;margin-bottom:10px;display:block}
+.blog-card h3{font-size:19px;margin-bottom:8px;line-height:1.3}
+.blog-card p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.blog-meta{font-size:12px;color:var(--muted);display:flex;gap:12px}
+.featured-post{background:var(--ink);border-radius:24px;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:48px;text-decoration:none;color:var(--paper);transition:transform .3s}
+.featured-post:hover{transform:translateY(-3px)}
+.featured-post h2{color:var(--paper);margin-bottom:14px}
+.featured-post p{color:rgba(245,242,235,0.6);font-size:15px;line-height:1.7}
+.feat-img{font-size:96px;text-align:center}
+@media(max-width:900px){.featured-post{grid-template-columns:1fr}.feat-img{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Physio<span>AI</span></a>
+  <div class="nav-links">
+    <a href="for-physios.html">For Physios</a>
+    <a href="for-patients.html">For Patients</a>
+    <a href="session.html">Try demo</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="blog.html" class="active">Blog</a>
+    <a href="contact.html" class="nav-cta">Get a demo</a>
+  </div>
+  <button class="nav-hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="for-physios.html">For Physios</a>
+  <a href="for-patients.html">For Patients</a>
+  <a href="session.html">Try demo</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="about.html">About</a>
+  <a href="blog.html">Blog</a>
+  <a href="contact.html">Get a demo</a>
+</div>
+
+<section class="page-hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="container" style="text-align:center">
+    <div class="hero-anim">
+      <div class="hero-badge" style="margin:0 auto 28px"><span class="dot"></span>PhysioAI Blog</div>
+      <h1>Physiotherapy tips.<br><em class="highlight">Recovery guides.</em></h1>
+      <p class="lead" style="margin:0 auto">Expert advice from physiotherapists on how to recover faster, exercise correctly, and stay pain-free.</p>
+      <div class="btn-actions" style="justify-content:center;margin-top:28px">
+        <a href="session.html" class="btn-secondary">Try AI session →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section">
+  <div class="container">
+    <a href="#" class="featured-post reveal">
+      <div>
+        <span style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--green-light);font-weight:500;display:block;margin-bottom:14px">Featured</span>
+        <h2>Why 78% of physiotherapy patients fail to recover fully — and how to be in the other 22%</h2>
+        <p style="margin-top:14px">Research shows that patient compliance with home exercise programs is the single biggest predictor of recovery outcomes. Here's what separates patients who fully recover from those who don't.</p>
+        <div style="margin-top:24px;font-size:13px;color:rgba(245,242,235,0.4)">By PhysioAI Clinical Team · 8 min read · Rehabilitation</div>
+      </div>
+      <div class="feat-img">🏆</div>
+    </a>
+
+    <span class="section-tag reveal">Latest articles</span>
+    <div class="grid-3" style="margin-top:28px">
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#e8f5ee">🦵</div><div class="blog-body"><span class="blog-tag">Knee rehabilitation</span><h3>The 5 most important exercises after knee replacement surgery</h3><p>Post knee replacement rehab doesn't have to be complicated. These 5 exercises, done correctly, are the foundation of a full recovery.</p><div class="blog-meta"><span>5 min read</span><span>·</span><span>Dr. Priya Sharma, PT</span></div></div></a>
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#fff0ea">💪</div><div class="blog-body"><span class="blog-tag">Shoulder recovery</span><h3>Rotator cuff injury: everything you need to know about recovery</h3><p>A rotator cuff tear is one of the most common shoulder injuries. Here's a comprehensive guide to what to expect during recovery.</p><div class="blog-meta"><span>7 min read</span><span>·</span><span>PhysioAI Team</span></div></div></a>
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#eeedfe">🤖</div><div class="blog-body"><span class="blog-tag">Technology</span><h3>How AI is changing physiotherapy — and what it means for patients in India</h3><p>Computer vision and AI pose detection are making clinical-grade physiotherapy guidance available to anyone with a smartphone.</p><div class="blog-meta"><span>6 min read</span><span>·</span><span>Shreyas Jadhav</span></div></div></a>
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#e8f5ee">🏃</div><div class="blog-body"><span class="blog-tag">Sports injuries</span><h3>ACL tear recovery timeline: what to expect week by week</h3><p>ACL reconstruction is a 9–12 month journey. Here's a week-by-week breakdown of what to expect and how to stay on track.</p><div class="blog-meta"><span>10 min read</span><span>·</span><span>PhysioAI Clinical Team</span></div></div></a>
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#faeeda">🧘</div><div class="blog-body"><span class="blog-tag">Posture</span><h3>Work from home is ruining your posture. Here's how to fix it.</h3><p>Hours of sitting at poorly set-up home offices are causing an epidemic of neck and back pain. A physio explains what to do.</p><div class="blog-meta"><span>4 min read</span><span>·</span><span>Dr. Amit Kulkarni, PT</span></div></div></a>
+      <a href="#" class="blog-card reveal"><div class="blog-img" style="background:#faece7">🦴</div><div class="blog-body"><span class="blog-tag">Hip rehabilitation</span><h3>Hip replacement recovery: the complete guide for Indian patients</h3><p>What to do before surgery, what to expect after, and the exercises that will help you walk normally again.</p><div class="blog-meta"><span>8 min read</span><span>·</span><span>PhysioAI Clinical Team</span></div></div></a>
+    </div>
+  </div>
+</div>
+
+<div class="section section-green">
+  <div class="container" style="text-align:center">
+    <span class="section-tag reveal">Newsletter</span>
+    <h2 class="reveal">Get weekly physio tips<br>in your inbox</h2>
+    <p class="lead reveal" style="margin:16px auto 0;text-align:center">No spam. Just practical physiotherapy advice from our clinical team, delivered every Tuesday.</p>
+    <div class="reveal" style="margin-top:32px;display:flex;gap:12px;max-width:440px;margin-left:auto;margin-right:auto">
+      <input type="email" placeholder="your@email.com" style="flex:1;padding:14px 18px;border:1.5px solid var(--border);border-radius:100px;font-size:15px;font-family:'Instrument Sans',sans-serif;outline:none;background:var(--paper)">
+      <button class="btn-primary" onclick="this.textContent='Subscribed ✓'">Subscribe</button>
+    </div>
+    <div style="margin-top:24px" class="reveal">
+      <a href="session.html" class="btn-secondary">Or try a live AI session →</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="container">
+  <div class="footer-top">
+    <div><span class="footer-logo">Physio<span>AI</span></span><p class="footer-tagline">AI-powered physiotherapy for every Indian.</p></div>
+    <div class="footer-col"><h4>Product</h4><a href="for-physios.html">For Physios</a><a href="for-patients.html">For Patients</a><a href="session.html">Try demo</a><a href="pricing.html">Pricing</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@physioai.in">hello@physioai.in</a><a href="#">Pune, India 🇮🇳</a></div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 PhysioAI. All rights reserved.</p><p>Made with ❤️ in Pune</p></div>
+</div></footer>
+<script src="assets/nav.js"></script>
+</body></html>

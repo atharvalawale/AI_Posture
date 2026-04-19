@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PhysioAI Pricing — Simple, Transparent Plans</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.pricing-card{border:1.5px solid var(--border);border-radius:24px;padding:36px;transition:all .3s;position:relative}
+.pricing-card:hover{border-color:var(--green);transform:translateY(-4px);box-shadow:0 20px 40px rgba(26,107,71,0.08)}
+.pricing-card.featured{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.pricing-card.featured h3{color:var(--paper)}
+.pricing-card.featured .price-desc{color:rgba(245,242,235,0.55)}
+.price-label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);font-weight:500;margin-bottom:12px;display:block}
+.pricing-card.featured .price-label{color:var(--green-light)}
+.price{font-family:'Clash Display',sans-serif;font-size:52px;font-weight:700;letter-spacing:-2px;line-height:1;margin:16px 0 8px}
+.price span{font-size:18px;letter-spacing:0;font-weight:400;color:var(--muted)}
+.pricing-card.featured .price span{color:rgba(245,242,235,0.5)}
+.price-desc{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+.featured-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:12px;font-weight:500;padding:4px 16px;border-radius:100px;white-space:nowrap}
+.faq-item{border-bottom:1px solid var(--border);padding:24px 0}
+.faq-q{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.7;margin-top:12px;display:none}
+.faq-a.open{display:block}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Physio<span>AI</span></a>
+  <div class="nav-links">
+    <a href="for-physios.html">For Physios</a>
+    <a href="for-patients.html">For Patients</a>
+    <a href="session.html">Try demo</a>
+    <a href="pricing.html" class="active">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html" class="nav-cta">Get a demo</a>
+  </div>
+  <button class="nav-hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="for-physios.html">For Physios</a>
+  <a href="for-patients.html">For Patients</a>
+  <a href="session.html">Try demo</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="about.html">About</a>
+  <a href="blog.html">Blog</a>
+  <a href="contact.html">Get a demo</a>
+</div>
+
+<section class="page-hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="container" style="text-align:center">
+    <div class="hero-anim">
+      <div class="hero-badge" style="margin:0 auto 28px"><span class="dot"></span>Simple pricing</div>
+      <h1>Transparent plans.<br><em class="highlight">No surprises.</em></h1>
+      <p class="lead" style="margin:0 auto">Pay per clinic, not per patient. Scale your practice without worrying about per-user costs.</p>
+      <div class="btn-actions" style="justify-content:center;margin-top:28px">
+        <a href="session.html" class="btn-secondary">Try free demo first →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section">
+  <div class="container">
+    <div style="background:var(--green-pale);border:1px solid rgba(26,107,71,0.2);border-radius:16px;padding:20px 28px;text-align:center;margin-bottom:48px" class="reveal">
+      <p style="color:var(--green);font-size:15px;font-weight:500">🎉 Early access offer — First 50 clinics get 3 months free. <a href="contact.html" style="color:var(--ink);text-decoration:underline">Apply now →</a></p>
+    </div>
+    <div class="grid-3" style="align-items:start">
+      <div class="pricing-card reveal">
+        <span class="price-label">Starter</span>
+        <h3>Solo Physio</h3>
+        <div class="price">₹2,999<span>/mo</span></div>
+        <p class="price-desc">Perfect for independent physiotherapists just getting started with remote monitoring.</p>
+        <ul class="feat-list"><li>Up to 30 active patients</li><li>AI rep counting + scoring</li><li>Patient dashboard</li><li>Session history (90 days)</li><li>In-app messaging</li><li>Email support</li></ul>
+        <a href="contact.html" class="btn-secondary" style="width:100%;justify-content:center;margin-top:28px">Get started →</a>
+      </div>
+      <div class="pricing-card featured reveal">
+        <div class="featured-badge">Most popular</div>
+        <span class="price-label">Professional</span>
+        <h3>Clinic</h3>
+        <div class="price">₹7,999<span>/mo</span></div>
+        <p class="price-desc">For established clinics that want to scale their patient capacity and offer remote care.</p>
+        <ul class="feat-list dark"><li>Up to 150 active patients</li><li>Everything in Starter</li><li>Multiple physio logins</li><li>Automated PDF reports</li><li>WhatsApp alerts</li><li>Teleconsultation (coming Q4)</li><li>Priority support</li><li>Onboarding assistance</li></ul>
+        <a href="contact.html" class="btn-green" style="width:100%;justify-content:center;margin-top:28px">Get started →</a>
+      </div>
+      <div class="pricing-card reveal">
+        <span class="price-label">Enterprise</span>
+        <h3>Hospital / Chain</h3>
+        <div class="price" style="font-size:36px">Custom</div>
+        <p class="price-desc">For hospital departments, multi-location clinic chains, and healthcare enterprises.</p>
+        <ul class="feat-list"><li>Unlimited patients</li><li>Everything in Clinic</li><li>Unlimited physio accounts</li><li>Custom exercise library</li><li>EMR/HIS integration</li><li>Dedicated account manager</li><li>SLA guarantee</li><li>On-site training</li></ul>
+        <a href="contact.html" class="btn-secondary" style="width:100%;justify-content:center;margin-top:28px">Contact sales →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-green">
+  <div class="container">
+    <span class="section-tag reveal" style="text-align:center;display:block">Patient pricing</span>
+    <h2 class="reveal" style="text-align:center">For patients referred by their physio</h2>
+    <div class="grid-2" style="margin-top:48px;max-width:700px;margin-left:auto;margin-right:auto">
+      <div class="card reveal" style="text-align:center"><div style="font-size:40px;margin-bottom:12px">📱</div><h3>Basic</h3><div style="font-family:'Clash Display',sans-serif;font-size:36px;font-weight:700;letter-spacing:-1px;margin:12px 0 6px">Free</div><p>Access exercises assigned by your physio. AI form correction and rep counting included.</p><div style="margin-top:16px"><a href="session.html" class="btn-secondary">Try demo →</a></div></div>
+      <div class="card reveal" style="text-align:center;border-color:var(--green)"><div style="font-size:40px;margin-bottom:12px">⭐</div><h3>Premium</h3><div style="font-family:'Clash Display',sans-serif;font-size:36px;font-weight:700;letter-spacing:-1px;margin:12px 0 6px">₹499<span style="font-size:14px;color:var(--muted);font-weight:400">/mo</span></div><p>Full session history, progress analytics, direct physio messaging, and appointment booking.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container" style="max-width:720px">
+    <span class="section-tag reveal">FAQ</span>
+    <h2 class="reveal">Common questions</h2>
+    <div style="margin-top:40px">
+      <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Is there a free trial? <span>+</span></div><div class="faq-a">Yes — all plans come with a 14-day free trial, no credit card required. Early access clinics also get 3 months free. You can also try our live demo right now with no signup at all.</div></div>
+      <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Do patients need to pay separately? <span>+</span></div><div class="faq-a">No — basic patient access is included in your clinic subscription. Patients only pay if they want the premium individual plan.</div></div>
+      <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">What devices does it work on? <span>+</span></div><div class="faq-a">The patient app works on any Android (7.0+) or iOS (12+) smartphone. No special hardware required — just a phone camera.</div></div>
+      <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <span>+</span></div><div class="faq-a">Yes, you can cancel at any time. There are no long-term contracts. Your data is exportable at any time.</div></div>
+      <div class="faq-item reveal"><div class="faq-q" onclick="toggleFaq(this)">Is patient data secure? <span>+</span></div><div class="faq-a">All patient data is encrypted in transit and at rest. We follow all Indian health data regulations.</div></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="container">
+  <div class="footer-top">
+    <div><span class="footer-logo">Physio<span>AI</span></span><p class="footer-tagline">AI-powered physiotherapy for every Indian.</p></div>
+    <div class="footer-col"><h4>Product</h4><a href="for-physios.html">For Physios</a><a href="for-patients.html">For Patients</a><a href="session.html">Try demo</a><a href="pricing.html">Pricing</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@physioai.in">hello@physioai.in</a><a href="#">Pune, India 🇮🇳</a></div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 PhysioAI. All rights reserved.</p><p>Made with ❤️ in Pune</p></div>
+</div></footer>
+<script src="assets/nav.js"></script>
+<script>function toggleFaq(el){const a=el.nextElementSibling;const s=el.querySelector('span');a.classList.toggle('open');s.textContent=a.classList.contains('open')?'−':'+';}</script>
+</body></html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PhysioAI — AI-Powered Physiotherapy for India</title>
+<meta name="description" content="Real-time AI form correction, rep counting, and remote physio monitoring. Making quality rehabilitation accessible to every Indian.">
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:120px 48px 80px;position:relative;overflow:hidden}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding:120px 24px 60px}.hero-visual{display:none}}
+.phone-mockup{background:var(--ink);border-radius:40px;padding:4px;box-shadow:0 40px 80px rgba(0,0,0,0.2);width:260px;margin:0 auto}
+.phone-screen{background:#0d1a14;border-radius:37px;overflow:hidden;aspect-ratio:9/19;display:flex;flex-direction:column;padding:20px 14px 14px}
+.phone-notch{width:72px;height:20px;background:var(--ink);border-radius:10px;margin:0 auto 16px}
+.score-ring{width:110px;height:110px;margin:0 auto 14px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:#1a3328;stroke-width:8}
+.ring-fill{fill:none;stroke:#2d9e6b;stroke-width:8;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:42;animation:ringFill 2s ease .5s both}
+.score-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.score-num{font-family:'Clash Display',sans-serif;font-size:30px;font-weight:700;color:#fff}
+.score-lbl{font-size:9px;color:#4a9e75;letter-spacing:1px;text-transform:uppercase}
+.phone-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pm{background:#0a1510;border-radius:10px;padding:9px;text-align:center}
+.pm-val{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;color:#2d9e6b}
+.pm-lbl{font-size:8px;color:#3d6b54;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.fb-pill{background:#0a1510;border-radius:10px;padding:9px 11px;margin-top:7px;display:flex;align-items:center;gap:7px}
+.fb-dot{width:5px;height:5px;background:#2d9e6b;border-radius:50%;flex-shrink:0;animation:pulse 1.5s infinite}
+.fb-txt{font-size:9px;color:#4a9e75}
+.float-card{position:absolute;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:11px 15px;box-shadow:0 8px 24px rgba(0,0,0,0.07)}
+.fc1{top:18%;right:60%;animation:float 4s ease-in-out infinite}
+.fc2{bottom:22%;right:57%;animation:float 4s ease-in-out infinite .5s}
+.fc-lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
+.fc-val{font-family:'Clash Display',sans-serif;font-size:16px;font-weight:600;color:var(--ink)}
+.fc-sub{font-size:10px;color:var(--green)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hero-visual{position:relative}
+.demo-banner{background:var(--ink);color:var(--paper);text-align:center;padding:12px 24px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.demo-banner a{color:var(--green-light);font-weight:600;text-decoration:none;border-bottom:1px solid var(--green-light)}
+.demo-banner a:hover{color:#fff}
+</style>
+</head>
+<body>
+
+<!-- Demo banner -->
+<div class="demo-banner">
+  🤖 Our AI is live — <a href="session.html">try a real session right now</a> (backend must be running on port 8000)
+</div>
+
+<nav>
+  <a href="index.html" class="nav-logo">Physio<span>AI</span></a>
+  <div class="nav-links">
+    <a href="for-physios.html">For Physios</a>
+    <a href="for-patients.html">For Patients</a>
+    <a href="session.html">Try demo</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="about.html">About</a>
+    <a href="blog.html">Blog</a>
+    <a href="contact.html" class="nav-cta">Get a demo</a>
+  </div>
+  <button class="nav-hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-menu">
+  <a href="for-physios.html">For Physios</a>
+  <a href="for-patients.html">For Patients</a>
+  <a href="session.html">Try demo</a>
+  <a href="pricing.html">Pricing</a>
+  <a href="about.html">About</a>
+  <a href="blog.html">Blog</a>
+  <a href="contact.html">Get a demo</a>
+</div>
+
+<section class="hero">
+  <div class="hero-bg"></div><div class="hero-grid"></div>
+  <div class="hero-anim">
+    <div class="hero-badge"><span class="dot"></span>India's first AI physio platform</div>
+    <h1>Physiotherapy that <em class="highlight">watches</em> you heal</h1>
+    <p class="lead">Real-time AI form correction, rep counting, and remote physio monitoring — making quality rehabilitation accessible to every patient in India.</p>
+    <div class="btn-actions">
+      <a href="session.html" class="btn-primary">Try live demo →</a>
+      <a href="contact.html" class="btn-secondary">Request a demo</a>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px">⚡ Live AI session — no signup needed. Backend must be running locally.</p>
+  </div>
+  <div class="hero-visual">
+    <div class="float-card fc1"><div class="fc-lbl">Session score</div><div class="fc-val">92<span style="font-size:13px;color:var(--muted)">/100</span></div><div class="fc-sub">↑ 8pts from last session</div></div>
+    <div class="phone-mockup">
+      <div class="phone-screen">
+        <div class="phone-notch"></div>
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100" width="110" height="110"><circle class="ring-track" cx="50" cy="50" r="45"/><circle class="ring-fill" cx="50" cy="50" r="45"/></svg>
+          <div class="score-text"><div class="score-num">92</div><div class="score-lbl">Score</div></div>
+        </div>
+        <div class="phone-metrics">
+          <div class="pm"><div class="pm-val">10</div><div class="pm-lbl">Reps</div></div>
+          <div class="pm"><div class="pm-val">94°</div><div class="pm-lbl">Angle</div></div>
+        </div>
+        <div class="fb-pill"><div class="fb-dot"></div><div class="fb-txt">Perfect height! Hold steady.</div></div>
+      </div>
+    </div>
+    <div class="float-card fc2"><div class="fc-lbl">Physio alert</div><div class="fc-val" style="font-size:13px">Raj completed 10 reps</div><div class="fc-sub">Avg score 89 · 2 mins ago</div></div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="container">
+    <div class="grid-4">
+      <div class="stat reveal"><div class="stat-num">5<span>Cr+</span></div><div class="stat-label">Indians need physiotherapy every year</div></div>
+      <div class="stat reveal"><div class="stat-num">3<span>x</span></div><div class="stat-label">Better outcomes with consistent home exercise</div></div>
+      <div class="stat reveal"><div class="stat-num">78<span>%</span></div><div class="stat-label">Patients skip exercises without supervision</div></div>
+      <div class="stat reveal"><div class="stat-num">₹8<span>K</span></div><div class="stat-label">Average monthly physio cost in metro cities</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <span class="section-tag reveal">The problem</span>
+    <h2 class="reveal">Physiotherapy is broken<br>for most Indians</h2>
+    <p class="lead reveal">Patients are given exercise sheets and sent home with zero supervision. 78% do it wrong or skip entirely. There's a better way.</p>
+    <div class="grid-2" style="margin-top:48px;align-items:center;gap:60px">
+      <div>
+        <div class="card reveal" style="margin-bottom:20px"><span class="card-icon">💸</span><h3>Unaffordable in-clinic care</h3><p>₹500–1500 per session, 3x a week, for months. Most patients can't sustain this.</p></div>
+        <div class="card reveal" style="margin-bottom:20px"><span class="card-icon">🤷</span><h3>No supervision at home</h3><p>Patients exercise alone with no feedback. Wrong form causes injury and delays recovery.</p></div>
+        <div class="card reveal"><span class="card-icon">📍</span><h3>Geography is a barrier</h3><p>Tier 2 and 3 cities have almost no qualified physiotherapists. Rural patients have zero access.</p></div>
+      </div>
+      <div class="reveal" style="background:var(--ink);border-radius:24px;padding:40px;color:var(--paper)">
+        <h3 style="color:var(--paper);margin-bottom:14px;font-size:26px">PhysioAI fixes all of this</h3>
+        <p style="color:rgba(245,242,235,0.65);font-size:15px;line-height:1.7;margin-bottom:24px">We put an AI physiotherapist in every patient's pocket. Real-time pose detection watches every rep and sends the data straight to the physio.</p>
+        <ul class="feat-list dark">
+          <li>AI watches patient form in real-time via phone camera</li>
+          <li>Counts reps and scores 0–100 per rep</li>
+          <li>Physio dashboard shows all patient sessions remotely</li>
+          <li>Works on any Android or iOS — no hardware needed</li>
+          <li>10x cheaper than in-clinic visits</li>
+        </ul>
+        <div style="margin-top:28px"><a href="session.html" class="btn-green">Try it live now →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-dark">
+  <div class="container">
+    <span class="section-tag reveal">How it works</span>
+    <h2 class="reveal" style="color:var(--paper)">From prescription to recovery<br>— fully automated</h2>
+    <div class="grid-3" style="margin-top:52px">
+      <div class="card-dark reveal"><span class="card-icon">🩺</span><h3>Physio prescribes</h3><p>Physiotherapist assigns a customised exercise program. Patient receives it instantly on their phone.</p></div>
+      <div class="card-dark reveal"><span class="card-icon">📱</span><h3>Patient exercises with AI</h3><p>Patient points their phone at themselves and exercises. Our AI watches every rep — counting, scoring, and giving voice feedback.</p></div>
+      <div class="card-dark reveal"><span class="card-icon">📊</span><h3>Physio monitors remotely</h3><p>Every session is logged. Physio sees rep scores, angles, and completion rate on their dashboard.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:40px" class="reveal">
+      <a href="session.html" class="btn-green">Try a live AI session →</a>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container" style="text-align:center">
+    <span class="section-tag reveal">Who it's for</span>
+    <h2 class="reveal">Built for both sides of care</h2>
+    <div class="grid-2" style="margin-top:48px;text-align:left">
+      <div class="card reveal">
+        <span class="card-icon">🧑‍⚕️</span><h3>For Physiotherapists</h3>
+        <p>Monitor 10x more patients. Get data you've never had before. Grow your practice beyond clinic walls.</p>
+        <ul class="feat-list" style="margin-top:16px">
+          <li>Remote patient monitoring dashboard</li>
+          <li>Automated session reports</li>
+          <li>Exercise prescription library</li>
+          <li>WhatsApp alerts for missed sessions</li>
+        </ul>
+        <div style="margin-top:24px"><a href="for-physios.html" class="btn-secondary">Learn more →</a></div>
+      </div>
+      <div class="card reveal">
+        <span class="card-icon">🏃</span><h3>For Patients</h3>
+        <p>Get quality physiotherapy at home at a fraction of clinic costs. No equipment needed — just your phone.</p>
+        <ul class="feat-list" style="margin-top:16px">
+          <li>Real-time form correction via AI</li>
+          <li>Rep counting and scoring per session</li>
+          <li>Voice feedback during exercise</li>
+          <li>Progress tracking over time</li>
+        </ul>
+        <div style="margin-top:24px"><a href="session.html" class="btn-secondary">Try live session →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-green">
+  <div class="container" style="text-align:center">
+    <span class="section-tag reveal">Get started</span>
+    <h2 class="reveal">Ready to transform<br>physiotherapy in India?</h2>
+    <p class="lead reveal" style="margin:20px auto 0;text-align:center">We are onboarding early physio clinics across Pune and Mumbai. Get 3 months free as a founding partner.</p>
+    <div class="btn-actions reveal" style="justify-content:center;margin-top:32px">
+      <a href="session.html" class="btn-primary">Try live demo →</a>
+      <a href="contact.html" class="btn-secondary">Request early access</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="container">
+  <div class="footer-top">
+    <div><span class="footer-logo">Physio<span>AI</span></span><p class="footer-tagline">AI-powered physiotherapy for every Indian. Making quality rehabilitation accessible and affordable.</p></div>
+    <div class="footer-col"><h4>Product</h4><a href="for-physios.html">For Physios</a><a href="for-patients.html">For Patients</a><a href="session.html">Try demo</a><a href="pricing.html">Pricing</a></div>
+    <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@physioai.in">hello@physioai.in</a><a href="#">Pune, India 🇮🇳</a></div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 PhysioAI. All rights reserved.</p><p>Made with ❤️ in Pune</p></div>
+</div></footer>
+<script src="assets/nav.js"></script>
+</body></html>
