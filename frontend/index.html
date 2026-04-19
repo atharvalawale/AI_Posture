@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhysioAI — Posture Testing</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e14;
+      --surface: #111820;
+      --border: #1e2a38;
+      --accent: #00e5a0;
+      --accent-dim: #00e5a020;
+      --warn: #ffb830;
+      --danger: #ff4d6d;
+      --text: #e8f0f8;
+      --muted: #4a6070;
+      --font-head: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-head);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); display: inline-block;
+      margin-right: 8px; transition: background 0.3s;
+    }
+    .status-dot.connected { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .status-label { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      height: calc(100vh - 61px);
+    }
+
+    /* ── Camera panel ── */
+    .camera-panel {
+      position: relative;
+      background: #060a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+    #video { display: none; }
+    #canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    /* Corner brackets */
+    .corner {
+      position: absolute;
+      width: 28px; height: 28px;
+      border-color: var(--accent);
+      border-style: solid;
+      opacity: 0.5;
+    }
+    .corner.tl { top: 20px; left: 20px; border-width: 2px 0 0 2px; }
+    .corner.tr { top: 20px; right: 20px; border-width: 2px 2px 0 0; }
+    .corner.bl { bottom: 20px; left: 20px; border-width: 0 0 2px 2px; }
+    .corner.br { bottom: 20px; right: 20px; border-width: 0 2px 2px 0; }
+
+    .no-camera {
+      text-align: center;
+      color: var(--muted);
+    }
+    .no-camera svg { margin-bottom: 12px; opacity: 0.3; }
+    .no-camera p { font-size: 14px; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--surface);
+    }
+
+    .section {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-label {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* ── Exercise selector ── */
+    .exercise-btn {
+      width: 100%;
+      padding: 11px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-head);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .exercise-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .exercise-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .exercise-btn .ex-icon {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .exercise-btn.active .ex-icon { background: var(--accent); }
+
+    /* Side selector */
+    .side-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .side-btn {
+      flex: 1;
+      padding: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .side-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* Reps input */
+    .reps-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .reps-row label { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+    .reps-row input {
+      width: 60px;
+      padding: 6px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* ── Start/Stop button ── */
+    .start-btn {
+      width: calc(100% - 40px);
+      margin: 0 20px 20px;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.15s;
+    }
+    .start-btn:hover { opacity: 0.85; }
+    .start-btn.stop { background: var(--danger); color: #fff; }
+    .start-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── Live metrics ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .metric-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric-label {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      line-height: 1;
+    }
+    .metric-value.warn { color: var(--warn); }
+    .metric-value.danger { color: var(--danger); }
+    .metric-value.muted { color: var(--muted); }
+
+    /* ── Angle bar ── */
+    .angle-bar-wrap {
+      margin-top: 4px;
+    }
+    .angle-bar-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .angle-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+      width: 0%;
+    }
+
+    /* ── Hold progress ── */
+    .hold-ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .hold-track {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .hold-fill {
+      height: 100%;
+      background: var(--warn);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+      width: 0%;
+    }
+
+    /* ── Feedback box ── */
+    .feedback-box {
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 52px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .feedback-box.good   { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+    .feedback-box.warning { border-color: var(--warn); background: #ffb83010; color: var(--warn); }
+    .feedback-box.error  { border-color: var(--danger); background: #ff4d6d10; color: var(--danger); }
+
+    /* ── Stage pill ── */
+    .stage-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.5px;
+      background: var(--border);
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .stage-pill.moving  { background: var(--accent-dim); color: var(--accent); }
+    .stage-pill.holding { background: #ffb83020; color: var(--warn); }
+    .stage-pill.complete { background: var(--accent); color: #000; }
+
+    /* ── Rep history ── */
+    .rep-history {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .rep-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      transition: all 0.3s;
+    }
+    .rep-dot.done-good { background: var(--accent); color: #000; }
+    .rep-dot.done-ok   { background: var(--warn); color: #000; }
+    .rep-dot.done-bad  { background: var(--danger); color: #fff; }
+
+    /* ── Complete banner ── */
+    .complete-banner {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: #0a0e14ee;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+    .complete-banner.show { display: flex; }
+    .complete-banner h2 { font-size: 28px; color: var(--accent); }
+    .complete-banner p  { color: var(--muted); font-size: 14px; }
+    .complete-banner .big-score {
+      font-size: 72px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Physio<span>AI</span></div>
+  <div>
+    <span class="status-dot" id="statusDot"></span>
+    <span class="status-label" id="statusLabel">disconnected</span>
+  </div>
+</header>
+
+<main>
+  <!-- Camera -->
+  <div class="camera-panel" id="cameraPanel">
+    <div class="no-camera" id="noCameraMsg">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+      </svg>
+      <p>Camera will start when you begin</p>
+    </div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div class="camera-overlay">
+      <div class="corner tl"></div>
+      <div class="corner tr"></div>
+      <div class="corner bl"></div>
+      <div class="corner br"></div>
+    </div>
+    <div class="complete-banner" id="completeBanner">
+      <p style="color:var(--muted);font-size:13px;font-family:var(--font-mono)">SESSION COMPLETE</p>
+      <div class="big-score" id="finalScore">--</div>
+      <p>average score</p>
+      <button class="start-btn" style="width:180px;margin:8px 0 0" onclick="resetSession()">Start again</button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Exercise selection -->
+    <div class="section">
+      <div class="section-label">Exercise</div>
+      <button class="exercise-btn active" data-key="knee_extension" onclick="selectExercise(this)">
+        <div class="ex-icon">K</div>
+        Knee Extension
+      </button>
+      <button class="exercise-btn" data-key="shoulder_raises" onclick="selectExercise(this)">
+        <div class="ex-icon">S</div>
+        Shoulder Raises
+      </button>
+      <button class="exercise-btn" data-key="straight_leg_raise" onclick="selectExercise(this)">
+        <div class="ex-icon">L</div>
+        Straight Leg Raise
+      </button>
+
+      <div class="side-row">
+        <button class="side-btn active" data-side="left" onclick="selectSide(this)">Left</button>
+        <button class="side-btn" data-side="right" onclick="selectSide(this)">Right</button>
+      </div>
+
+      <div class="reps-row">
+        <label>REPS TARGET</label>
+        <input type="number" id="repsInput" value="10" min="1" max="30">
+      </div>
+    </div>
+
+    <!-- Start button -->
+    <button class="start-btn" id="startBtn" onclick="toggleSession()">Start Session</button>
+
+    <!-- Live metrics -->
+    <div class="section">
+      <div class="section-label">Live metrics</div>
+      <span class="stage-pill" id="stagePill">waiting</span>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Reps</div>
+          <div class="metric-value muted" id="repCount">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Last score</div>
+          <div class="metric-value muted" id="lastScore">--</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Avg score</div>
+          <div class="metric-value muted" id="avgScore">--</div>
+        </div>
+        <div class="metric-card angle-bar-wrap">
+          <div class="metric-label">Angle</div>
+          <div class="metric-value muted" id="angleVal">--°</div>
+          <div class="angle-bar-track"><div class="angle-bar-fill" id="angleBar"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="metric-label" style="margin-bottom:6px">Hold progress</div>
+        <div class="hold-track"><div class="hold-fill" id="holdBar"></div></div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="section">
+      <div class="section-label">Feedback</div>
+      <div class="feedback-box" id="feedbackBox">Select an exercise and press Start.</div>
+    </div>
+
+    <!-- Rep history -->
+    <div class="section">
+      <div class="section-label">Rep history</div>
+      <div class="rep-history" id="repHistory"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const WS_BASE = 'ws://localhost:8000/ws/pose';
+
+  let ws = null;
+  let stream = null;
+  let sendInterval = null;
+  let selectedExercise = 'knee_extension';
+  let selectedSide = 'left';
+  let isRunning = false;
+  let repScores = [];
+
+  const video   = document.getElementById('video');
+  const canvas  = document.getElementById('canvas');
+  const ctx     = canvas.getContext('2d');
+
+  // ── Exercise / side selection ─────────────────────────────
+
+  function selectExercise(btn) {
+    document.querySelectorAll('.exercise-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedExercise = btn.dataset.key;
+  }
+
+  function selectSide(btn) {
+    document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedSide = btn.dataset.side;
+  }
+
+  // ── Session control ───────────────────────────────────────
+
+  async function toggleSession() {
+    if (isRunning) { stopSession(); return; }
+    await startSession();
+  }
+
+  async function startSession() {
+    repScores = [];
+    document.getElementById('repHistory').innerHTML = '';
+    document.getElementById('completeBanner').classList.remove('show');
+    resetMetrics();
+
+    // Start camera
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+      video.srcObject = stream;
+      await new Promise(r => video.onloadedmetadata = r);
+      video.play();
+      document.getElementById('noCameraMsg').style.display = 'none';
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+    } catch(e) {
+      setFeedback('Camera access denied. Please allow camera access.', 'error');
+      return;
+    }
+
+    // Connect WebSocket
+    const reps = document.getElementById('repsInput').value || 10;
+    const url  = `${WS_BASE}/${selectedExercise}/${selectedSide}?reps_target=${reps}`;
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      setStatus(true);
+      isRunning = true;
+      document.getElementById('startBtn').textContent = 'Stop Session';
+      document.getElementById('startBtn').classList.add('stop');
+      document.querySelectorAll('.exercise-btn, .side-btn, #repsInput').forEach(el => el.disabled = true);
+      startSendLoop();
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.error) { setFeedback(data.error, 'error'); return; }
+        updateUI(data);
+      } catch(e) {}
+    };
+
+    ws.onclose = () => {
+      setStatus(false);
+      stopSession();
+    };
+
+    ws.onerror = () => {
+      setFeedback('Cannot connect to backend. Is the server running on port 8000?', 'error');
+      setStatus(false);
+      stopSession();
+    };
+  }
+
+  function stopSession() {
+    isRunning = false;
+    if (sendInterval) { clearInterval(sendInterval); sendInterval = null; }
+    if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    document.getElementById('startBtn').textContent = 'Start Session';
+    document.getElementById('startBtn').classList.remove('stop');
+    document.querySelectorAll('.exercise-btn, .side-btn, #repsInput').forEach(el => el.disabled = false);
+    setStatus(false);
+  }
+
+  function resetSession() {
+    document.getElementById('completeBanner').classList.remove('show');
+    stopSession();
+    resetMetrics();
+  }
+
+  // ── Frame sending ─────────────────────────────────────────
+
+  function startSendLoop() {
+    sendInterval = setInterval(() => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const b64 = reader.result.split(',')[1];
+          ws.send(JSON.stringify({ frame: b64 }));
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.75);
+    }, 100); // 10fps — good balance of responsiveness vs bandwidth
+  }
+
+  // ── UI updates ────────────────────────────────────────────
+
+  function updateUI(data) {
+    // Stage pill
+    const pill = document.getElementById('stagePill');
+    pill.textContent = data.stage;
+    pill.className = 'stage-pill ' + (data.stage === 'moving' || data.stage === 'raising' || data.stage === 'extending' ? 'moving' : data.stage === 'holding' ? 'holding' : data.stage === 'complete' ? 'complete' : '');
+
+    // Metrics
+    setMetric('repCount',  data.rep_count, data.rep_count > 0 ? 'accent' : 'muted');
+    setMetric('lastScore', data.last_rep_score !== null ? data.last_rep_score : '--', scoreColor(data.last_rep_score));
+    setMetric('avgScore',  data.session_avg_score !== null ? data.session_avg_score : '--', scoreColor(data.session_avg_score));
+    setMetric('angleVal',  data.angle !== null ? data.angle + '°' : '--°', 'muted');
+
+    // Angle bar (0-180 range)
+    const anglePct = data.angle !== null ? Math.min(data.angle / 180 * 100, 100) : 0;
+    document.getElementById('angleBar').style.width = anglePct + '%';
+
+    // Hold bar
+    document.getElementById('holdBar').style.width = (data.hold_progress * 100) + '%';
+
+    // Feedback
+    setFeedback(data.feedback, data.severity);
+
+    // Rep history dots
+    if (data.last_rep_score !== null && data.rep_count > repScores.length) {
+      repScores.push(data.last_rep_score);
+      addRepDot(data.last_rep_score);
+    }
+
+    // Complete
+    if (data.complete && data.summary) {
+      document.getElementById('finalScore').textContent = data.summary.avg_score;
+      document.getElementById('completeBanner').classList.add('show');
+      stopSession();
+    }
+  }
+
+  function setMetric(id, value, color) {
+    const el = document.getElementById(id);
+    el.textContent = value;
+    el.className = 'metric-value ' + (color || 'muted');
+  }
+
+  function scoreColor(score) {
+    if (score === null || score === undefined) return 'muted';
+    if (score >= 80) return 'accent';
+    if (score >= 55) return 'warn';
+    return 'danger';
+  }
+
+  function setFeedback(text, severity) {
+    const box = document.getElementById('feedbackBox');
+    box.textContent = text;
+    box.className = 'feedback-box ' + (severity || '');
+  }
+
+  function addRepDot(score) {
+    const dot = document.createElement('div');
+    dot.className = 'rep-dot ' + (score >= 80 ? 'done-good' : score >= 55 ? 'done-ok' : 'done-bad');
+    dot.textContent = Math.round(score);
+    document.getElementById('repHistory').appendChild(dot);
+  }
+
+  function resetMetrics() {
+    setMetric('repCount', '0', 'muted');
+    setMetric('lastScore', '--', 'muted');
+    setMetric('avgScore', '--', 'muted');
+    setMetric('angleVal', '--°', 'muted');
+    document.getElementById('angleBar').style.width = '0%';
+    document.getElementById('holdBar').style.width = '0%';
+    document.getElementById('stagePill').textContent = 'waiting';
+    document.getElementById('stagePill').className = 'stage-pill';
+    setFeedback('Select an exercise and press Start.', '');
+  }
+
+  function setStatus(connected) {
+    document.getElementById('statusDot').className = 'status-dot ' + (connected ? 'connected' : '');
+    document.getElementById('statusLabel').textContent = connected ? 'connected' : 'disconnected';
+  }
+</script>
+</body>
+</html>
