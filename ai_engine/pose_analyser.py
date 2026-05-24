@@ -1,39 +1,27 @@
 import cv2
+import math
 import numpy as np
 import mediapipe as mp
-from mediapipe.tasks import python as mp_python
-from mediapipe.tasks.python import vision
-import urllib.request
-import os
 
-MODEL_PATH = "pose_landmarker.task"
-MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
-
-def _ensure_model():
-    if not os.path.exists(MODEL_PATH):
-        print("Downloading pose landmarker model...")
-        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        print("Model downloaded.")
+_mp_pose = mp.solutions.pose
 
 class HolisticAnalyzer:
     def __init__(self):
-        _ensure_model()
-        base_options = mp_python.BaseOptions(model_asset_path=MODEL_PATH)
-        options = vision.PoseLandmarkerOptions(
-            base_options=base_options,
-            running_mode=vision.RunningMode.IMAGE,
-            min_pose_detection_confidence=0.7,
+        self.pose = _mp_pose.Pose(
+            static_image_mode=False,
+            model_complexity=1,
+            enable_segmentation=False,
+            min_detection_confidence=0.7,
             min_tracking_confidence=0.7,
         )
-        self.landmarker = vision.PoseLandmarker.create_from_options(options)
 
     def analyze(self, frame):
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
-        return self.landmarker.detect(mp_image)
+        results = self.pose.process(image_rgb)
+        return results
 
     def release(self):
-        self.landmarker.close()
+        self.pose.close()
         cv2.destroyAllWindows()
 
 
@@ -80,9 +68,8 @@ def detect_pose(frame):
     h, w, _ = frame.shape
 
     if results and results.pose_landmarks:
-        landmarks = results.pose_landmarks[0]
         for name, idx in POSE_LANDMARKS.items():
-            lm = landmarks[idx]
+            lm = results.pose_landmarks.landmark[idx]
             if lm.visibility > 0.7:
                 keypoints[name] = (int(lm.x * w), int(lm.y * h))
             else:
