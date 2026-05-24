@@ -2,29 +2,23 @@ import cv2
 import math
 import numpy as np
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import urllib.request
+import os
+import tempfile
 
-_mp_pose = mp.solutions.pose
+# ── Download pose model ───────────────────────────────────────
+MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
+MODEL_PATH = os.path.join(tempfile.gettempdir(), "pose_landmarker.task")
 
-class HolisticAnalyzer:
-    def __init__(self):
-        self.pose = _mp_pose.Pose(
-            static_image_mode=False,
-            model_complexity=1,
-            enable_segmentation=False,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7,
-        )
+def _ensure_model():
+    if not os.path.exists(MODEL_PATH):
+        print("Downloading pose model...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        print("Model downloaded.")
 
-    def analyze(self, frame):
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image_rgb)
-        return results
-
-    def release(self):
-        self.pose.close()
-        cv2.destroyAllWindows()
-
-
+# ── Landmark indices ──────────────────────────────────────────
 POSE_LANDMARKS = {
     'nose': 0,
     'left_eye_inner': 1,
@@ -51,27 +45,48 @@ POSE_LANDMARKS = {
     'right_ankle': 28,
 }
 
-_analyzer_instance = None
+_landmarker = None
+_frame_ts = 0
 
-
-def _get_analyzer():
-    global _analyzer_instance
-    if _analyzer_instance is None:
-        _analyzer_instance = HolisticAnalyzer()
-    return _analyzer_instance
+def _get_landmarker():
+    global _landmarker
+    if _landmarker is None:
+        _ensure_model()
+        base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
+        options = vision.PoseLandmarkerOptions(
+            base_options=base_options,
+            running_mode=vision.RunningMode.VIDEO,
+            min_pose_detection_confidence=0.7,
+            min_pose_presence_confidence=0.7,
+            min_tracking_confidence=0.7,
+        )
+        _landmarker = vision.PoseLandmarker.create_from_options(options)
+    return _landmarker
 
 
 def detect_pose(frame):
-    analyzer = _get_analyzer()
-    results = analyzer.analyze(frame)
-    keypoints = {}
+    global _frame_ts
+    landmarker = _get_landmarker()
     h, w, _ = frame.shape
 
-    if results and results.pose_landmarks:
+    # Convert to MediaPipe Image
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+
+    # Increment timestamp (must be monotonically increasing in ms)
+    _frame_ts += 100
+    result = landmarker.detect_for_video(mp_image, _frame_ts)
+
+    keypoints = {}
+    if result.pose_landmarks:
+        lms = result.pose_landmarks[0]  # first person
         for name, idx in POSE_LANDMARKS.items():
-            lm = results.pose_landmarks.landmark[idx]
-            if lm.visibility > 0.7:
-                keypoints[name] = (int(lm.x * w), int(lm.y * h))
+            if idx < len(lms):
+                lm = lms[idx]
+                if lm.visibility > 0.7:
+                    keypoints[name] = (int(lm.x * w), int(lm.y * h))
+                else:
+                    keypoints[name] = None
             else:
                 keypoints[name] = None
     else:
