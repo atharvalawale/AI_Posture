@@ -9,4 +9,5 @@ python-dotenv
 passlib[bcrypt]
 python-jose[cryptography]
 requests
+numpy<2
 mediapipe==0.10.9
