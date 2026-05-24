@@ -1,24 +1,19 @@
+"""
+pose_analyser.py
+Uses mediapipe-model-maker free approach — works on headless servers.
+Falls back to returning empty keypoints if GPU libs missing.
+"""
 import cv2
 import math
 import numpy as np
-import mediapipe as mp
-from mediapipe.tasks import python
-from mediapipe.tasks.python import vision
-import urllib.request
 import os
-import tempfile
 
-# ── Download pose model ───────────────────────────────────────
-MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
-MODEL_PATH = os.path.join(tempfile.gettempdir(), "pose_landmarker.task")
+# Set environment to avoid OpenGL issues on headless servers
+os.environ["MEDIAPIPE_DISABLE_GPU"] = "1"
+os.environ["MESA_GL_VERSION_OVERRIDE"] = "3.3"
 
-def _ensure_model():
-    if not os.path.exists(MODEL_PATH):
-        print("Downloading pose model...")
-        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        print("Model downloaded.")
+import mediapipe as mp
 
-# ── Landmark indices ──────────────────────────────────────────
 POSE_LANDMARKS = {
     'nose': 0,
     'left_eye_inner': 1,
@@ -45,55 +40,42 @@ POSE_LANDMARKS = {
     'right_ankle': 28,
 }
 
-_landmarker = None
-_frame_ts = 0
+_pose_instance = None
 
-def _get_landmarker():
-    global _landmarker
-    if _landmarker is None:
-        _ensure_model()
-        base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
-        options = vision.PoseLandmarkerOptions(
-            base_options=base_options,
-            running_mode=vision.RunningMode.VIDEO,
-            min_pose_detection_confidence=0.7,
-            min_pose_presence_confidence=0.7,
-            min_tracking_confidence=0.7,
+def _get_pose():
+    global _pose_instance
+    if _pose_instance is None:
+        _pose_instance = mp.solutions.pose.Pose(
+            static_image_mode=False,
+            model_complexity=0,  # lightest model
+            enable_segmentation=False,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
         )
-        _landmarker = vision.PoseLandmarker.create_from_options(options)
-    return _landmarker
+    return _pose_instance
 
 
 def detect_pose(frame):
-    global _frame_ts
-    landmarker = _get_landmarker()
-    h, w, _ = frame.shape
-
-    # Convert to MediaPipe Image
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-
-    # Increment timestamp (must be monotonically increasing in ms)
-    _frame_ts += 100
-    result = landmarker.detect_for_video(mp_image, _frame_ts)
-
-    keypoints = {}
-    if result.pose_landmarks:
-        lms = result.pose_landmarks[0]  # first person
-        for name, idx in POSE_LANDMARKS.items():
-            if idx < len(lms):
-                lm = lms[idx]
-                if lm.visibility > 0.7:
+    try:
+        pose = _get_pose()
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(rgb)
+        h, w, _ = frame.shape
+        keypoints = {}
+        if results.pose_landmarks:
+            for name, idx in POSE_LANDMARKS.items():
+                lm = results.pose_landmarks.landmark[idx]
+                if lm.visibility > 0.5:
                     keypoints[name] = (int(lm.x * w), int(lm.y * h))
                 else:
                     keypoints[name] = None
-            else:
+        else:
+            for name in POSE_LANDMARKS:
                 keypoints[name] = None
-    else:
-        for name in POSE_LANDMARKS:
-            keypoints[name] = None
-
-    return keypoints
+        return keypoints
+    except Exception as e:
+        print(f"detect_pose error: {e}")
+        return {name: None for name in POSE_LANDMARKS}
 
 
 def analyze_posture(keypoints, reference_keypoints=None):

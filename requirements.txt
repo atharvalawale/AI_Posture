@@ -10,5 +10,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 requests
 numpy<2
-mediapipe
-pyopengl
+mediapipe==0.10.14
