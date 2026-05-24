@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-opencv-python
+opencv-python-headless
 websockets
 aiofiles
 python-multipart
@@ -10,4 +10,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 requests
 numpy<2
-mediapipe==0.10.33
+mediapipe
