@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-mediapipe
 opencv-python
 websockets
 aiofiles
@@ -10,3 +9,4 @@ python-dotenv
 passlib[bcrypt]
 python-jose[cryptography]
 requests
+mediapipe==0.10.9
