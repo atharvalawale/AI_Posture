@@ -1,20 +1,17 @@
 import cv2
-import math
 import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
-from mediapipe.tasks.python.components import containers
 import urllib.request
 import os
 
-# Download the pose landmarker model if not present
 MODEL_PATH = "pose_landmarker.task"
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
 
 def _ensure_model():
     if not os.path.exists(MODEL_PATH):
-        print(f"Downloading pose landmarker model...")
+        print("Downloading pose landmarker model...")
         urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
         print("Model downloaded.")
 
@@ -27,7 +24,6 @@ class HolisticAnalyzer:
             running_mode=vision.RunningMode.IMAGE,
             min_pose_detection_confidence=0.7,
             min_tracking_confidence=0.7,
-            model_complexity=1,  # 0=lite, 1=full, 2=heavy
         )
         self.landmarker = vision.PoseLandmarker.create_from_options(options)
 
@@ -84,7 +80,6 @@ def detect_pose(frame):
     h, w, _ = frame.shape
 
     if results and results.pose_landmarks:
-        # New API returns a list of poses; take the first one
         landmarks = results.pose_landmarks[0]
         for name, idx in POSE_LANDMARKS.items():
             lm = landmarks[idx]
