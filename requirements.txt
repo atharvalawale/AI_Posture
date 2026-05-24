@@ -11,3 +11,4 @@ python-jose[cryptography]
 requests
 numpy<2
 mediapipe
+pyopengl
