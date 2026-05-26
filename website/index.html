@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fixbee — AI-Powered Physiotherapy for India</title>
+<title>FiixBE — AI-Powered Physiotherapy for India</title>
 <meta name="description" content="Real-time AI form correction, rep counting, and remote physio monitoring. Making quality rehabilitation accessible to every Indian.">
 <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
@@ -14,18 +14,18 @@
 .phone-notch{width:72px;height:20px;background:var(--ink);border-radius:10px;margin:0 auto 16px}
 .score-ring{width:110px;height:110px;margin:0 auto 14px;position:relative}
 .score-ring svg{transform:rotate(-90deg)}
-.ring-track{fill:none;stroke:#1a3328;stroke-width:8}
-.ring-fill{fill:none;stroke:#2d9e6b;stroke-width:8;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:42;animation:ringFill 2s ease .5s both}
+.ring-track{fill:none;stroke:#1a3a40;stroke-width:8}
+.ring-fill{fill:none;stroke:#2a9eb0;stroke-width:8;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:42;animation:ringFill 2s ease .5s both}
 .score-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
 .score-num{font-family:'Clash Display',sans-serif;font-size:30px;font-weight:700;color:#fff}
-.score-lbl{font-size:9px;color:#4a9e75;letter-spacing:1px;text-transform:uppercase}
+.score-lbl{font-size:9px;color:#2a9eb0;letter-spacing:1px;text-transform:uppercase}
 .phone-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.pm{background:#0a1510;border-radius:10px;padding:9px;text-align:center}
-.pm-val{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;color:#2d9e6b}
-.pm-lbl{font-size:8px;color:#3d6b54;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
-.fb-pill{background:#0a1510;border-radius:10px;padding:9px 11px;margin-top:7px;display:flex;align-items:center;gap:7px}
-.fb-dot{width:5px;height:5px;background:#2d9e6b;border-radius:50%;flex-shrink:0;animation:pulse 1.5s infinite}
-.fb-txt{font-size:9px;color:#4a9e75}
+.pm{background:#0a1515;border-radius:10px;padding:9px;text-align:center}
+.pm-val{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:600;color:#2a9eb0}
+.pm-lbl{font-size:8px;color:#1b7a8a;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.fb-pill{background:#0a1515;border-radius:10px;padding:9px 11px;margin-top:7px;display:flex;align-items:center;gap:7px}
+.fb-dot{width:5px;height:5px;background:#2a9eb0;border-radius:50%;flex-shrink:0;animation:pulse 1.5s infinite}
+.fb-txt{font-size:9px;color:#2a9eb0}
 .float-card{position:absolute;background:var(--paper);border:1px solid var(--border);border-radius:14px;padding:11px 15px;box-shadow:0 8px 24px rgba(0,0,0,0.07)}
 .fc1{top:18%;right:60%;animation:float 4s ease-in-out infinite}
 .fc2{bottom:22%;right:57%;animation:float 4s ease-in-out infinite .5s}
@@ -41,13 +41,14 @@
 </head>
 <body>
 
-<!-- Demo banner -->
 <div class="demo-banner">
-  🤖 Our AI is live — <a href="session.html">try a real session right now</a> (backend must be running on port 8000)
+  🤖 Our AI is live — <a href="session.html">try a real session right now</a>
 </div>
 
 <nav>
-  <a href="index.html" class="nav-logo">Fix<span>BEE</span></a>
+  <a href="index.html" class="nav-logo">
+    <img src="assets/logo.png" alt="FiixBE" style="height:38px;width:auto;object-fit:contain">
+  </a>
   <div class="nav-links">
     <a href="for-physios.html">For Physios</a>
     <a href="for-patients.html">For Patients</a>
@@ -60,6 +61,7 @@
   <button class="nav-hamburger"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-menu">
+  <a href="index.html"><img src="assets/logo.png" alt="FiixBE" style="height:32px"></a>
   <a href="for-physios.html">For Physios</a>
   <a href="for-patients.html">For Patients</a>
   <a href="session.html">Try demo</a>
@@ -72,14 +74,14 @@
 <section class="hero">
   <div class="hero-bg"></div><div class="hero-grid"></div>
   <div class="hero-anim">
-    <div class="hero-badge"><span class="dot"></span>India's first AI Fixbee platform</div>
+    <div class="hero-badge"><span class="dot"></span>India's first AI physio platform</div>
     <h1>Physiotherapy that <em class="highlight">watches</em> you heal</h1>
     <p class="lead">Real-time AI form correction, rep counting, and remote physio monitoring — making quality rehabilitation accessible to every patient in India.</p>
     <div class="btn-actions">
       <a href="session.html" class="btn-primary">Try live demo →</a>
       <a href="contact.html" class="btn-secondary">Request a demo</a>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:12px">⚡ Live AI session — no signup needed. Backend must be running locally.</p>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px">⚡ No signup needed — just allow camera access</p>
   </div>
   <div class="hero-visual">
     <div class="float-card fc1"><div class="fc-lbl">Session score</div><div class="fc-val">92<span style="font-size:13px;color:var(--muted)">/100</span></div><div class="fc-sub">↑ 8pts from last session</div></div>
@@ -124,7 +126,7 @@
         <div class="card reveal"><span class="card-icon">📍</span><h3>Geography is a barrier</h3><p>Tier 2 and 3 cities have almost no qualified physiotherapists. Rural patients have zero access.</p></div>
       </div>
       <div class="reveal" style="background:var(--ink);border-radius:24px;padding:40px;color:var(--paper)">
-        <h3 style="color:var(--paper);margin-bottom:14px;font-size:26px">PhysioAI fixes all of this</h3>
+        <h3 style="color:var(--paper);margin-bottom:14px;font-size:26px">FiixBE fixes all of this</h3>
         <p style="color:rgba(245,242,235,0.65);font-size:15px;line-height:1.7;margin-bottom:24px">We put an AI physiotherapist in every patient's pocket. Real-time pose detection watches every rep and sends the data straight to the physio.</p>
         <ul class="feat-list dark">
           <li>AI watches patient form in real-time via phone camera</li>
@@ -199,12 +201,15 @@
 
 <footer class="footer"><div class="container">
   <div class="footer-top">
-    <div><span class="footer-logo">Physio<span>AI</span></span><p class="footer-tagline">AI-powered physiotherapy for every Indian. Making quality rehabilitation accessible and affordable.</p></div>
+    <div>
+      <div class="footer-logo"><img src="assets/logo.png" alt="FiixBE" style="height:40px;filter:brightness(0) invert(1)"></div>
+      <p class="footer-tagline">AI-powered physiotherapy for every Indian. Making quality rehabilitation accessible and affordable.</p>
+    </div>
     <div class="footer-col"><h4>Product</h4><a href="for-physios.html">For Physios</a><a href="for-patients.html">For Patients</a><a href="session.html">Try demo</a><a href="pricing.html">Pricing</a></div>
     <div class="footer-col"><h4>Company</h4><a href="about.html">About</a><a href="blog.html">Blog</a><a href="contact.html">Contact</a></div>
-    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@physioai.in">hello@physioai.in</a><a href="#">Mumbai, India 🇮🇳</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="mailto:hello@fiixbe.in">hello@fiixbe.in</a><a href="#">Mumbai, India 🇮🇳</a></div>
   </div>
-  <div class="footer-bottom"><p>© 2025 Fixbee. All rights reserved.</p><p>Made with ❤️ in Mumbai</p></div>
+  <div class="footer-bottom"><p>© 2025 FiixBE. All rights reserved.</p><p>Made with ❤️ in Mumbai</p></div>
 </div></footer>
 <script src="assets/nav.js"></script>
 </body></html>
