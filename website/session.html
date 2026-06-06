@@ -519,11 +519,46 @@ async function startSession(){
   cnv.width=vid.videoWidth||480; cnv.height=vid.videoHeight||360;
   vid.style.display='none';
 
-  ws=new WebSocket(`${WS_BASE}/${selEx}/${selSide}?reps_target=${selReps}`);
-  ws.onopen=()=>{ isRunning=true; setConn(true,'live · AI watching'); startSendLoop(); setFeedback('Session started — get into position!',''); };
-  ws.onmessage=(e)=>{ try{ const d=JSON.parse(e.data); if(d.error){ setFeedback(d.error,'error'); return; } updateUI(d); }catch(ex){} };
-  ws.onclose=()=>{ setConn(false,'disconnected'); cleanupSession(); };
-  ws.onerror=()=>{ setFeedback('Cannot connect to AI backend. Please try again.','error'); setConn(false,'connection failed'); cleanupSession(); };
+  let retryCount=0;
+  const maxRetries=5;
+
+  function connectWS(){
+    ws=new WebSocket(`${WS_BASE}/${selEx}/${selSide}?reps_target=${selReps}`);
+    ws.onopen=()=>{
+      retryCount=0;
+      isRunning=true;
+      setConn(true,'live · AI watching');
+      startSendLoop();
+      setFeedback('Session started — get into position!','');
+    };
+    ws.onmessage=(e)=>{ try{ const d=JSON.parse(e.data); if(d.error){ setFeedback(d.error,'error'); return; } updateUI(d); }catch(ex){} };
+    ws.onclose=()=>{
+      if(isRunning && retryCount<maxRetries){
+        retryCount++;
+        const wait=retryCount*3;
+        setConn(false,`backend waking up... (${retryCount}/${maxRetries})`);
+        setFeedback(`⏳ Backend is waking up from sleep. Retrying in ${wait}s... (${retryCount}/${maxRetries})`,'warning');
+        setTimeout(connectWS, wait*1000);
+      } else {
+        setConn(false,'disconnected');
+        cleanupSession();
+      }
+    };
+    ws.onerror=()=>{
+      if(retryCount<maxRetries){
+        retryCount++;
+        const wait=retryCount*3;
+        setConn(false,`waking up... retry ${retryCount}/${maxRetries}`);
+        setFeedback(`⏳ Backend is starting up (free tier takes ~30s). Retrying in ${wait}s...`,'warning');
+        setTimeout(connectWS, wait*1000);
+      } else {
+        setFeedback('❌ Cannot connect after 5 attempts. Check your connection or try again later.','error');
+        setConn(false,'connection failed');
+        cleanupSession();
+      }
+    };
+  }
+  connectWS();
 }
 
 function startSendLoop(){
