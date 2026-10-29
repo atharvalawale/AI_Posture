@@ -23,20 +23,20 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
   }, [active]);
 
   return (
-    <div className="flex h-full flex-col bg-bg px-5 pb-5 pt-[44px] text-text">
+    <div className="flex h-full flex-col bg-bg px-4 pb-4 pt-[44px] text-text">
       <div className="flex items-center justify-between">
-        <p className="text-[13px] text-muted">Tuesday</p>
-        <Image src="/images/avatars/riya.webp" alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+        <p className="pl-1 text-[13px] text-muted">Tuesday</p>
+        <Image src="/images/avatars/riya.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
       </div>
-      <p className="mt-3 text-[26px] font-semibold leading-[1.1] tracking-[-0.02em]">Good morning, Riya</p>
-      <p className="mt-1.5 text-sm text-muted">Week 3 of your knee recovery plan</p>
+      <p className="mt-2.5 px-1 text-[26px] font-semibold leading-[1.1] tracking-[-0.02em]">Good morning, Riya</p>
+      <p className="mt-1.5 px-1 text-sm text-muted">Week 3 of your knee recovery plan</p>
 
-      <ul className="mt-5 grid gap-2">
+      <ul className="mt-4 grid gap-2">
         {ITEMS.map((item, i) => {
           const checked = i === 0 && done;
           return (
-            <li key={item.name} className="flex items-center gap-3 rounded-[14px] border border-line bg-surface p-3">
-              <Image src={item.img} alt="" width={46} height={46} className="h-[46px] w-[46px] rounded-[10px] object-cover" />
+            <li key={item.name} className="flex items-center gap-3 rounded-[14px] border border-line bg-surface p-2.5 pr-3">
+              <Image src={item.img} alt="" width={46} height={46} unoptimized className="h-[46px] w-[46px] rounded-[10px] object-cover" />
               <div className={`flex-1 text-sm font-semibold transition-colors duration-300 ${checked ? "text-muted" : ""}`}>
                 {item.name}
                 <span className="mt-0.5 block text-xs font-normal text-muted">{item.dose}</span>
@@ -56,7 +56,7 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
 
       <div className="mt-auto rounded-2xl bg-surface-2 p-3.5 text-[13px] leading-[1.45]">
         <div className="mb-2 flex items-center gap-2.5 font-semibold">
-          <Image src="/images/avatars/physio.webp" alt="" width={30} height={30} className="h-[30px] w-[30px] rounded-full object-cover" />
+          <Image src="/images/avatars/physio.webp" alt="" width={30} height={30} unoptimized className="h-[30px] w-[30px] rounded-full object-cover" />
           Your physio
         </div>
         Your depth is much better this week. I have added split squats. Go slow on the way down.

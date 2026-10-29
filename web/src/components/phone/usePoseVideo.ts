@@ -44,7 +44,7 @@ export function usePoseVideo(
     let shown = 0;
     let drawn = { t: -1, w: 0, h: 0, dpr: 0 };
     const counter = new RepCounter();
-    const hasFrameCallback = "requestVideoFrameCallback" in video;
+    const hasFrameCallback = typeof video.requestVideoFrameCallback === "function";
     const raf$ = window.requestAnimationFrame?.bind(window) ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
     const caf$ = window.cancelAnimationFrame?.bind(window) ?? window.clearTimeout;
 

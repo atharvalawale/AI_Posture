@@ -16,21 +16,22 @@ export function Phone2DStage({ progress, screen, width, still = false }: { progr
     const el = ref.current;
     if (!el || still) return;
     let raf = 0;
-    let visible = true;
-    const loop = (now: number) => {
-      const { x, y } = tiltAt(progress.current, now / 1000);
+    const apply = () => {
+      raf = 0;
+      const { x, y } = tiltAt(progress.current);
       // CSS rotateX runs the other way round from three.js, rotateY the same way.
       el.style.transform = `perspective(1800px) rotateX(${(-x).toFixed(4)}rad) rotateY(${y.toFixed(4)}rad)`;
-      raf = visible ? requestAnimationFrame(loop) : 0;
     };
-    const io = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible && !raf) raf = requestAnimationFrame(loop);
-    });
-    io.observe(el);
-    raf = requestAnimationFrame(loop);
+    // Scroll drives the tilt, so update once per frame while scrolling and rest otherwise.
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
     return () => {
-      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
       el.style.transform = "";
     };

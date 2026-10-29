@@ -55,3 +55,22 @@ test("3D phone loads and the scroll story walks through the three screens", asyn
   await expect(title("Good morning, Riya")).toBeVisible();
   await expect(title("Session complete")).toHaveCount(0);
 });
+
+test("the 3D phone comes back after navigating away and back", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect(page.locator('[data-phone="3d"]')).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Pricing" }).click();
+  await expect(page).toHaveURL(/\/pricing$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+
+  await expect(page.locator('[data-phone="3d"]').filter({ visible: true })).toHaveAttribute("data-ready", "true");
+  await expect(page.locator("canvas[data-engine]").filter({ visible: true })).toHaveCount(1);
+  await scrollStory(page, 0.5);
+  await expect(page.getByText("Session complete", { exact: true }).filter({ visible: true })).toBeVisible();
+  expect(errors).toEqual([]);
+});

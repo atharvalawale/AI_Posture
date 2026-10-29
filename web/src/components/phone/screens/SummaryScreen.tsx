@@ -50,7 +50,7 @@ export function SummaryScreen({ active = true }: { active?: boolean }) {
       </dl>
 
       <div className="mt-auto flex items-center gap-2.5 rounded-[14px] border border-line bg-surface px-3.5 py-3 text-[13px]">
-        <Image src="/images/avatars/physio.webp" alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
+        <Image src="/images/avatars/physio.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
         Sent to your physio
       </div>
     </div>

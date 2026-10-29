@@ -1,14 +1,13 @@
 "use client";
 
 import { Html } from "@react-three/drei";
-import { forwardRef, useMemo, type ReactNode } from "react";
-import { ExtrudeGeometry, Shape, ShapeGeometry, type Group } from "three";
-import { PHONE_H, PHONE_W, SCREEN_H, SCREEN_RADIUS, SCREEN_W } from "@/components/phone/PhoneFrame";
+import { forwardRef, useMemo, type ReactNode, type RefObject } from "react";
+import { ExtrudeGeometry, NoBlending, Shape, ShapeGeometry, type Group } from "three";
+import { PHONE_H, PHONE_W } from "@/components/phone/PhoneFrame";
 
 /** World units per CSS pixel of the 2D design, so the 3D phone matches the 2D one exactly. */
 const U = 0.075 / PHONE_W;
 export const BODY = { w: PHONE_W * U, h: PHONE_H * U, d: 0.0085, r: 48 * U };
-const SCREEN = { w: SCREEN_W * U, h: SCREEN_H * U, r: SCREEN_RADIUS * U };
 const EDGE = { size: 0.0016, thickness: 0.0019 };
 
 function roundedRect(w: number, h: number, r: number): Shape {
@@ -48,13 +47,20 @@ function slab(w: number, h: number, r: number, d: number, edge = EDGE): ExtrudeG
  * `occlude="blending"` the page shows the DOM through a hole cut in the canvas, so the body
  * hides the screen whenever the back faces the camera.
  */
-export const PhoneModel = forwardRef<Group, { children: ReactNode }>(function PhoneModel({ children }, ref) {
+type Props = {
+  children: ReactNode;
+  /** Element the screen DOM is appended to. A stable element avoids drei re-creating it on mount. */
+  portal?: RefObject<HTMLElement | null>;
+};
+
+export const PhoneModel = forwardRef<Group, Props>(function PhoneModel({ children, portal }, ref) {
   const geo = useMemo(() => {
     const bump = { w: 0.0215, h: 0.0335, r: 0.0072 };
     return {
       body: slab(BODY.w, BODY.h, BODY.r, BODY.d),
-      glass: new ShapeGeometry(roundedRect(BODY.w - EDGE.size * 2 + 0.0003, BODY.h - EDGE.size * 2 + 0.0003, BODY.r - EDGE.size), 24),
-      screen: new ShapeGeometry(roundedRect(SCREEN.w, SCREEN.h, SCREEN.r), 24),
+      // The flat front glass, inside the rounded metal rim. Used for the back panel, and as the
+      // hole the front face DOM shows through.
+      glass: new ShapeGeometry(roundedRect(BODY.w - EDGE.size * 2, BODY.h - EDGE.size * 2, BODY.r - EDGE.size), 32),
       bump: slab(bump.w, bump.h, bump.r, 0.0024, { size: 0.0007, thickness: 0.0008 }),
       bumpSize: bump,
     };
@@ -71,11 +77,6 @@ export const PhoneModel = forwardRef<Group, { children: ReactNode }>(function Ph
     <group ref={ref}>
       <mesh geometry={geo.body} castShadow>
         {frame}
-      </mesh>
-
-      {/* Front glass, black, with a faint clear coat so the bezel catches the light. */}
-      <mesh geometry={geo.glass} position={[0, 0, z + 0.00002]}>
-        <meshPhysicalMaterial color="#050607" roughness={0.14} metalness={0} clearcoat={1} clearcoatRoughness={0.06} envMapIntensity={0.7} />
       </mesh>
 
       {/* Back panel: frosted glass, a shade lighter than the frame. */}
@@ -113,15 +114,23 @@ export const PhoneModel = forwardRef<Group, { children: ReactNode }>(function Ph
         </mesh>
       ))}
 
-      {/* The screen. 1 CSS pixel = U world units: distanceFactor maps Html pixels to units. */}
+      {/*
+        The whole front face (black bezel and screen) is DOM, 300 x 630 CSS px like the 2D phone,
+        shown through a hole the size of the front glass. The DOM is larger than the hole, so the
+        tiny differences between the CSS and WebGL projections land on black bezel, never on the
+        page behind. 1 CSS pixel = U world units: distanceFactor maps Html pixels to units.
+      */}
       <Html
         transform
         occlude="blending"
-        geometry={geo.screen}
+        portal={portal as RefObject<HTMLElement>}
+        geometry={<primitive object={geo.glass} attach="geometry" />}
+        // Writes transparent pixels with no blending, so the hole shows the DOM whatever drew there first.
+        material={<meshBasicMaterial color="#000000" opacity={0} blending={NoBlending} />}
         distanceFactor={400 * U}
         position={[0, 0, z + 0.0001]}
         zIndexRange={[10, 0]}
-        style={{ width: SCREEN_W, height: SCREEN_H, backfaceVisibility: "hidden" }}
+        style={{ width: PHONE_W, height: PHONE_H, backfaceVisibility: "hidden" }}
       >
         {children}
       </Html>

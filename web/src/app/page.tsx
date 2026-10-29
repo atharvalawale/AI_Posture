@@ -1,24 +1,26 @@
-import { Button } from "@/components/ui/Button";
-import { Container } from "@/components/ui/Container";
-import { site } from "@/lib/site";
+import { BothSides } from "@/components/home/BothSides";
+import { ClosingCta } from "@/components/home/ClosingCta";
+import { Hero } from "@/components/home/Hero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { Problem } from "@/components/home/Problem";
+import { PhoneStage, type StageNote } from "@/components/phone-stage/PhoneStage";
 
-// Placeholder until Task 5 builds the homepage.
+const notes: StageNote[] = [
+  { title: "Counts every rep", body: "Only full, controlled reps count.", screen: "live" },
+  { title: "Measures your joints", body: "Knee, hip and shoulder angles, on every rep.", screen: "live" },
+  { title: "Corrects you out loud", body: "“Lower slowly.” “Good depth, hold.” Then a score for your form.", screen: "summary" },
+  { title: "Keeps your physio close", body: "They review each session and adjust your plan.", screen: "plan" },
+];
+
 export default function HomePage() {
   return (
-    <Container className="py-24 text-center">
-      <h1 className="mx-auto max-w-3xl font-serif text-[44px] leading-[1.02] tracking-[-0.02em] md:text-[68px]">
-        See every degree of your recovery.
-      </h1>
-      <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted">
-        Your physiotherapist sets the plan. FiixBE watches every rep through your phone camera and reports back to them.
-      </p>
-      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-        <Button href="/session">Start your recovery</Button>
-        <Button href="/for-physios" variant="line">
-          For physiotherapists
-        </Button>
-      </div>
-      <p className="mt-5 text-sm text-muted">{site.appsComingSoon}</p>
-    </Container>
+    <>
+      <Hero />
+      <PhoneStage notes={notes} />
+      <Problem />
+      <HowItWorks />
+      <BothSides />
+      <ClosingCta />
+    </>
   );
 }

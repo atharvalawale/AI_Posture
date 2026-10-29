@@ -41,8 +41,10 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): { pro
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        let story: ScrollTrigger | undefined;
+        // The enter trigger can report before the story trigger exists, so hold it in a box.
+        const box: { story?: ScrollTrigger } = {};
         const sync = (enter: ScrollTrigger) => {
+          const story = box.story;
           const p = story && story.progress > 0 ? story.progress : enter.progress - 1;
           progress.current = p;
           setScreen(screenAt(Math.max(0, p)));
@@ -55,7 +57,7 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): { pro
           onUpdate: (self) => sync(self),
           onRefresh: (self) => sync(self),
         });
-        story = ScrollTrigger.create({
+        box.story = ScrollTrigger.create({
           trigger: el,
           start: () => `top ${headerHeight()}px`,
           end: () => `+=${Math.round(window.innerHeight * STORY_LENGTH)}`,
