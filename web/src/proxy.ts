@@ -8,8 +8,9 @@ const known = new Set<string>(slugs);
 export function proxy(request: NextRequest) {
   const slug = decodeURIComponent(request.nextUrl.pathname.slice("/blog/".length)).replace(/\/$/, "");
   if (known.has(slug)) return NextResponse.next();
-  // The prerendered not-found route always answers with status 404 and the site's 404 page.
-  return NextResponse.rewrite(new URL("/_not-found", request.url));
+  // Render the site's 404 page. Set the status explicitly: Vercel serves the prerendered
+  // not-found route with 200 when it is the target of a rewrite.
+  return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
 }
 
 export const config = {
