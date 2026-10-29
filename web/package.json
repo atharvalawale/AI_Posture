@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "blog:manifest": "node scripts/blog-manifest.mjs",
+    "predev": "node scripts/blog-manifest.mjs",
+    "prebuild": "node scripts/blog-manifest.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

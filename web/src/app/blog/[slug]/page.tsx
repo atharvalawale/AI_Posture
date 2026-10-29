@@ -117,7 +117,7 @@ export default async function ArticlePage({ params }: Props) {
           </section>
 
           <aside className="mt-16 rounded-[14px] border border-line bg-surface p-6 md:p-8">
-            <p className="font-serif text-[24px] leading-tight tracking-[-0.015em] md:text-[28px]">Exercise with your physio's plan, at home.</p>
+            <p className="font-serif text-[24px] leading-tight tracking-[-0.015em] md:text-[28px]">Exercise with your physio&rsquo;s plan, at home.</p>
             <p className="mt-3 text-[16px] leading-relaxed text-muted">
               FiixBE counts your reps and checks your form through your camera, then shares each session with your physiotherapist.
             </p>
