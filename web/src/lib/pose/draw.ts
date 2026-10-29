@@ -1,5 +1,5 @@
 import { EDGES, JOINTS, keypoint, type PoseClip } from "./clip";
-import type { Box } from "./geometry";
+import { jointAngle, type Box } from "./geometry";
 
 // Fixed in both themes: the video decides legibility, not the page.
 const LINE = "#5ED6C6";
@@ -63,5 +63,54 @@ export function drawSkeleton(ctx: CanvasRenderingContext2D, clip: PoseClip, t: n
     ctx.strokeStyle = JOINT;
     ctx.lineWidth = 1.5;
     ctx.stroke();
+  }
+}
+
+/** The joints the tracking view measures, on the side facing the camera: [name, a, vertex, c]. */
+export const MEASURED: [string, number, number, number][] = [
+  ["Shoulder", 13, 11, 23],
+  ["Hip", 11, 23, 25],
+  ["Knee", 23, 25, 27],
+];
+
+/**
+ * Labels each measured joint with its angle at time `t`, on a dark plate just outside the
+ * angle, so the label never sits on the limbs. `font` is a CSS font family.
+ */
+export function drawAngleLabels(ctx: CanvasRenderingContext2D, clip: PoseClip, t: number, box: Box, font: string): void {
+  const at = (k: number): [number, number] => {
+    const p = keypoint(clip, t, k);
+    return [box.ox + p[0] * box.w, box.oy + p[1] * box.h];
+  };
+  ctx.font = `600 11px ${font}`;
+  ctx.textBaseline = "middle";
+  for (const [name, a, b, c] of MEASURED) {
+    const [bx, by] = at(b);
+    const [ax, ay] = at(a);
+    const [cx, cy] = at(c);
+    // Away from the middle of the two limbs.
+    const ua = Math.hypot(ax - bx, ay - by) || 1;
+    const uc = Math.hypot(cx - bx, cy - by) || 1;
+    let dx = -((ax - bx) / ua + (cx - bx) / uc);
+    let dy = -((ay - by) / ua + (cy - by) / uc);
+    const d = Math.hypot(dx, dy);
+    // A straight limb has no inside: put the label to the side.
+    if (d < 0.2) [dx, dy] = [1, 0];
+    else [dx, dy] = [dx / d, dy / d];
+
+    const text = `${name} ${Math.round(jointAngle(clip, t, a, b, c))}°`;
+    const w = ctx.measureText(text).width + 12;
+    const h = 20;
+    const x = bx + dx * 22 - w / 2 + dx * (w / 2 - 6);
+    const y = by + dy * 22 - h / 2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 6);
+    ctx.fillStyle = "rgba(10,14,15,.82)";
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = LINE;
+    ctx.stroke();
+    ctx.fillStyle = JOINT;
+    ctx.fillText(text, x + 6, y + h / 2 + 0.5);
   }
 }

@@ -6,17 +6,20 @@ import { usePoseVideo } from "../usePoseVideo";
 // Overlay colors sit on top of video, so they stay the same in both themes (like the skeleton).
 const OVERLAY = "bg-[rgba(10,14,15,.72)]";
 
-/** The live session: the squat clip with real pose tracking, rep count and spoken cue. */
-export function LiveScreen({ active = true }: { active?: boolean }) {
+/**
+ * The live session: the squat clip with real pose tracking, rep count and spoken cue.
+ * `tracking` dims the picture and labels the measured joints with their angles.
+ */
+export function LiveScreen({ active = true, tracking = false }: { active?: boolean; tracking?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { angle, reps, cue, playing } = usePoseVideo(videoRef, canvasRef, { active });
+  const { angle, reps, cue, playing } = usePoseVideo(videoRef, canvasRef, { active, tracking });
 
   return (
-    <div className="absolute inset-0 bg-[#1c2224] text-[#EEF2F1]" data-playing={playing}>
+    <div className="absolute inset-0 bg-[#1c2224] text-[#EEF2F1]" data-playing={playing} data-tracking={tracking}>
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
+        className={`absolute inset-0 h-full w-full object-cover transition-[filter] duration-500 ${tracking ? "brightness-[.38] saturate-[.2]" : ""}`}
         src="/media/squat-720.mp4"
         poster="/media/squat-poster.jpg"
         muted

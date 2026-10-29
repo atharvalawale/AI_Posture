@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import fixture from "../../../public/media/squat.pose.json";
-import { EDGES, JOINTS, drawSkeleton, type PoseClip } from "./index";
+import { EDGES, JOINTS, MEASURED, drawAngleLabels, drawSkeleton, type PoseClip } from "./index";
 
 const clip = fixture as PoseClip;
 
@@ -49,5 +49,19 @@ describe("drawSkeleton", () => {
     drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 160, h: 300 });
     expect(widths[0]).toBe(4.5);
     expect(widths[1]).toBe(2);
+  });
+});
+
+describe("drawAngleLabels", () => {
+  it("labels each measured joint with its angle in whole degrees", () => {
+    const { ctx } = fakeContext();
+    const texts: string[] = [];
+    Object.assign(ctx, {
+      measureText: (t: string) => ({ width: t.length * 6 }),
+      fillText: (t: string) => texts.push(t),
+    });
+    drawAngleLabels(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, "sans-serif");
+    expect(texts).toHaveLength(MEASURED.length);
+    for (const [i, [name]] of MEASURED.entries()) expect(texts[i]).toMatch(new RegExp(`^${name} \\d{1,3}°$`));
   });
 });

@@ -1,11 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { LiveScreen } from "./screens/LiveScreen";
 import { PlanScreen } from "./screens/PlanScreen";
 import { SummaryScreen } from "./screens/SummaryScreen";
 import type { ScreenId } from "./PhoneFrame";
 
-const SCREENS: { id: ScreenId; label: string; Component: typeof LiveScreen }[] = [
+const SCREENS: { id: ScreenId; label: string; Component: (props: { active?: boolean; tracking?: boolean }) => ReactNode }[] = [
   { id: "live", label: "Live session", Component: LiveScreen },
   { id: "summary", label: "Session summary", Component: SummaryScreen },
   { id: "plan", label: "Today's plan", Component: PlanScreen },
@@ -14,9 +15,9 @@ const SCREENS: { id: ScreenId; label: string; Component: typeof LiveScreen }[] =
 /**
  * All three app screens stacked, cross-fading to `screen` over 250 ms.
  * Hidden screens get `visibility: hidden` once faded, so they leave the accessibility tree,
- * and `active={false}`, so the hidden video pauses.
+ * and `active={false}`, so the hidden video pauses. `tracking` switches the live screen's tracking view.
  */
-export function ScreenStack({ screen }: { screen: ScreenId }) {
+export function ScreenStack({ screen, tracking = false }: { screen: ScreenId; tracking?: boolean }) {
   return (
     <>
       {SCREENS.map(({ id, label, Component }) => {
@@ -29,7 +30,7 @@ export function ScreenStack({ screen }: { screen: ScreenId }) {
             data-screen={id}
             className={`absolute inset-0 transition-[opacity,visibility] duration-250 ease-out motion-reduce:transition-none ${on ? "visible opacity-100" : "invisible opacity-0"}`}
           >
-            <Component active={on} />
+            <Component active={on} tracking={tracking} />
           </section>
         );
       })}

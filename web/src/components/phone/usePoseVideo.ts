@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
-import { RepCounter, coverBox, drawSkeleton, kneeAngle, loadPoseClip, type Cue, type PoseClip } from "@/lib/pose";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { RepCounter, coverBox, drawAngleLabels, drawSkeleton, kneeAngle, loadPoseClip, type Cue, type PoseClip } from "@/lib/pose";
 
 export type PoseVideoState = { angle: number | null; reps: number; cue: Cue; playing: boolean };
 
@@ -11,6 +11,8 @@ type Options = {
   /** The video's object-position as fractions, so the skeleton lines up with `object-fit: cover`. */
   position?: [number, number];
   url?: string;
+  /** Labels the measured joints with their angles. */
+  tracking?: boolean;
 };
 
 const INITIAL: PoseVideoState = { angle: null, reps: 0, cue: "Stand tall to begin", playing: false };
@@ -24,10 +26,15 @@ const INITIAL: PoseVideoState = { angle: null, reps: 0, cue: "Stand tall to begi
 export function usePoseVideo(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
-  { active = true, position = [0.5, 0.5], url }: Options = {},
+  { active = true, position = [0.5, 0.5], url, tracking = false }: Options = {},
 ): PoseVideoState {
   const [state, setState] = useState<PoseVideoState>(INITIAL);
   const [posX, posY] = position;
+  // A ref, so switching the labels redraws without restarting the video or the rep count.
+  const labels = useRef(tracking);
+  useEffect(() => {
+    labels.current = tracking;
+  }, [tracking]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -42,7 +49,9 @@ export function usePoseVideo(
     let raf = 0;
     let vfc = 0;
     let shown = 0;
-    let drawn = { t: -1, w: 0, h: 0, dpr: 0 };
+    let drawn = { t: -1, w: 0, h: 0, dpr: 0, labels: false };
+    // next/font gives the family a generated name, so read it from the page.
+    const font = getComputedStyle(canvas).fontFamily || "sans-serif";
     const counter = new RepCounter();
     const hasFrameCallback = typeof video.requestVideoFrameCallback === "function";
     const raf$ = window.requestAnimationFrame?.bind(window) ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
@@ -78,12 +87,14 @@ export function usePoseVideo(
         canvas.height = Math.round(h * dpr);
       }
       const t = hasFrameCallback ? shown : video.currentTime;
-      if (t !== drawn.t || w !== drawn.w || h !== drawn.h || dpr !== drawn.dpr) {
-        drawn = { t, w, h, dpr };
+      if (t !== drawn.t || w !== drawn.w || h !== drawn.h || dpr !== drawn.dpr || labels.current !== drawn.labels) {
+        drawn = { t, w, h, dpr, labels: labels.current };
         clear();
         if (started && clip && w && h) {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          drawSkeleton(ctx, clip, t, coverBox(w, h, clip.w, clip.h, posX, posY), { arcAt: 25 });
+          const box = coverBox(w, h, clip.w, clip.h, posX, posY);
+          drawSkeleton(ctx, clip, t, box, { arcAt: 25 });
+          if (labels.current) drawAngleLabels(ctx, clip, t, box, font);
           const angle = kneeAngle(clip, t);
           const { reps, cue } = counter.update(angle);
           update({ angle: Math.round(angle), reps, cue });

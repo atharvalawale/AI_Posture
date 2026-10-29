@@ -8,6 +8,7 @@ import { BEZEL, PHONE_H, PHONE_W, ScreenSurface, type ScreenId } from "@/compone
 import { ScreenStack } from "@/components/phone/ScreenStack";
 import { BODY, PhoneModel } from "./PhoneModel";
 import { tiltAt } from "./tilt";
+import type { Spin } from "./useSpin";
 
 const FOV = 18;
 /**
@@ -24,9 +25,13 @@ const ELEVATION = 9;
 type Props = {
   progress: MutableRefObject<number>;
   screen: ScreenId;
+  /** Shows the live screen's tracking view. */
+  tracking: boolean;
   /** On-screen phone width in CSS pixels. The canvas is larger so the phone can tilt. */
   phoneWidth: number;
   dark: boolean;
+  /** The visitor's own turn of the phone, added on top of the scroll tilt. */
+  spin: Pick<Spin, "state" | "subscribe">;
   onReady: () => void;
 };
 
@@ -99,8 +104,16 @@ function SoftShadow({ dark }: { dark: boolean }) {
   );
 }
 
-function Phone({ progress, screen, onReady, portal }: Pick<Props, "progress" | "screen" | "onReady"> & { portal: RefObject<HTMLDivElement | null> }) {
+function Phone({
+  progress,
+  screen,
+  tracking,
+  spin,
+  onReady,
+  portal,
+}: Pick<Props, "progress" | "screen" | "tracking" | "spin" | "onReady"> & { portal: RefObject<HTMLDivElement | null> }) {
   const group = useRef<Group>(null);
+  const turn = useRef<Group>(null);
   const frames = useRef(0);
   const invalidate = useThree((s) => s.invalidate);
 
@@ -108,13 +121,19 @@ function Phone({ progress, screen, onReady, portal }: Pick<Props, "progress" | "
   useEffect(() => {
     const onScroll = () => invalidate();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [invalidate]);
+    const unsubscribe = spin.subscribe(invalidate);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      unsubscribe();
+    };
+  }, [invalidate, spin]);
 
   // Priority -1 runs before drei's Html, so the screen DOM and the model move in the same frame.
   useFrame((state, dt) => {
     const g = group.current;
     if (!g) return;
+    // The visitor's turn is already smoothed by its spring, so it applies directly.
+    turn.current?.rotation.set(spin.state.current.x, spin.state.current.y, 0);
     const target = tiltAt(progress.current);
     // Damped, so a fast flick of the scroll wheel still reads as smooth motion.
     const k = Math.min(dt, 1 / 30);
@@ -133,13 +152,15 @@ function Phone({ progress, screen, onReady, portal }: Pick<Props, "progress" | "
   }, [progress]);
   return (
     <group scale={WORLD}>
-      <PhoneModel ref={group} portal={portal}>
-        <div className="rounded-[48px] bg-device" style={{ width: PHONE_W, height: PHONE_H, padding: BEZEL }}>
-          <ScreenSurface>
-            <ScreenStack screen={screen} />
-          </ScreenSurface>
-        </div>
-      </PhoneModel>
+      <group ref={turn}>
+        <PhoneModel ref={group} portal={portal}>
+          <div className="rounded-[48px] bg-device" style={{ width: PHONE_W, height: PHONE_H, padding: BEZEL }}>
+            <ScreenSurface>
+              <ScreenStack screen={screen} tracking={tracking} />
+            </ScreenSurface>
+          </div>
+        </PhoneModel>
+      </group>
     </group>
   );
 }
@@ -148,7 +169,7 @@ function Phone({ progress, screen, onReady, portal }: Pick<Props, "progress" | "
  * The 3D phone. Renders only while on screen. Loaded with next/dynamic (ssr: false) so three.js
  * stays out of the first load.
  */
-export default function Phone3D({ progress, screen, phoneWidth, dark, onReady }: Props) {
+export default function Phone3D({ progress, screen, tracking, phoneWidth, dark, spin, onReady }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const phoneHeight = phoneWidth * (BODY.h / BODY.w);
@@ -181,7 +202,7 @@ export default function Phone3D({ progress, screen, phoneWidth, dark, onReady }:
         <ambientLight intensity={0.25} />
         <directionalLight position={[-0.5, 0.7, 1]} intensity={1.4} />
         <directionalLight position={[0.7, 0.25, -0.8]} intensity={dark ? 2.4 : 1.1} />
-        <Phone progress={progress} screen={screen} onReady={onReady} portal={wrap} />
+        <Phone progress={progress} screen={screen} tracking={tracking} spin={spin} onReady={onReady} portal={wrap} />
         <SoftShadow dark={dark} />
       </Canvas>
     </div>
