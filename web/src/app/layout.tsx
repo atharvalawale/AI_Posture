@@ -1,0 +1,37 @@
+import type { Metadata, Viewport } from "next";
+import { fonts } from "./fonts";
+import "./globals.css";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { site } from "@/lib/site";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
+  title: { default: `${site.name} - ${site.tagline}`, template: `%s | ${site.name}` },
+  description:
+    "Your physiotherapist sets the plan. FiixBE watches every rep through your phone camera, corrects your form as you move and reports back to them.",
+  applicationName: site.name,
+  openGraph: { siteName: site.name, type: "website", locale: "en_IN" },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f6f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f10" },
+  ],
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="en" suppressHydrationWarning className={`${fonts.serif.variable} ${fonts.sans.variable}`}>
+      <body className="flex min-h-dvh flex-col">
+        <ThemeProvider>
+          <SiteHeader />
+          <main className="flex flex-1 flex-col">{children}</main>
+          <SiteFooter />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
