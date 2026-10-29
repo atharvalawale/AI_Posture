@@ -49,6 +49,25 @@ const liveTracks = (page: Page) =>
   page.evaluate(() => (window as unknown as { __tracks: MediaStreamTrack[] }).__tracks.filter((t) => t.readyState === "live").length);
 const gumCalls = (page: Page) => page.evaluate(() => (window as unknown as { __gumCalls: number }).__gumCalls);
 
+test("the preview shows how the chosen exercise is tracked, for the chosen side", async ({ page }) => {
+  await page.goto("/session");
+  const preview = page.locator("[data-exercise-preview]");
+  await expect(preview).toHaveAttribute("data-exercise-preview", "knee_extension");
+  await expect(preview.getByText(/^Knee \d+°$/)).toBeVisible();
+
+  await page.getByText("Right", { exact: true }).click();
+  await expect(preview).toHaveAttribute("data-side", "right");
+  // The photo shows a left knee, so the right side is its mirror image.
+  await expect(preview.locator("img")).toHaveClass(/-scale-x-100/);
+  await expect(page.locator("dd").filter({ hasText: /^Right$/ })).toBeVisible();
+
+  // A straight leg raise reads as the lift off the floor, the number its instruction asks for.
+  await page.getByText("Straight leg raise", { exact: true }).click();
+  await expect(preview).toHaveAttribute("data-exercise-preview", "straight_leg_raise");
+  await expect(preview.getByText("Leg 38°")).toBeVisible();
+  await expect(page.locator("dd").filter({ hasText: "Leg angle" })).toBeVisible();
+});
+
 test.describe("with a camera", () => {
   test.use({ permissions: ["camera"] });
 
