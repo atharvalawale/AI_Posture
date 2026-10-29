@@ -5,7 +5,9 @@ const POSE_WS = /\/ws\/pose\//;
 // permission explicitly; the denied test grants nothing, so Chromium refuses the camera for real.
 // (launchOptions can only be set at file level. --use-fake-ui-for-media-stream would auto-accept
 // the prompt and make a real denial impossible, so it is not used here.)
-test.use({ launchOptions: { args: ["--use-fake-device-for-media-stream"] } });
+// The default headless shell rejects every camera request with NotSupportedError unless the fake
+// UI flag is on, so this file runs in the full Chromium build instead.
+test.use({ channel: "chromium", launchOptions: { args: ["--use-fake-device-for-media-stream"] } });
 
 function update(partial: Record<string, unknown>) {
   return JSON.stringify({
@@ -51,6 +53,7 @@ test.describe("with a camera", () => {
   test.use({ permissions: ["camera"] });
 
   test("full session ends in the report", async ({ page }) => {
+    await trackCamera(page);
     let url = "";
     let firstFrame = "";
     await page.routeWebSocket(POSE_WS, (ws) => {

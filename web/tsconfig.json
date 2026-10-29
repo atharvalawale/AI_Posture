@@ -34,15 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    ".next-pages/types/**/*.ts",
-    ".next-pages/dev/types/**/*.ts",
-    ".next-contact/types/**/*.ts",
-    ".next-contact/dev/types/**/*.ts",
-    ".next-blog/types/**/*.ts",
-    ".next-blog/dev/types/**/*.ts",
-    ".next-session/types/**/*.ts",
-    ".next-session/dev/types/**/*.ts"
+    "**/*.mts"
   ],
   "exclude": [
     "node_modules"
