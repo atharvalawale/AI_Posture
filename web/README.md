@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FiixBE website
 
-## Getting Started
+The marketing site and web exercise session for [fiixbee.com](https://fiixbee.com). Built with Next.js 16 (App Router, Cache Components), React 19, TypeScript and Tailwind CSS v4.
 
-First, run the development server:
+Design spec: `../docs/superpowers/specs/2026-10-29-fiixbe-nextjs-website-design.md`.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` and fill in the values. Without `RESEND_API_KEY`, the contact and newsletter forms return an error that tells the visitor to email hello@fiixbee.com.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Test it
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test           # unit tests (Vitest)
+npm run test:e2e   # browser tests (Playwright) against a production build
+npm run typecheck
+npm run lint
+```
 
-## Learn More
+To run the browser tests against a dev server instead, set `E2E_DEV=1`. To run several dev servers side by side, give each one its own `NEXT_DIST_DIR` and `E2E_PORT`.
 
-To learn more about Next.js, take a look at the following resources:
+## Where things live
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Path | What |
+|---|---|
+| `src/app/` | Routes. The homepage is `page.tsx`. API routes are in `api/`. |
+| `src/app/fonts.ts` | The only place fonts are chosen. |
+| `src/app/globals.css` | Color tokens for light and dark mode. Components use tokens only. |
+| `src/components/phone-stage/` | The 3D phone and its scroll story. Homepage only. |
+| `src/components/phone/` | The app screens shown on the phone, shared by the 3D and 2D phone. |
+| `src/components/session/` | The live exercise session. It talks to the pose backend over WebSocket. |
+| `src/lib/pose/` | Pose math: keypoints, joint angles, rep counting, skeleton drawing. |
+| `content/blog/` | Blog posts as Markdown. |
+| `credits/` | Sources and licenses for every photo and video. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Add a blog post
 
-## Deploy on Vercel
+1. Add `content/blog/<slug>.md` with the same frontmatter as the existing posts.
+2. Add its image to `public/images/blog/<slug>.webp` and credit it in `credits/blog.md`.
+3. Run `npm run blog:manifest`. The proxy uses this list to answer unknown slugs with a 404. The build runs it too.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Regenerate the pose data
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The skeleton on the homepage phone is real MediaPipe output for `public/media/squat-720.mp4`.
+
+```bash
+cd scripts/pose
+python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python extract_pose.py ../../public/media/squat-720.mp4 ../../public/media/squat.pose.json
+```
+
+## Environment variables
+
+| Name | Used for |
+|---|---|
+| `RESEND_API_KEY` | Sending contact form mail and adding newsletter contacts. Needs a full access key. |
+| `RESEND_FROM` | Sender, for example `FiixBE website <website@fiixbee.com>`. The domain must be verified in Resend. |
+| `RESEND_AUDIENCE_ID` | The Resend segment that newsletter sign-ups join. |
+| `CONTACT_TO` | Where contact form messages go. Defaults to `hello@fiixbee.com`. |
+| `NEXT_PUBLIC_POSE_WS_URL` | The pose backend WebSocket base URL. Defaults to `wss://ai-posture-backend.onrender.com/ws/pose`. |
+
+## Working on the exFAT drive
+
+The repo lives on an exFAT drive. macOS writes `._*` files next to new files there. Git ignores them, and the Turbopack file-system cache is off because they corrupt it. If something behaves strangely, run:
+
+```bash
+find . -name '._*' -not -path './node_modules/*' -delete
+```
