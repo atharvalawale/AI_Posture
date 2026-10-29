@@ -13,9 +13,6 @@ type Status = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind
 const FIELDS: Field[] = ["name", "email", "role", "message"];
 const EMPTY: Values = { name: "", email: "", role: "", message: "" };
 
-// Error red lives here, not in the global tokens: only forms use it. Both shades pass 4.5:1 on --bg and --surface.
-const theme = "[--danger:#a8382b] dark:[--danger:#ef9a8e]";
-
 const control =
   "block w-full rounded-[10px] border bg-surface px-4 text-[16px] transition-colors placeholder:text-muted focus-visible:border-accent focus-visible:outline-offset-0!";
 
@@ -92,7 +89,7 @@ export function ContactForm() {
 
   if (status.kind === "sent") {
     return (
-      <div className={`${theme} mt-6 rounded-[16px] border border-line bg-surface p-8 md:p-10`}>
+      <div className={`mt-6 rounded-[16px] border border-line bg-surface p-8 md:p-10`}>
         <h2 ref={sentHeadingRef} tabIndex={-1} className="font-serif text-[30px] leading-tight tracking-[-0.015em] focus:outline-none">
           Message sent
         </h2>
@@ -110,7 +107,7 @@ export function ContactForm() {
   const sending = status.kind === "sending";
 
   return (
-    <form noValidate onSubmit={onSubmit} aria-busy={sending} className={`${theme} relative grid gap-6`}>
+    <form noValidate onSubmit={onSubmit} aria-busy={sending} className="relative grid gap-6">
       <p className="-mb-2 text-[15px] text-muted">All fields are required.</p>
       <div className="grid gap-6 sm:grid-cols-2">
         <FormField label="Your name" htmlFor={fieldId("name")} errorId={errorId("name")} error={errors.name}>
@@ -124,7 +121,7 @@ export function ContactForm() {
             onChange={(e) => update("name", e.target.value)}
             aria-invalid={errors.name ? true : undefined}
             aria-describedby={errors.name ? errorId("name") : undefined}
-            className={`${control} h-12 text-text ${errors.name ? "border-(--danger)" : "border-line"}`}
+            className={`${control} h-12 text-text ${errors.name ? "border-danger" : "border-line"}`}
           />
         </FormField>
         <FormField label="Email" htmlFor={fieldId("email")} errorId={errorId("email")} error={errors.email}>
@@ -139,7 +136,7 @@ export function ContactForm() {
             onChange={(e) => update("email", e.target.value)}
             aria-invalid={errors.email ? true : undefined}
             aria-describedby={errors.email ? errorId("email") : undefined}
-            className={`${control} h-12 text-text ${errors.email ? "border-(--danger)" : "border-line"}`}
+            className={`${control} h-12 text-text ${errors.email ? "border-danger" : "border-line"}`}
           />
         </FormField>
       </div>
@@ -153,7 +150,7 @@ export function ContactForm() {
             onChange={(e) => update("role", e.target.value)}
             aria-invalid={errors.role ? true : undefined}
             aria-describedby={errors.role ? errorId("role") : undefined}
-            className={`${control} h-12 cursor-pointer appearance-none pr-11 ${values.role ? "text-text" : "text-muted"} ${errors.role ? "border-(--danger)" : "border-line"}`}
+            className={`${control} h-12 cursor-pointer appearance-none pr-11 ${values.role ? "text-text" : "text-muted"} ${errors.role ? "border-danger" : "border-line"}`}
           >
             <option value="" disabled>
               Choose one
@@ -196,7 +193,7 @@ export function ContactForm() {
           onChange={(e) => update("message", e.target.value)}
           aria-invalid={errors.message ? true : undefined}
           aria-describedby={[`${id}-message-hint`, errors.message ? errorId("message") : ""].filter(Boolean).join(" ")}
-          className={`${control} min-h-40 text-text resize-y py-3 leading-relaxed ${errors.message ? "border-(--danger)" : "border-line"}`}
+          className={`${control} min-h-40 text-text resize-y py-3 leading-relaxed ${errors.message ? "border-danger" : "border-line"}`}
         />
       </FormField>
 
@@ -260,7 +257,7 @@ function FormField({
       )}
       <div className="mt-2">{children}</div>
       {error && (
-        <p id={errorId} className="mt-2 text-sm text-(--danger)">
+        <p id={errorId} className="mt-2 text-sm text-danger">
           {error}
         </p>
       )}
@@ -272,7 +269,7 @@ function Notice({ children }: { children: ReactNode }) {
   return (
     <p
       role="alert"
-      className="rounded-[10px] border border-(--danger) bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-4 py-3 text-[15px] leading-relaxed text-text"
+      className="rounded-[10px] border border-danger bg-danger/8 px-4 py-3 text-[15px] leading-relaxed text-text"
     >
       {children}
     </p>
