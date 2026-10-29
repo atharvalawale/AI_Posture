@@ -70,7 +70,7 @@ export function NewsletterForm() {
           placeholder="you@example.com"
           aria-invalid={invalid}
           aria-describedby={message ? messageId : undefined}
-          className={`h-12 w-full min-w-0 flex-1 rounded-[10px] border bg-bg px-4 text-[16px] text-text placeholder:text-muted ${invalid ? "border-text" : "border-line"}`}
+          className={`h-12 w-full min-w-0 rounded-[10px] sm:flex-1 border bg-bg px-4 text-[16px] text-text placeholder:text-muted ${invalid ? "border-text" : "border-line"}`}
         />
         <Button type="submit" disabled={state.kind === "sending"}>
           {state.kind === "sending" ? "Subscribing" : "Subscribe"}

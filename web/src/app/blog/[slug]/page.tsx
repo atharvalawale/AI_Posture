@@ -12,6 +12,11 @@ import { getAllPosts, getPost } from "@/lib/blog";
 // Typed by hand: generated route types live in each dev server's own dist folder here.
 type Props = { params: Promise<{ slug: string }> };
 
+// Every post is prerendered from generateStaticParams. The page awaits `params` before streaming
+// so an unknown slug returns a real 404 status. Moving that into <Suspense> would make client
+// navigations "instant" but turn the 404 into a 200 with a noindex tag, so we opt out here.
+export const instant = false;
+
 export async function generateStaticParams() {
   const posts = await getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));

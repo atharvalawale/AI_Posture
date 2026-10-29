@@ -24,6 +24,13 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    // In local dev on the exFAT drive, macOS writes "._*" files into the image cache and the
+    // optimizer serves them as images. Skip optimization locally. Vercel builds are unaffected.
+    unoptimized: process.env.NODE_ENV === "development",
+  },
+  // Unknown blog slugs read content/blog at request time, so ship the posts with the server bundle.
+  outputFileTracingIncludes: {
+    "/blog/[slug]": ["./content/blog/**"],
   },
   async redirects() {
     return [

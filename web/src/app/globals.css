@@ -12,6 +12,7 @@
   --muted: #5c6866;
   --accent: #0f6e7c;
   --on-accent: #ffffff;
+  --danger: #b42318;
   --device: #0a0a0a;
   --device-edge: #c9cecc;
   color-scheme: light;
@@ -26,6 +27,7 @@
   --muted: #8d9b99;
   --accent: #6fd0c3;
   --on-accent: #06231f;
+  --danger: #f97066;
   --device: #0a0a0a;
   --device-edge: #2c3638;
   color-scheme: dark;
@@ -40,6 +42,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
   --color-device: var(--device);
   --color-device-edge: var(--device-edge);
   --font-serif: var(--ff-serif), Georgia, serif;

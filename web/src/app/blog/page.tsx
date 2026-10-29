@@ -63,6 +63,7 @@ function FeaturedPost({ post }: { post: PostMeta }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
+      prefetch
       className="group mt-12 grid items-center gap-7 md:mt-16 md:grid-cols-[1.2fr_1fr] md:gap-12 lg:gap-16"
     >
       <div className="relative aspect-[3/2] overflow-hidden rounded-[14px] bg-surface-2">
@@ -93,20 +94,23 @@ function FeaturedPost({ post }: { post: PostMeta }) {
 }
 
 function PostRow({ post }: { post: PostMeta }) {
+  // Small screens: meta spans the row, then title beside a square thumbnail.
+  // From md: image on the left, text column on the right.
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group grid grid-cols-[1fr_88px] items-start gap-5 py-7 sm:grid-cols-[1fr_160px] md:grid-cols-[220px_1fr] md:gap-10 md:py-9"
+      prefetch
+      className="group grid grid-cols-[1fr_76px] items-start gap-x-4 py-7 sm:grid-cols-[1fr_160px] sm:gap-x-6 md:grid-cols-[220px_minmax(0,640px)] md:grid-rows-[auto_auto_auto_1fr] md:gap-x-10 md:py-9"
     >
-      <div className="relative order-2 aspect-square overflow-hidden rounded-[10px] bg-surface-2 sm:aspect-[3/2] md:order-1">
+      <PostMetaLine post={post} className="col-span-2 md:col-span-1 md:col-start-2 md:row-start-1" />
+      <h3 className="col-start-1 row-start-2 mt-2.5 text-pretty font-serif text-[21px] md:text-balance font-normal leading-[1.15] tracking-[-0.015em] decoration-line decoration-1 underline-offset-[5px] group-hover:underline sm:text-[22px] md:col-start-2 md:text-[28px]">
+        {post.title}
+      </h3>
+      <p className="col-start-1 row-start-3 mt-3 hidden text-pretty text-[16px] leading-relaxed text-muted sm:block md:col-start-2">
+        {post.description}
+      </p>
+      <div className="relative col-start-2 row-start-2 row-span-2 mt-3 aspect-square overflow-hidden rounded-[10px] bg-surface-2 sm:aspect-[3/2] md:col-start-1 md:row-start-1 md:row-span-4 md:mt-0">
         <Image src={post.image.src} alt="" fill sizes="(min-width: 768px) 220px, 160px" className="object-cover" />
-      </div>
-      <div className="order-1 md:order-2 md:max-w-[640px]">
-        <PostMetaLine post={post} />
-        <h3 className="mt-2.5 text-balance font-serif text-[22px] font-normal leading-[1.15] tracking-[-0.015em] decoration-line decoration-1 underline-offset-[5px] group-hover:underline md:text-[28px]">
-          {post.title}
-        </h3>
-        <p className="mt-3 hidden text-pretty text-[16px] leading-relaxed text-muted sm:block">{post.description}</p>
       </div>
     </Link>
   );
