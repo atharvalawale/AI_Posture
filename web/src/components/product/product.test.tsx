@@ -23,6 +23,13 @@ describe("RepBars", () => {
     expect(line.style.bottom).toBe("50%");
   });
 
+  it("takes height classes for the chart and its loading state", () => {
+    const { container, rerender } = render(<RepBars depths={[95]} target={100} height="min-h-44 flex-1" />);
+    expect((container.firstElementChild as HTMLElement).className).toContain("min-h-44 flex-1");
+    rerender(<RepBars depths={null} target={100} height="min-h-44 flex-1" />);
+    expect((container.firstElementChild as HTMLElement).className).toContain("min-h-44 flex-1");
+  });
+
   it("shows a loading line when depths are null", () => {
     render(<RepBars depths={null} target={100} />);
     expect(screen.getByText("Loading the session")).toBeTruthy();

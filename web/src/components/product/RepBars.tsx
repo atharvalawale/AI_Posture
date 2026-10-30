@@ -2,7 +2,6 @@
 
 import { reachedCount } from "@/lib/pose";
 
-const HEIGHT = "h-44";
 
 type Props = {
   depths: number[] | null;
@@ -10,12 +9,14 @@ type Props = {
   activeRep?: number | null;
   onRep?: (i: number) => void;
   range?: [number, number];
+  /** Height classes for the chart, labels included. Pass `flex-1` to fill a flex column. */
+  height?: string;
 };
 
-export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 180] }: Props) {
+export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 180], height = "h-44" }: Props) {
   if (!depths) {
     return (
-      <div className={`flex ${HEIGHT} items-center justify-center rounded-xl border border-line`}>
+      <div className={`flex ${height} items-center justify-center rounded-xl border border-line`}>
         <p className="text-[15px] text-muted">Loading the session</p>
       </div>
     );
@@ -26,7 +27,7 @@ export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 
   const targetBottom = `${heightOf(target) * 100}%`;
 
   return (
-    <div className={`relative ${HEIGHT}`}>
+    <div className={`relative ${height}`}>
       <div
         aria-hidden
         data-target-line

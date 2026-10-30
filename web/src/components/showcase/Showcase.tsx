@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useShowcase } from "./useShowcase";
 
 export type ShowcaseItem = { id: string; title: string; body: string; icon?: ReactNode; note?: string };
@@ -16,6 +16,13 @@ type Props = {
 
 const FOCUSABLE = 'a[href], button, input, select, textarea, video[controls], [tabindex]:not([tabindex="-1"])';
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+const PanelActive = createContext(true);
+
+/** True while the panel this is rendered in is the one showing. A panel uses it to pause work, such as a video, while hidden. */
+export function useShowcasePanelActive() {
+  return useContext(PanelActive);
+}
 
 /** A list of items beside one panel. The active item is lifted and its panel shows; hover, tap, focus and arrow keys all change it. */
 export function Showcase({ label, items: allItems, panels: allPanels, layout, autoAdvanceMs, className = "" }: Props) {
@@ -93,14 +100,14 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                 )}
                 <span className="min-w-0">
                   <span className="block text-[17px] font-semibold text-text">{item.title}</span>
-                  <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-muted`}>{item.body}</span>
+                  <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-pretty text-muted`}>{item.body}</span>
                   {item.note && <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[13px] text-muted`}>{item.note}</span>}
                 </span>
               </button>
             );
           })}
         </div>
-        {row && <p className="mt-3 text-[15px] text-muted sm:hidden">{items[active].body}</p>}
+        {row && <p className="mt-3 text-[15px] text-balance text-muted sm:hidden">{items[active].body}</p>}
       </div>
 
       <div className="order-first grid min-w-0 lg:order-none">
@@ -117,7 +124,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
               inert={!on}
               className={`col-start-1 row-start-1 rounded-xl ${focus} transition-opacity duration-300 ${on ? "opacity-100" : "invisible opacity-0"}`}
             >
-              {panel}
+              <PanelActive value={on}>{panel}</PanelActive>
             </div>
           );
         })}

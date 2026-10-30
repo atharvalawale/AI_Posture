@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Showcase } from "./Showcase";
+import { Showcase, useShowcasePanelActive } from "./Showcase";
 
 const items = [
   { id: "a", title: "First", body: "First line" },
@@ -211,6 +211,21 @@ describe("Showcase structure", () => {
     setup();
     fireEvent.keyDown(tab("First"), { key: "ArrowRight", altKey: true });
     expect(selected()[0]).toBe(tab("First"));
+  });
+
+  it("tells each panel whether it is the one showing", () => {
+    function Probe({ name }: { name: string }) {
+      return <p>{`${name} ${useShowcasePanelActive() ? "on" : "off"}`}</p>;
+    }
+    render(
+      <Showcase label="Steps" items={items} layout="steps"
+        panels={[<Probe key="a" name="A" />, <Probe key="b" name="B" />, <Probe key="c" name="C" />]} />,
+    );
+    expect(screen.getByText("A on")).toBeTruthy();
+    expect(screen.getByText("B off")).toBeTruthy();
+    fireEvent.click(tab("Second"));
+    expect(screen.getByText("A off")).toBeTruthy();
+    expect(screen.getByText("B on")).toBeTruthy();
   });
 
   it("makes a panel with nothing focusable reachable", () => {
