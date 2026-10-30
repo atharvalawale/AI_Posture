@@ -11,7 +11,7 @@ import { useShowcasePanelActive } from "@/components/showcase/Showcase";
 export function PracticePanel() {
   const active = useShowcasePanelActive();
   return (
-    <div className="flex h-full items-center justify-center rounded-xl border border-line bg-surface p-5 sm:p-6">
+    <div className="flex h-full items-center justify-center overflow-hidden rounded-xl border border-line bg-surface p-5 sm:p-6">
       <div role="img" aria-label="The FiixBE app during a squat: it counts each rep, measures the knee and says how to fix the form.">
         <PhoneFrame width={220}>
           <LiveScreen active={active} />

@@ -7,6 +7,8 @@ import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
 
 const TARGET = 100;
+// Standing is about 170° and the clip's deepest rep about 95°. This range keeps every bar well clear of both ends, so a few degrees show.
+const RANGE: [number, number] = [70, 140];
 
 /** One rep against the target, in the words the physio reads. */
 function repLine(depth: number, i: number) {
@@ -47,18 +49,26 @@ export function ReviewPanel() {
             </p>
           )}
         </div>
-        <div className="mt-6 flex flex-1 flex-col">
-          <RepBars
-            depths={depths}
-            target={TARGET}
-            activeRep={rep}
-            onRep={(i) => setRep((r) => (r === i ? null : i))}
-            height="min-h-44 flex-1"
-          />
-        </div>
-        <p aria-live="polite" className="mt-4 min-h-6 text-[15px] text-pretty text-muted">
+        <RepBars
+          depths={depths}
+          target={TARGET}
+          activeRep={rep}
+          onRep={(i) => setRep((r) => (r === i ? null : i))}
+          range={RANGE}
+          className="mt-6 h-52"
+        />
+        <p aria-live="polite" className="mt-3 min-h-6 text-[15px] text-pretty text-muted">
           {line}
         </p>
+        <div className="mt-auto pt-5">
+          <div className="flex items-start gap-3 rounded-lg border border-line bg-bg p-3.5">
+            <Image src="/images/avatars/physio.webp" alt="" width={32} height={32} unoptimized className="size-8 shrink-0 rounded-full object-cover" />
+            <div className="min-w-0">
+              <p className="text-[13px] text-muted">Plan updated</p>
+              <p className="mt-0.5 text-[15px] text-text">Added split squats. Go slow on the way down.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

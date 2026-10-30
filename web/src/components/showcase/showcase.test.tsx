@@ -83,6 +83,23 @@ describe("Showcase selection", () => {
     expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("horizontal");
   });
 
+  it("keeps the steps row horizontal on tablets and turns it vertical from 1024 px", () => {
+    const at = (width: number) =>
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: /min-width: (\d+)px/.test(query) && width >= Number(query.match(/min-width: (\d+)px/)![1]),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    at(768);
+    const { unmount } = setup();
+    expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("horizontal");
+    unmount();
+    at(1024);
+    setup();
+    expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("vertical");
+  });
+
   it("selects on focus", () => {
     setup();
     fireEvent.focus(tab("Third"));
@@ -202,7 +219,7 @@ describe("Showcase structure", () => {
     render(<Showcase label="Steps" items={four} panels={[...panels, <p key="d">D</p>]} layout="steps" />);
     const list = screen.getByRole("tablist");
     expect(list.className).not.toContain("grid-cols-3");
-    expect(list.className).not.toContain("sm:grid-cols-1");
+    expect(list.className).not.toContain("lg:grid-cols-1");
     expect(list.getAttribute("aria-orientation")).toBe("vertical");
     expect(screen.getAllByText("First line")).toHaveLength(1);
   });
