@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { MAYA_SESSION, PLAN_ITEMS } from "@/lib/sample";
+import { MAYA, MAYA_SESSION, PLAN_ITEMS } from "@/lib/sample";
 
 /** Today's plan: the exercises the physio set, with a note from them. Squats tick off when the screen shows. */
 export function PlanScreen({ active = true }: { active?: boolean }) {
@@ -24,7 +24,7 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
         <Image src="/images/avatars/maya.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
       </div>
       <p className="mt-2.5 px-1 text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] whitespace-nowrap">Good morning, Maya</p>
-      <p className="mt-1.5 px-1 text-sm text-muted">Week 3 of your knee recovery plan</p>
+      <p className="mt-1.5 px-1 text-sm text-muted">Week {MAYA.week} of your knee recovery plan</p>
 
       <ul className="mt-4 grid gap-2">
         {PLAN_ITEMS.map((item, i) => {

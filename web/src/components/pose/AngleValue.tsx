@@ -1,6 +1,10 @@
 import type { HTMLAttributes } from "react";
 
-type Props = { value: number | null } & HTMLAttributes<HTMLSpanElement> & { [data: `data-${string}`]: unknown };
+type Props = {
+  value: number | null;
+  /** Equal-width digits, for a number that changes while you watch it, so the "°" does not step sideways. */
+  tabular?: boolean;
+} & HTMLAttributes<HTMLSpanElement> & { [data: `data-${string}`]: unknown };
 
 /**
  * A large angle in degrees: the number in the parent's (serif) font with proportional figures, so the digits
@@ -8,10 +12,10 @@ type Props = { value: number | null } & HTMLAttributes<HTMLSpanElement> & { [dat
  * Faint "--" while there is no value, so the placeholder never reads as a number.
  * Size and font come from the parent.
  */
-export function AngleValue({ value, className = "", ...numberProps }: Props) {
+export function AngleValue({ value, tabular = false, className = "", ...numberProps }: Props) {
   return (
     <>
-      <span {...numberProps} className={`proportional-nums ${value === null ? "text-line" : ""} ${className}`}>
+      <span {...numberProps} className={`${tabular ? "tabular-nums" : "proportional-nums"} ${value === null ? "text-line" : ""} ${className}`}>
         {value === null ? "--" : value}
       </span>
       <span

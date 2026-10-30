@@ -9,6 +9,7 @@ import { PoseFigure, figureBounds } from "@/components/pose/PoseFigure";
 import { usePoseClip } from "@/components/pose/usePoseClip";
 import { useShowcasePanelActive } from "@/components/showcase/Showcase";
 import { standingPose, weekDepths } from "@/lib/pose";
+import { MAYA } from "@/lib/sample";
 import { WeekChart } from "./WeekChart";
 
 const panel = "flex h-full rounded-xl border border-line bg-surface p-5 sm:p-6";
@@ -59,11 +60,9 @@ export function GuidePanel() {
   );
 }
 
-/**
- * Maya's week in her knee plan. PlanScreen (step 1) and the rest of the site show her in week 3,
- * squatting to the clip's full depth, so her chart runs weeks 1 to 3 and ends there.
- */
-const MAYA_WEEK = 3;
+// Maya's week in her knee plan, shared with the physio dashboard. She squats to the clip's full depth now,
+// so her chart runs from week 1 to this week and ends there.
+const MAYA_WEEK = MAYA.week;
 
 /** Step 3: Maya's deepest knee bend per week so far, from the same tracked squat as the hero. Sample data. */
 export function ProgressPanel() {

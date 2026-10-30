@@ -54,7 +54,7 @@ export function LiveReadout({ state, onJoint, variant }: Props) {
         style={{ fontSize: full ? "clamp(110px, 12vw, 190px)" : "72px", marginTop: full ? 6 : 0 }}
       >
         {/* Faint while there is nothing to measure yet (the clip is loading), so the placeholder never reads as a value. */}
-        <AngleValue value={state.value} data-readout-value />
+        <AngleValue value={state.value} tabular data-readout-value />
       </div>
       <Track state={state} className={full ? "mt-5" : "mt-3"} />
       {/* Under the phone the phone screen already shows the cue, so the compact readout only announces it. */}
