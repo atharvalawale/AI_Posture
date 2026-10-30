@@ -111,3 +111,26 @@ test("the visitor can turn the phone, see the tracking and jump between screens"
   await page.getByRole("button", { name: "Corrects you out loud" }).click();
   await expect(page.getByText("Session complete", { exact: true }).filter({ visible: true })).toBeVisible();
 });
+
+test("the story releases the pin and the next section follows it", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const stage = page.locator("[data-phone-stage]");
+  await expect(stage).toHaveAttribute("data-story-end", /\d+/);
+  const { start, end, stageTop } = await stage.evaluate((el) => ({
+    start: Number((el as HTMLElement).dataset.storyStart),
+    end: Number((el as HTMLElement).dataset.storyEnd),
+    stageTop: el.getBoundingClientRect().top + window.scrollY,
+  }));
+  const heading = page.locator("#problem-title");
+  const problemTop = await heading.evaluate((el) => el.closest("section")!.getBoundingClientRect().top + window.scrollY);
+  // The pin spacer pushes the next section down by the whole story length.
+  expect(problemTop - stageTop).toBeGreaterThanOrEqual(end - start);
+  await page.evaluate((y) => window.scrollTo(0, y), end + 200);
+  await expect(heading).toBeInViewport();
+  const covered = await heading.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return !el.contains(document.elementFromPoint(r.left + 8, r.top + r.height / 2));
+  });
+  expect(covered).toBe(false);
+});

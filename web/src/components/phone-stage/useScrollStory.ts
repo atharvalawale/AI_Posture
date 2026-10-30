@@ -77,6 +77,9 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): {
           start: () => `top ${headerHeight()}px`,
           end: () => `+=${Math.round(window.innerHeight * STORY_LENGTH)}`,
           pin: true,
+          // GSAP turns pin spacing off when the pinned element's parent is a flex container,
+          // and <main> in layout.tsx is one. Without spacing the pin covers the next sections.
+          pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate: () => sync(enter),
