@@ -46,16 +46,16 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
     mo.observe(el, { childList: true, subtree: true });
     return () => mo.disconnect();
   }, [active]);
-  // Phone row is horizontal. From 640 px the steps stack, so the keys that matter are vertical.
+  // The steps row is horizontal below 1024 px (titles only on phones, cards on tablets). From 1024 px the steps stack, so the keys that matter are vertical.
   const [wide, setWide] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
+    const mq = window.matchMedia("(min-width: 1024px)");
     const update = () => setWide(mq.matches);
     update();
     mq.addEventListener?.("change", update);
     return () => mq.removeEventListener?.("change", update);
   }, []);
-  // Under 640 px the steps fold into one row of titles. That only fits three, so any other count stays a stacked list.
+  // Below 1024 px the steps sit in one row: titles only under 640 px, cards with their line from 640 px. That only fits three, so any other count stays a stacked list.
   const row = layout === "steps" && items.length === 3;
 
   return (
@@ -69,7 +69,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
           role="tablist"
           aria-label={label}
           aria-orientation={row && !wide ? "horizontal" : "vertical"}
-          className={row ? "grid grid-cols-3 gap-2 sm:grid-cols-1 sm:gap-3" : "grid gap-3"}
+          className={row ? "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1" : "grid gap-3"}
         >
           {items.map((item, i) => {
             const on = active === i;
@@ -79,11 +79,13 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                 type="button"
                 {...tabProps(i)}
                 className={`flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
-                  row ? "items-center justify-center px-3 py-2 sm:items-start sm:justify-start sm:px-5 sm:py-4" : "items-start px-5 py-4"
+                  row
+                    ? "items-center justify-center px-3 py-2 sm:h-full sm:flex-col sm:items-start sm:justify-start sm:gap-3 sm:px-5 sm:py-4 lg:flex-row lg:gap-4"
+                    : "items-start px-5 py-4"
                 } ${
                   on
                     ? "border-line bg-surface shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]"
-                    : "border-transparent hover:bg-surface/60"
+                    : `border-transparent hover:bg-surface/60 ${row ? "sm:border-line lg:border-transparent" : ""}`
                 }`}
               >
                 {layout === "steps" ? (
@@ -100,14 +102,14 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                 )}
                 <span className="min-w-0">
                   <span className="block text-[17px] font-semibold text-text">{item.title}</span>
-                  <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-pretty text-muted`}>{item.body}</span>
+                  <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-pretty text-muted lg:text-balance`}>{item.body}</span>
                   {item.note && <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[13px] text-muted`}>{item.note}</span>}
                 </span>
               </button>
             );
           })}
         </div>
-        {row && <p className="mt-3 text-[15px] text-balance text-muted sm:hidden">{items[active].body}</p>}
+        {row && <p className="mt-3 min-h-[2lh] text-[15px] text-balance text-muted sm:hidden">{items[active].body}</p>}
       </div>
 
       <div className="order-first grid min-w-0 lg:order-none">
