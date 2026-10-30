@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BodyMap } from "@/components/patients/BodyMap";
 import { GuidePanel, PlanPanel, ProgressPanel } from "@/components/patients/PatientStepPanels";
 import { RecoverySlider } from "@/components/patients/RecoverySlider";
 import { SessionDemos } from "@/components/patients/SessionDemos";
@@ -8,8 +9,6 @@ import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
 import {
   ClosingCta,
-  Photo,
-  RuleColumns,
   Section,
   SectionHeading,
   bodyClass,
@@ -34,13 +33,6 @@ const withTheApps = [
   { title: "Session history", body: "Every session is saved, so you can see how you have improved over days and weeks." },
   { title: "Exercise reminders", body: "Gentle reminders when it is time to exercise. Consistency is what drives recovery." },
   { title: "Message your physio", body: "Ask your physio a question in the app, without waiting for your next appointment." },
-] as const;
-
-const conditions = [
-  { title: "Knee rehabilitation", body: "After ACL reconstruction, meniscus repair or knee replacement." },
-  { title: "Shoulder recovery", body: "Rotator cuff injuries, frozen shoulder and shoulder replacement." },
-  { title: "Hip rehabilitation", body: "After hip replacement surgery and hip fractures." },
-  { title: "Sports injuries", body: "Sprains, strains and sports-related muscle injuries." },
 ] as const;
 
 export function ForPatients() {
@@ -123,22 +115,13 @@ export function ForPatients() {
       </Section>
 
       <Section labelledBy="patients-conditions">
-        <div className="grid items-end gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
-          <SectionHeading
-            id="patients-conditions"
-            title="Built for rehab after surgery and injury."
-            intro="Your physiotherapist decides whether FiixBE suits your recovery, and which exercises you do."
-          />
-          <Photo
-            src="/images/pages/physio-knee.webp"
-            alt="A physiotherapist examining a patient's bent knee"
-            className="aspect-[3/2]"
-            sizes="(min-width: 1024px) 560px, 100vw"
-            position="60% 50%"
-          />
-        </div>
-        <div className="mt-16">
-          <RuleColumns items={conditions} cols={4} />
+        <SectionHeading
+          id="patients-conditions"
+          title="Built for rehab after surgery and injury."
+          intro="Your physiotherapist decides whether FiixBE suits your recovery, and which exercises you do."
+        />
+        <div className="mt-14">
+          <BodyMap />
         </div>
       </Section>
 

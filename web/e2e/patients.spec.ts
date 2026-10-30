@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 test.describe("/for-patients recovery slider", () => {
   test("the week slider and the chart change the deepest bend", async ({ page }) => {
@@ -62,6 +62,53 @@ test.describe("/for-patients steps and live demos", () => {
     await expect(reps).toHaveText("2");
     await expect(page.locator("[data-demo-cue]")).toHaveText("Good depth, hold");
     await expect(page.locator("[data-demo-scores] > div")).toHaveCount(2);
+    await context.close();
+  });
+});
+
+test.describe("/for-patients body map", () => {
+  const panel = (page: Page) => page.locator("[data-body-map]").getByRole("tabpanel");
+
+  test("buttons, keys and hotspots change the panel", async ({ page }) => {
+    await page.goto("/for-patients");
+    const tabs = page.getByRole("tablist", { name: "Areas of the body" });
+    await tabs.scrollIntoViewIfNeeded();
+    await expect(panel(page)).toContainText("Knee rehabilitation");
+    await expect(panel(page)).toContainText("FiixBE measures the Knee angle.");
+
+    await tabs.getByRole("tab", { name: "Shoulder" }).click();
+    await expect(panel(page)).toContainText("Shoulder raises");
+
+    await page.keyboard.press("ArrowRight");
+    await expect(tabs.getByRole("tab", { name: "Hip" })).toBeFocused();
+    await expect(panel(page)).toContainText("Hip rehabilitation");
+    await expect(panel(page)).toContainText("Straight leg raise");
+
+    await page.keyboard.press("ArrowRight");
+    await expect(panel(page)).toContainText("Sports injuries");
+    await expect(panel(page)).not.toContainText("measures");
+    await expect(page.locator('[data-hotspot][data-on="true"]')).toHaveCount(3);
+
+    // A real mouse move over the knee hotspot selects it.
+    const knee = page.locator('[data-hotspot="knee"]');
+    const box = (await knee.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.move(box.x + box.width / 2 + 1, box.y + box.height / 2);
+    await expect(panel(page)).toContainText("Knee rehabilitation");
+    await expect(page.locator('[data-hotspot][data-on="true"]')).toHaveCount(1);
+  });
+
+  test("a tap on a hotspot selects it, and its hit area is at least 44 px", async ({ browser }) => {
+    const context = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    await page.goto("/for-patients");
+    const shoulder = page.locator('[data-hotspot="shoulder"]');
+    await shoulder.scrollIntoViewIfNeeded();
+    const box = (await shoulder.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(panel(page)).toContainText("Shoulder recovery");
     await context.close();
   });
 });
