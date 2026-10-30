@@ -171,8 +171,8 @@ describe("morning queue", () => {
     render(<PhysioDashboard />);
     await screen.findByText("2 of 3 reached your target");
     expect(screen.getByText("3 of 3 sessions in")).toBeInTheDocument();
-    const queue = () => screen.getByText("Worth a look first").nextElementSibling as HTMLElement;
-    expect(within(queue()).getAllByRole("button").map((b) => b.textContent)).toEqual([
+    const queue = () => screen.getByText("Flagged today").nextElementSibling as HTMLElement;
+    expect(within(queue()).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
       `MayaRep 2 stopped at ${Math.round(reps[1].depth)}°`,
       "ArjunMissed 4 sessions this week",
       "RohanRep 2 stopped at 37°",
@@ -181,9 +181,8 @@ describe("morning queue", () => {
     // Every one of Maya's reps reaches a 105° target, so she leaves the queue.
     fireEvent.change(screen.getByRole("slider", { name: "Your target for Maya" }), { target: { value: "105" } });
     expect(within(queue()).queryByText("Maya")).toBeNull();
-
-    fireEvent.click(within(queue()).getByRole("button", { name: /Arjun/ }));
-    expect(screen.getByText("Rotator cuff repair, week 6")).toBeInTheDocument();
+    // A summary, not a second set of patient buttons.
+    expect(within(queue()).queryByRole("button")).toBeNull();
   });
 });
 

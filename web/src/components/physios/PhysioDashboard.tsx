@@ -58,7 +58,7 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
         patients={PATIENTS}
         selected={selected}
         onSelect={setSelected}
-        footer={<MorningQueue done={inToday} total={PATIENTS.length} items={queue} onSelect={setSelected} />}
+        footer={<MorningQueue done={inToday} total={PATIENTS.length} items={queue} />}
         className="border-b border-line p-2.5 sm:p-3 lg:border-r lg:border-b-0"
       />
       <div className="sm:grid sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:contents">

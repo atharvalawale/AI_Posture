@@ -84,10 +84,10 @@ export function PatientList({ patients, selected, onSelect, footer, className = 
 export type QueueItem = { id: SamplePatient["id"]; name: string; text: string };
 
 /**
- * The physio's morning at a glance: how many of today's sessions are in, and the patients worth a look first,
- * each with the first thing that needs it. A row opens that patient.
+ * The physio's morning at a glance: how many of today's sessions are in, and the patients flagged today,
+ * each with the first thing that needs it. A summary only: the patient list above is where you pick a patient.
  */
-export function MorningQueue({ done, total, items, onSelect }: { done: number; total: number; items: QueueItem[]; onSelect: (id: SamplePatient["id"]) => void }) {
+export function MorningQueue({ done, total, items }: { done: number; total: number; items: QueueItem[] }) {
   return (
     <div className="mt-5 border-t border-line px-2 pt-4">
       <p className="text-[13px] text-muted">This morning</p>
@@ -96,21 +96,15 @@ export function MorningQueue({ done, total, items, onSelect }: { done: number; t
       </p>
       {items.length > 0 && (
         <>
-          <p className="mt-5 text-[13px] text-muted">Worth a look first</p>
-          <ul className="mt-1.5 -mx-2 grid gap-1">
+          <p className="mt-5 text-[13px] text-muted">Flagged today</p>
+          <ul className="mt-2 grid gap-3">
             {items.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                  className="flex min-h-11 w-full cursor-pointer items-start gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-surface-2/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  <span aria-hidden className="mt-[7px] size-2 shrink-0 rounded-full bg-warn" />
-                  <span className="min-w-0">
-                    <span className="block text-[15px] font-semibold text-text">{item.name}</span>
-                    <span className="block text-[13px] text-pretty text-muted">{item.text}</span>
-                  </span>
-                </button>
+              <li key={item.id} className="flex items-start gap-2.5">
+                <span aria-hidden className="mt-[7px] size-2 shrink-0 rounded-full bg-warn" />
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-semibold text-text">{item.name}</span>
+                  <span className="block text-[13px] text-pretty text-muted">{item.text}</span>
+                </span>
               </li>
             ))}
           </ul>
