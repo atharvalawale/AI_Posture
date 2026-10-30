@@ -6,9 +6,9 @@ import { useClipReps } from "@/components/pose/usePoseClip";
 import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
 
-const TARGET = 100;
+export const TARGET = 100;
 // Standing is about 170° and the clip's deepest rep about 95°. This range keeps every bar well clear of both ends, so a few degrees show.
-const RANGE: [number, number] = [70, 140];
+export const RANGE: [number, number] = [70, 140];
 
 /** One rep against the target, in the words the physio reads. */
 function repLine(depth: number, i: number) {
@@ -18,17 +18,19 @@ function repLine(depth: number, i: number) {
     : `Rep ${i + 1} stopped at ${deg}°, ${deg - TARGET}° short of the ${TARGET}° target.`;
 }
 
+/** The line under the rep bars: the chosen rep, else the first rep short of the target, else that every rep reached it. */
+export function sessionLine(depths: number[] | null, rep: number | null) {
+  if (!depths) return "";
+  if (rep !== null) return repLine(depths[rep], rep);
+  const short = depths.findIndex((d) => reachedCount([d], TARGET) === 0);
+  return short >= 0 ? repLine(depths[short], short) : `Every rep reached the ${TARGET}° target.`;
+}
+
 /** The physio's view of Maya's session: the deepest knee bend of each rep against the target. Sample data from the real clip. */
 export function ReviewPanel() {
   const reps = useClipReps();
   const depths = reps?.map((r) => r.depth) ?? null;
   const [rep, setRep] = useState<number | null>(null);
-  const short = depths?.findIndex((d) => reachedCount([d], TARGET) === 0) ?? -1;
-
-  let line = "";
-  if (depths && rep !== null) line = repLine(depths[rep], rep);
-  else if (depths && short >= 0) line = repLine(depths[short], short);
-  else if (depths) line = `Every rep reached the ${TARGET}° target.`;
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-line bg-surface p-5 sm:p-6">
@@ -58,7 +60,7 @@ export function ReviewPanel() {
           className="mt-6 h-52"
         />
         <p aria-live="polite" className="mt-3 min-h-6 text-[15px] text-pretty text-muted">
-          {line}
+          {sessionLine(depths, rep)}
         </p>
         <div className="mt-auto pt-5">
           <div className="flex items-start gap-3 rounded-lg border border-line bg-bg p-3.5">

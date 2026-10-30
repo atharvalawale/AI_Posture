@@ -204,6 +204,40 @@ describe("Showcase auto advance", () => {
   });
 });
 
+describe("Showcase card details", () => {
+  const detailed = [
+    { id: "a", title: "First", body: "First line", detail: <a href="/a">First link</a> },
+    { id: "b", title: "Second", body: "Second line", detail: <a href="/b">Second link</a> },
+  ];
+  const renderDetailed = () =>
+    render(<Showcase label="Sides" items={detailed} panels={[<p key="a">Panel A</p>, <p key="b">Panel B</p>]} layout="cards" />);
+
+  it("keeps each detail, with its link, outside the tablist", () => {
+    renderDetailed();
+    const tablist = screen.getByRole("tablist");
+    for (const name of ["First link", "Second link"]) {
+      const link = screen.getByRole("link", { name });
+      expect(tablist.contains(link)).toBe(false);
+    }
+    expect([...tablist.children].every((el) => el.getAttribute("role") === "tab")).toBe(true);
+  });
+
+  it("marks the active card's detail, and a tap or a mouse move on a detail picks its card", () => {
+    renderDetailed();
+    const detailOf = (name: string) => screen.getByRole("link", { name }).parentElement!;
+    expect(detailOf("First link").hasAttribute("data-active")).toBe(true);
+    expect(detailOf("Second link").hasAttribute("data-active")).toBe(false);
+    fireEvent.click(detailOf("Second link"));
+    expect(tab("Second").getAttribute("aria-selected")).toBe("true");
+    expect(detailOf("Second link").hasAttribute("data-active")).toBe(true);
+    expect(detailOf("First link").hasAttribute("data-active")).toBe(false);
+    fireEvent.pointerMove(detailOf("First link"), { pointerType: "touch" });
+    expect(tab("Second").getAttribute("aria-selected")).toBe("true");
+    fireEvent.pointerMove(detailOf("First link"), { pointerType: "mouse" });
+    expect(tab("First").getAttribute("aria-selected")).toBe("true");
+  });
+});
+
 describe("Showcase structure", () => {
   it("drops extras and warns when items and panels differ in length", () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => {});

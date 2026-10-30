@@ -125,3 +125,92 @@ test("How it works: only one squat video plays at a time", async ({ page }) => {
   await how.getByRole("tab", { name: /Review/ }).click();
   await expect.poll(playing).toEqual([]);
 });
+
+test("Problem: the week switches from a printed sheet to FiixBE", async ({ page }) => {
+  await page.goto("/");
+  const problem = page.locator('section[aria-labelledby="problem-title"]');
+  const sheet = problem.getByRole("button", { name: "From a printed sheet" });
+  const fiixbe = problem.getByRole("button", { name: "With FiixBE" });
+  await expect(sheet).toHaveAttribute("aria-pressed", "true");
+  await expect(problem.getByText("Your physio sees nothing until your next visit.")).toBeVisible();
+  await fiixbe.click();
+  await expect(fiixbe).toHaveAttribute("aria-pressed", "true");
+  await expect(sheet).toHaveAttribute("aria-pressed", "false");
+  await expect(problem.getByText("Your physio sees every rep, every day")).toBeVisible();
+  await expect(problem.getByText("Your physio sees nothing until your next visit.")).toBeHidden();
+});
+
+test("Problem: on phones each day shows only its day and number, at 13 px or more", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 360, height: 800 } });
+  const page = await context.newPage();
+  try {
+    await page.goto("/");
+    const problem = page.locator('section[aria-labelledby="problem-title"]');
+    for (const mode of ["From a printed sheet", "With FiixBE"]) {
+      await problem.getByRole("button", { name: mode }).click();
+      const days = problem.locator("[data-day]:visible");
+      await expect(days).toHaveCount(7);
+      const cells = await days.evaluateAll((els) =>
+        els.map((el) => {
+          const box = el.getBoundingClientRect();
+          const texts = [...el.querySelectorAll<HTMLElement>("*")].filter(
+            (t) => t.childElementCount === 0 && t.checkVisibility({ visibilityProperty: true }) && t.getBoundingClientRect().width > 1 && t.textContent?.trim(),
+          );
+          return {
+            lines: texts.length,
+            smallest: Math.min(...texts.map((t) => parseFloat(getComputedStyle(t).fontSize))),
+            // Measure the text itself: a block stretches to its cell, so its own width says nothing.
+            fits: texts.every((t) => {
+              const range = document.createRange();
+              range.selectNodeContents(t);
+              const r = range.getBoundingClientRect();
+              return r.left >= box.left + 1 && r.right <= box.right - 1;
+            }),
+          };
+        }),
+      );
+      for (const [i, cell] of cells.entries()) {
+        // Today has no score yet: a dot under the day marks it.
+        expect(cell.lines).toBe(mode === "With FiixBE" && i === 6 ? 1 : 2);
+        expect(cell.smallest).toBeGreaterThanOrEqual(13);
+        expect(cell.fits).toBe(true);
+      }
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test("Both sides: each card changes the panel and keeps its link", async ({ page }) => {
+  await page.goto("/");
+  const sides = page.locator('section[aria-labelledby="sides-title"]');
+  const panel = sides.locator('[role="tabpanel"]:not([inert])');
+  await expect(sides.getByRole("link", { name: "How FiixBE works for physios" })).toHaveAttribute("href", "/for-physios");
+  await expect(sides.getByRole("link", { name: "How FiixBE works for patients" })).toHaveAttribute("href", "/for-patients");
+  await expect(sides.getByText("Alerts when a session is missed")).toBeVisible();
+  await expect(panel.getByText("Squats, sent from Maya's phone this morning")).toBeVisible();
+  await sides.getByRole("tab", { name: /For patients/ }).click();
+  await expect(panel.getByText("Session complete")).toBeVisible();
+  await expect(sides.getByText("Live form correction")).toBeVisible();
+  await expect(sides.getByText("Alerts when a session is missed")).toBeHidden();
+});
+
+test("Both sides: on tablets the two cards sit side by side, their links in line", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+  const page = await context.newPage();
+  try {
+    await page.goto("/");
+    const sides = page.locator('section[aria-labelledby="sides-title"]');
+    await sides.scrollIntoViewIfNeeded();
+    await expect(sides.getByRole("tablist")).toHaveAttribute("aria-orientation", "horizontal");
+    const [a, b] = await Promise.all((await sides.getByRole("tab").all()).map(async (t) => (await t.boundingBox())!));
+    expect(Math.round(a.y)).toBe(Math.round(b.y));
+    expect(a.x + a.width).toBeLessThan(b.x);
+    const links = await Promise.all((await sides.getByRole("link").all()).map(async (l) => (await l.boundingBox())!));
+    expect(Math.round(links[0].y)).toBe(Math.round(links[1].y));
+    const panel = (await sides.locator('[role="tabpanel"]:not([inert])').boundingBox())!;
+    expect(a.y).toBeGreaterThan(panel.y + panel.height);
+  } finally {
+    await context.close();
+  }
+});

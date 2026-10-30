@@ -1,9 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { useShowcase } from "./useShowcase";
 
-export type ShowcaseItem = { id: string; title: string; body: string; icon?: ReactNode; note?: string };
+export type ShowcaseItem = {
+  id: string;
+  title: string;
+  body: string;
+  icon?: ReactNode;
+  note?: string;
+  /**
+   * Cards layout only: more of the card, under its body. It sits outside the tab, so it may hold links.
+   * Its wrapper is a column that fills the card's height, and has `data-active` while the card is the active one,
+   * so content can show only then (`in-data-active:`).
+   */
+  detail?: ReactNode;
+};
 
 type Props = {
   label: string;
@@ -16,6 +28,8 @@ type Props = {
 
 const FOCUSABLE = 'a[href], button, input, select, textarea, video[controls], [tabindex]:not([tabindex="-1"])';
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+const lifted = "border-line bg-surface shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]";
 
 const PanelActive = createContext(true);
 
@@ -33,7 +47,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
   if (process.env.NODE_ENV !== "production" && allItems.length !== allPanels.length) {
     console.error(`Showcase "${label}": ${allItems.length} items but ${allPanels.length} panels. Extra entries are dropped.`);
   }
-  const { active, holdProps, tabProps, tabId, panelId, rootRef } = useShowcase(count, { autoAdvanceMs });
+  const { active, select, holdProps, tabProps, tabId, panelId, rootRef } = useShowcase(count, { autoAdvanceMs });
   const activePanel = useRef<HTMLDivElement | null>(null);
   // WAI-ARIA: a panel with nothing focusable inside takes tabindex 0 so keyboard users can reach its content.
   const [panelNeedsStop, setPanelNeedsStop] = useState(false);
@@ -47,16 +61,34 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
     return () => mo.disconnect();
   }, [active]);
   // The steps row is horizontal below 1024 px (titles only on phones, cards on tablets). From 1024 px the steps stack, so the keys that matter are vertical.
+  // Cards with a detail sit side by side from 640 to 1023 px, so they track the 640 px line too.
   const [wide, setWide] = useState(false);
+  const [tablet, setTablet] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const update = () => setWide(mq.matches);
+    const lg = window.matchMedia("(min-width: 1024px)");
+    const sm = window.matchMedia("(min-width: 640px)");
+    const update = () => {
+      setWide(lg.matches);
+      setTablet(sm.matches && !lg.matches);
+    };
     update();
-    mq.addEventListener?.("change", update);
-    return () => mq.removeEventListener?.("change", update);
+    lg.addEventListener?.("change", update);
+    sm.addEventListener?.("change", update);
+    return () => {
+      lg.removeEventListener?.("change", update);
+      sm.removeEventListener?.("change", update);
+    };
   }, []);
   // Below 1024 px the steps sit in one row: titles only under 640 px, cards with their line from 640 px. That only fits three, so any other count stays a stacked list.
   const row = layout === "steps" && items.length === 3;
+  // Cards with a detail: a tablist may hold only tabs, so a card's detail (and its links) can't sit inside its tab.
+  // Three layers share one grid instead, through subgrid: the card faces, the tabs, and the details. A card spans its
+  // tab row and its detail row. Phones and desktops stack the cards with a 12 px row between them; tablets (640 to
+  // 1023 px) put them side by side, one column each, so the tab rows and the detail rows line up across the cards.
+  const detailed = layout === "cards" && items.some((item) => item.detail);
+  const layer = "col-span-full row-span-full grid grid-cols-subgrid grid-rows-subgrid";
+  const place = (i: number) =>
+    ({ "--tab-row": 3 * i + 1, "--detail-row": 3 * i + 2, "--col": i + 1 }) as CSSProperties;
 
   return (
     <div
@@ -64,12 +96,36 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
       {...holdProps}
       className={`grid items-start gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 ${className}`}
     >
-      <div className="min-w-0">
+      <div
+        className={`min-w-0 ${
+          detailed
+            ? "grid grid-cols-1 grid-rows-(--rows) sm:grid-cols-[repeat(var(--count),minmax(0,1fr))] sm:grid-rows-[auto_auto] sm:gap-x-3 lg:grid-cols-1 lg:grid-rows-(--rows) lg:gap-x-0"
+            : ""
+        }`}
+        style={
+          detailed
+            ? ({ "--rows": items.map(() => "auto auto").join(" 0.75rem "), "--count": count } as CSSProperties)
+            : undefined
+        }
+      >
+        {detailed && (
+          <div aria-hidden className={`pointer-events-none ${layer}`}>
+            {items.map((item, i) => (
+              <div
+                key={item.id}
+                style={place(i)}
+                className={`[grid-row:var(--tab-row)/span_2] sm:[grid-column:var(--col)] sm:[grid-row:1/span_2] lg:[grid-column:1] lg:[grid-row:var(--tab-row)/span_2] rounded-xl border transition-[background-color,border-color,box-shadow] duration-200 ${
+                  active === i ? lifted : "border-transparent sm:border-line lg:border-transparent"
+                }`}
+              />
+            ))}
+          </div>
+        )}
         <div
           role="tablist"
           aria-label={label}
-          aria-orientation={row && !wide ? "horizontal" : "vertical"}
-          className={row ? "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1" : "grid gap-3"}
+          aria-orientation={(row && !wide) || (detailed && tablet) ? "horizontal" : "vertical"}
+          className={detailed ? layer : row ? "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1" : "grid gap-3"}
         >
           {items.map((item, i) => {
             const on = active === i;
@@ -78,14 +134,19 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                 key={item.id}
                 type="button"
                 {...tabProps(i)}
-                className={`flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
+                style={detailed ? place(i) : undefined}
+                className={`${detailed ? "[grid-row:var(--tab-row)] sm:[grid-column:var(--col)] sm:[grid-row:1] lg:[grid-column:1] lg:[grid-row:var(--tab-row)]" : ""} flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
                   row
                     ? "items-center justify-center px-3 py-2 sm:h-full sm:flex-col sm:items-start sm:justify-start sm:gap-3 sm:px-5 sm:py-4 lg:flex-row lg:gap-4"
-                    : "items-start px-5 py-4"
+                    : detailed
+                      ? "items-start px-5 pt-4 pb-3"
+                      : "items-start px-5 py-4"
                 } ${
-                  on
-                    ? "border-line bg-surface shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]"
-                    : `border-transparent hover:bg-surface/60 ${row ? "sm:border-line lg:border-transparent" : ""}`
+                  detailed
+                    ? "border-transparent"
+                    : on
+                      ? lifted
+                      : `border-transparent hover:bg-surface/60 ${row ? "sm:border-line lg:border-transparent" : ""}`
                 }`}
               >
                 {layout === "steps" ? (
@@ -109,6 +170,25 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
             );
           })}
         </div>
+        {detailed && (
+          <div className={`pointer-events-none ${layer}`}>
+            {items.map((item, i) => (
+              <div
+                key={item.id}
+                data-active={active === i || undefined}
+                style={place(i)}
+                // The detail is part of the card, so pointing at it or tapping it picks the card too.
+                onPointerMove={(e) => {
+                  if (e.pointerType === "mouse" && active !== i) select(i);
+                }}
+                onClick={() => select(i)}
+                className="pointer-events-auto flex min-w-0 flex-col items-start px-5 pb-5 [grid-row:var(--detail-row)] sm:[grid-column:var(--col)] sm:[grid-row:2] lg:[grid-column:1] lg:[grid-row:var(--detail-row)]"
+              >
+                {item.detail}
+              </div>
+            ))}
+          </div>
+        )}
         {row && <p className="mt-3 min-h-[2lh] text-[15px] text-balance text-muted sm:hidden">{items[active].body}</p>}
       </div>
 
