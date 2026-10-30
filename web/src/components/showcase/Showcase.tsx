@@ -31,6 +31,15 @@ const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 
 const lifted = "border-line bg-surface shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]";
 
+/** Whether focus came the keyboard's way. Engines without `:focus-visible` ring every focus. */
+function focusVisible(el: Element) {
+  try {
+    return el.matches(":focus-visible");
+  } catch {
+    return true;
+  }
+}
+
 const PanelActive = createContext(true);
 
 /** True while the panel this is rendered in is the one showing. A panel uses it to pause work, such as a video, while hidden. */
@@ -64,6 +73,8 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
   // Cards with a detail sit side by side from 640 to 1023 px, so they track the 640 px line too.
   const [wide, setWide] = useState(false);
   const [tablet, setTablet] = useState(false);
+  // The detailed card whose tab has keyboard focus. Its whole face takes the ring, since the tab is only its top.
+  const [ring, setRing] = useState<number | null>(null);
   useEffect(() => {
     const lg = window.matchMedia("(min-width: 1024px)");
     const sm = window.matchMedia("(min-width: 640px)");
@@ -113,8 +124,10 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
             {items.map((item, i) => (
               <div
                 key={item.id}
+                data-card-face
+                data-ring={ring === i || undefined}
                 style={place(i)}
-                className={`[grid-row:var(--tab-row)/span_2] sm:[grid-column:var(--col)] sm:[grid-row:1/span_2] lg:[grid-column:1] lg:[grid-row:var(--tab-row)/span_2] rounded-xl border transition-[background-color,border-color,box-shadow] duration-200 ${
+                className={`${ring === i ? "outline-2 outline-offset-2 outline-accent" : ""} [grid-row:var(--tab-row)/span_2] sm:[grid-column:var(--col)] sm:[grid-row:1/span_2] lg:[grid-column:1] lg:[grid-row:var(--tab-row)/span_2] rounded-xl border transition-[background-color,border-color,box-shadow] duration-200 ${
                   active === i ? lifted : "border-transparent sm:border-line lg:border-transparent"
                 }`}
               />
@@ -135,7 +148,9 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                 type="button"
                 {...tabProps(i)}
                 style={detailed ? place(i) : undefined}
-                className={`${detailed ? "[grid-row:var(--tab-row)] sm:[grid-column:var(--col)] sm:[grid-row:1] lg:[grid-column:1] lg:[grid-row:var(--tab-row)]" : ""} flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
+                onFocusCapture={detailed ? (e) => setRing(focusVisible(e.currentTarget) ? i : null) : undefined}
+                onBlurCapture={detailed ? () => setRing(null) : undefined}
+                className={`${detailed ? "[grid-row:var(--tab-row)] sm:[grid-column:var(--col)] sm:[grid-row:1] lg:[grid-column:1] lg:[grid-row:var(--tab-row)]" : ""} flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${detailed ? "outline-none" : focus} ${
                   row
                     ? "items-center justify-center px-3 py-2 sm:h-full sm:flex-col sm:items-start sm:justify-start sm:gap-3 sm:px-5 sm:py-4 lg:flex-row lg:gap-4"
                     : detailed
@@ -204,7 +219,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
               ref={on ? activePanel : undefined}
               tabIndex={on && panelNeedsStop ? 0 : undefined}
               inert={!on}
-              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-opacity duration-300 ${on ? "opacity-100" : "invisible opacity-0"}`}
+              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-[opacity,visibility] duration-300 ${on ? "visible opacity-100" : "invisible opacity-0"}`}
             >
               <PanelActive value={on}>{panel}</PanelActive>
             </div>

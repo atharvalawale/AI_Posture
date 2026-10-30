@@ -23,26 +23,29 @@ export function PhysioPanel() {
         </div>
       </div>
 
+      {/* The panel takes the phone's height beside it, so the chart sits in the middle of the room it gets. */}
       <div className="mt-5 flex flex-1 flex-col border-t border-line pt-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className="text-[15px] text-muted">Deepest knee bend per rep</p>
-          {depths && (
-            <p className="text-[15px] font-semibold tabular-nums text-text">
-              {reachedCount(depths, TARGET)} of {depths.length} reached {TARGET}°
-            </p>
-          )}
+        <div className="my-auto">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <p className="text-[15px] text-muted">Set 1, deepest knee bend per rep</p>
+            {depths && (
+              <p className="text-[15px] font-semibold tabular-nums text-text">
+                {reachedCount(depths, TARGET)} of {depths.length} reached {TARGET}°
+              </p>
+            )}
+          </div>
+          <RepBars
+            depths={depths}
+            target={TARGET}
+            activeRep={rep}
+            onRep={(i) => setRep((r) => (r === i ? null : i))}
+            range={RANGE}
+            className="mt-6 h-52"
+          />
+          <p aria-live="polite" className="mt-3 min-h-6 text-[15px] text-pretty text-muted">
+            {sessionLine(depths, rep)}
+          </p>
         </div>
-        <RepBars
-          depths={depths}
-          target={TARGET}
-          activeRep={rep}
-          onRep={(i) => setRep((r) => (r === i ? null : i))}
-          range={RANGE}
-          className="mt-6 min-h-52 flex-1"
-        />
-        <p aria-live="polite" className="mt-3 min-h-6 text-[15px] text-pretty text-muted">
-          {sessionLine(depths, rep)}
-        </p>
       </div>
     </div>
   );

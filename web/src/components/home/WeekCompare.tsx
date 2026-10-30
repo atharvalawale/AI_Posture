@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { MAYA_WEEK } from "@/lib/sample";
 
 type Mode = "sheet" | "fiixbe";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-// Sample form scores for one week, in the product view only. Wednesday was missed and Sunday is today.
-const WEEK: (number | "missed" | "today")[] = [84, 88, "missed", 90, 91, 93, "today"];
-// Narrow no-break spaces keep the dose on one line in a narrow day. A phone's day is narrower still, so there it drops the spaces.
-const DOSE = "3\u202f×\u202f10";
+// Narrow no-break spaces keep the dose on one line. The narrowest days drop the spaces.
+const DOSE = "3 × 10";
 const DOSE_TIGHT = "3×10";
 
 const CHANGES = [
@@ -24,45 +23,65 @@ const MODES: { id: Mode; label: string }[] = [
 ];
 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-// Both modes sit in each day, one over the other, so a day keeps its size and the switch is a crossfade.
-const layer = "col-start-1 row-start-1 flex flex-col items-center transition-opacity duration-300 motion-reduce:transition-none sm:items-start";
 
-function SheetDay() {
+/*
+ * A day's size comes from the strip's own width, not the viewport's: the strip is narrower on a 1024 px
+ * desktop, where the section splits into two columns, than on a 768 px tablet. Three sizes:
+ * - under 460 px: the shortest value ("3×10", a score, a mark for missed and today), centred in a 36 to 46 px day;
+ * - from 460 px: words ("Missed", "Today") at 13 px, scores at 20 px, in a day of 60 px or more;
+ * - from 560 px: words at 15 px, scores at 24 px, in a day of 73 px or more.
+ * Each threshold leaves room for the widest value ("Missed") inside the day's padding. Class names stay
+ * literal (no template parts) so Tailwind finds them.
+ */
+/** Both modes sit in one grid cell, one over the other, so a day keeps its size and the switch is a crossfade. */
+function Layer({ on, delay, className = "", children }: { on: boolean; delay: number; className?: string; children: ReactNode }) {
+  const style: CSSProperties = { transitionDelay: on ? `${delay}ms` : "0ms" };
+  return (
+    <span
+      style={style}
+      className={`col-start-1 row-start-1 transition-[opacity,visibility] duration-300 motion-reduce:transition-none ${
+        on ? "visible opacity-100" : "invisible opacity-0"
+      } ${className}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SheetValue() {
   return (
     <>
-      <span className="hidden text-[15px] leading-snug text-text sm:block">Squats</span>
-      <span className="text-[13px] leading-snug tabular-nums text-text sm:hidden">{DOSE_TIGHT}</span>
-      <span className="hidden text-[15px] leading-snug tabular-nums text-text sm:block">{DOSE}</span>
-      <span className="mt-1 hidden text-[13px] leading-snug text-muted sm:block">Form unknown</span>
+      <span className="text-[13px] leading-snug text-text @min-[460px]:hidden">{DOSE_TIGHT}</span>
+      <span className="hidden text-[13px] leading-snug tabular-nums text-text @min-[460px]:inline @min-[560px]:text-[15px]">{DOSE}</span>
     </>
   );
 }
 
-function FiixbeDay({ day }: { day: (typeof WEEK)[number] }) {
+function FiixbeValue({ day }: { day: (typeof MAYA_WEEK)[number] }) {
+  const word = "sr-only @min-[460px]:not-sr-only @min-[460px]:text-[13px] @min-[460px]:font-semibold @min-[460px]:leading-snug @min-[560px]:text-[15px]";
   if (day === "missed") {
     return (
       <>
-        <span aria-hidden className="text-[15px] font-semibold leading-snug text-warn sm:hidden">
-          -
-        </span>
-        <span className="sr-only sm:not-sr-only sm:text-[15px] sm:font-semibold sm:leading-snug sm:text-warn">Missed</span>
+        <svg viewBox="0 0 24 24" className="size-3.5 text-warn @min-[460px]:hidden" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+        <span className={`${word} @min-[460px]:text-warn`}>Missed</span>
       </>
     );
   }
   if (day === "today") {
-    // "Today" is wider than a phone's day, so there the accent day and a dot mark it.
+    // Today has no score yet. The narrowest days mark it with a dot under the accent day name.
     return (
       <>
-        <span aria-hidden className="mt-[7px] size-1.5 rounded-full bg-accent sm:hidden" />
-        <span className="sr-only sm:not-sr-only sm:text-[15px] sm:font-semibold sm:leading-snug sm:text-accent">Today</span>
+        <span aria-hidden data-mark className="size-1.5 rounded-full bg-accent @min-[460px]:hidden" />
+        <span className={`${word} @min-[460px]:text-accent`}>Today</span>
       </>
     );
   }
   return (
-    <>
-      <span className="text-[15px] font-semibold leading-snug tabular-nums text-text sm:text-[24px] sm:leading-tight sm:tracking-[-0.01em]">{day}</span>
-      <span className="hidden text-[13px] leading-snug text-muted sm:block">Form score</span>
-    </>
+    <span className="text-[15px] font-semibold leading-snug tabular-nums text-text @min-[460px]:text-[20px] @min-[460px]:leading-tight @min-[560px]:text-[24px] @min-[560px]:tracking-[-0.01em]">
+      {day}
+    </span>
   );
 }
 
@@ -72,7 +91,7 @@ export function WeekCompare({ className = "" }: { className?: string }) {
   const fiixbe = mode === "fiixbe";
 
   return (
-    <div className={`rounded-xl border border-line bg-surface p-4 sm:p-6 ${className}`}>
+    <div className={`rounded-xl border border-line bg-surface p-4 sm:p-6 lg:p-5 ${className}`}>
       <div role="group" aria-label="Compare a week" className="flex gap-1 rounded-lg bg-surface-2 p-1">
         {MODES.map((m) => {
           const on = mode === m.id;
@@ -92,32 +111,43 @@ export function WeekCompare({ className = "" }: { className?: string }) {
         })}
       </div>
 
-      <ol aria-label="One week of squats" className="mt-5 grid grid-cols-7 gap-1 sm:mt-6 sm:gap-2">
-        {DAYS.map((name, i) => {
-          const day = WEEK[i];
-          const tone =
-            fiixbe && day === "missed" ? "border-warn/50 bg-warn/10" : fiixbe && day === "today" ? "border-accent" : "border-line";
-          return (
-            <li
-              key={name}
-              data-day
-              className={`grid min-w-0 content-start rounded-lg border bg-bg px-0.5 py-2.5 text-center transition-[background-color,border-color] duration-300 motion-reduce:transition-none sm:px-2.5 sm:py-3 sm:text-left ${tone}`}
-            >
-              <span className={`text-[13px] leading-snug ${fiixbe && day === "today" ? "font-semibold text-accent" : "text-muted"}`}>{name}</span>
-              <span className="mt-1 grid">
-                <span className={`${layer} ${fiixbe ? "invisible opacity-0" : "opacity-100"}`} style={{ transitionDelay: fiixbe ? "0ms" : `${i * 40}ms` }}>
-                  <SheetDay />
+      <div className="@container mt-5 sm:mt-6">
+        <ol aria-label="One week of squats" className="grid grid-cols-7 gap-1 @min-[460px]:gap-1.5 @min-[560px]:gap-2">
+          {DAYS.map((name, i) => {
+            const day = MAYA_WEEK[i];
+            const tone = fiixbe && day === "missed" ? "border-warn/50 bg-warn/10" : fiixbe && day === "today" ? "border-accent" : "border-line";
+            return (
+              <li
+                key={name}
+                data-day
+                className={`grid min-w-0 content-start justify-items-center rounded-lg border bg-bg px-0 py-2.5 text-center transition-[background-color,border-color] duration-300 motion-reduce:transition-none @min-[460px]:px-1.5 @min-[560px]:px-2 @min-[560px]:py-3 ${tone}`}
+              >
+                <span className={`text-[13px] leading-snug ${fiixbe && day === "today" ? "font-semibold text-accent" : "text-muted"}`}>{name}</span>
+                {/* The value row is as tall as a score at every size, so a day with a word in one mode keeps its other value level with the rest. */}
+                <span className="mt-1 grid min-h-[21px] w-full items-center justify-items-center @min-[460px]:min-h-[25px] @min-[560px]:min-h-[30px]">
+                  <Layer on={!fiixbe} delay={i * 40} className="flex items-center justify-center">
+                    <SheetValue />
+                  </Layer>
+                  <Layer on={fiixbe} delay={i * 40} className="flex items-center justify-center">
+                    <FiixbeValue day={day} />
+                  </Layer>
                 </span>
-                <span className={`${layer} ${fiixbe ? "opacity-100" : "invisible opacity-0"}`} style={{ transitionDelay: fiixbe ? `${i * 40}ms` : "0ms" }}>
-                  <FiixbeDay day={day} />
-                </span>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+              </li>
+            );
+          })}
+        </ol>
+        {/* What every day's value means, said once for the whole week. */}
+        <p className="mt-3 grid text-[15px] leading-snug text-muted">
+          <Layer on={!fiixbe} delay={0}>
+            Squats, {DOSE} a day. Form unknown.
+          </Layer>
+          <Layer on={fiixbe} delay={0}>
+            Each day&apos;s form score, out of 100.
+          </Layer>
+        </p>
+      </div>
 
-      <p aria-live="polite" className="mt-5 text-[17px] font-semibold leading-snug text-text sm:mt-6">
+      <p aria-live="polite" className="mt-5 text-[17px] font-semibold leading-snug text-balance text-text sm:mt-6">
         {fiixbe ? "Your physio sees every rep, every day." : "Your physio sees nothing until your next visit."}
       </p>
       {fiixbe && (

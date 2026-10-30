@@ -1,3 +1,5 @@
+import { MAYA_SESSION } from "@/lib/sample";
+
 type Chapter = "summary" | "plan";
 
 const NOTES: Record<Chapter, { title: string; line: string }> = {
@@ -33,8 +35,8 @@ type Line = { label: string; value: string };
 
 // What the summary and plan screens show, in words. Sample data, so it mirrors the phone exactly.
 const SUMMARY: Line[] = [
-  { label: "Form score", value: "92, up 6 from Monday" },
-  { label: "Deepest knee bend", value: "95°" },
+  { label: "Form score", value: `${MAYA_SESSION.formScore}, up ${MAYA_SESSION.change} from yesterday` },
+  { label: "Deepest knee bend", value: `${MAYA_SESSION.deepest}°` },
   { label: "Report", value: "Sent to your physio" },
 ];
 

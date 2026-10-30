@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useClipReps } from "@/components/pose/usePoseClip";
 import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
+import { MAYA_SESSION } from "@/lib/sample";
 
-export const TARGET = 100;
+export const TARGET = MAYA_SESSION.target;
 // Standing is about 170° and the clip's deepest rep about 95°. This range keeps every bar well clear of both ends, so a few degrees show.
 export const RANGE: [number, number] = [70, 140];
 
@@ -37,7 +38,7 @@ export function ReviewPanel() {
       <div className="flex items-center gap-3">
         <Image src="/images/avatars/maya.webp" alt="" width={44} height={44} unoptimized className="size-11 rounded-full object-cover" />
         <div className="min-w-0">
-          <p className="text-[17px] font-semibold leading-snug text-text">Maya&apos;s session, Tuesday</p>
+          <p className="text-[17px] font-semibold leading-snug text-text">Maya&apos;s session, this morning</p>
           <p className="text-[15px] text-muted">Squats, set 1 of 3</p>
         </div>
       </div>

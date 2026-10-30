@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveSession, type PoseClip } from "@/lib/pose";
+import { MAYA_SESSION } from "@/lib/sample";
 import { LiveScreen } from "./screens/LiveScreen";
 import { PlanScreen } from "./screens/PlanScreen";
 import { SummaryScreen } from "./screens/SummaryScreen";
@@ -100,7 +101,12 @@ describe("LiveScreen session", () => {
 describe("SummaryScreen", () => {
   it("shows the score and that it went to the physio", () => {
     render(<SummaryScreen />);
-    expect(screen.getByText("92")).toBeInTheDocument();
+    expect(screen.getByText(String(MAYA_SESSION.formScore))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Up ${MAYA_SESSION.change} from yesterday`))).toBeInTheDocument();
+    // Set 1's reps from the clip, one bar each.
+    expect(document.querySelectorAll("i")).toHaveLength(MAYA_SESSION.depths.length);
+    for (const d of MAYA_SESSION.depths) expect(screen.getByText(`${d}°`, { selector: "span" })).toBeInTheDocument();
+    expect(screen.getByText("Set 1, knee bend per rep")).toBeInTheDocument();
     expect(screen.getByText("Sent to your physio")).toBeInTheDocument();
   });
 });
@@ -129,13 +135,13 @@ describe("SummaryScreen scroll fill", () => {
 
     progress.current = 0.5;
     act(() => listeners.forEach((fn) => fn()));
-    expect(screen.getByText("92")).toBeInTheDocument();
+    expect(screen.getByText(String(MAYA_SESSION.formScore))).toBeInTheDocument();
     expect(bars.every((b) => b.style.transform === "scaleY(1)")).toBe(true);
 
     // It holds through the rest of the chapter.
     progress.current = 0.62;
     act(() => listeners.forEach((fn) => fn()));
-    expect(screen.getByText("92")).toBeInTheDocument();
+    expect(screen.getByText(String(MAYA_SESSION.formScore))).toBeInTheDocument();
   });
 });
 

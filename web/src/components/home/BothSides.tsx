@@ -29,17 +29,25 @@ const items: ShowcaseItem[] = sides.map((s) => ({
   body: s.body,
   detail: (
     <>
-      {/* The points show on the active card only. The link keeps to the card's foot, so side by side the two links line up. */}
-      <ul className="mb-3 hidden gap-2 self-stretch border-t border-line pt-4 in-data-active:grid">
-        {s.points.map((p) => (
-          <li key={p} className="flex gap-2.5 text-[15px] leading-snug text-text">
-            <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 12.5l4.5 4.5L19 7.5" />
-            </svg>
-            {p}
-          </li>
-        ))}
-      </ul>
+      {/*
+        The points open on the active card. From 640 to 1023 px the two cards sit side by side, so both show
+        their points, the other card's muted. The rows animate open and shut, so a switch on desktop glides
+        rather than jumps. The link keeps to the card's foot, so side by side the two links line up.
+      */}
+      <div className="invisible grid w-full grid-rows-[0fr] transition-[grid-template-rows,visibility] duration-300 ease-out motion-reduce:transition-none in-data-active:visible in-data-active:grid-rows-[1fr] sm:max-lg:visible sm:max-lg:grid-rows-[1fr]">
+        <div className="min-h-0 overflow-hidden">
+          <ul className="mb-3 grid gap-2 border-t border-line pt-4">
+            {s.points.map((p) => (
+              <li key={p} className="flex gap-2.5 text-[15px] leading-snug text-muted in-data-active:text-text">
+                <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+                {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
       <Link
         href={s.href}
         className="mt-auto inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-accent underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"

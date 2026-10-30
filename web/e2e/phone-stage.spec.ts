@@ -250,8 +250,8 @@ test("the chapter rail lands on the summary with the score and every bar filled"
   await expect(page.locator('[data-phone="3d"]')).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
   await page.getByRole("navigation", { name: "App screens" }).getByRole("button", { name: "Summary" }).click();
   const summary = page.locator('[data-screen="summary"]');
-  await expect(summary.getByText("92", { exact: true })).toBeVisible();
-  await expect(summary.locator("i")).toHaveCount(10);
+  await expect(summary.getByText("99", { exact: true })).toBeVisible();
+  await expect(summary.locator("i")).toHaveCount(3);
   const scales = await summary.locator("i").evaluateAll((els) => els.map((el) => (el as HTMLElement).style.transform));
   expect(scales.every((t) => t === "scaleY(1)")).toBe(true);
 });

@@ -236,6 +236,31 @@ describe("Showcase card details", () => {
     fireEvent.pointerMove(detailOf("First link"), { pointerType: "mouse" });
     expect(tab("First").getAttribute("aria-selected")).toBe("true");
   });
+  it("rings the whole card face, not just the tab, when its tab has keyboard focus", () => {
+    const { container } = renderDetailed();
+    const faces = () => [...container.querySelectorAll<HTMLElement>("[data-card-face]")];
+    expect(faces()).toHaveLength(2);
+    // Keyboard focus. A key press first, since jsdom (like browsers) keeps focus rings off after pointer input.
+    fireEvent.keyDown(document.body, { key: "Tab" });
+    act(() => tab("Second").focus());
+    expect(faces()[1].hasAttribute("data-ring")).toBe(true);
+    expect(faces()[0].hasAttribute("data-ring")).toBe(false);
+    act(() => tab("Second").blur());
+    expect(faces().some((f) => f.hasAttribute("data-ring"))).toBe(false);
+  });
+});
+
+describe("Showcase without card details", () => {
+  it("renders the cards layout as before: tabs only, no faces, no details, no placement styles", () => {
+    const { container } = render(<Showcase label="Plain" items={items} panels={panels} layout="cards" />);
+    const tablist = screen.getByRole("tablist");
+    expect(tablist.className).toBe("grid gap-3");
+    expect(tablist.parentElement!.className.trim()).toBe("min-w-0");
+    expect(tablist.parentElement!.children).toHaveLength(1);
+    expect(container.querySelector("[data-card-face]")).toBeNull();
+    for (const t of screen.getAllByRole("tab")) expect(t.getAttribute("style")).toBeNull();
+    expect(tab("First").className).toContain("focus-visible:outline-accent");
+  });
 });
 
 describe("Showcase structure", () => {

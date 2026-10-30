@@ -140,46 +140,57 @@ test("Problem: the week switches from a printed sheet to FiixBE", async ({ page 
   await expect(problem.getByText("Your physio sees nothing until your next visit.")).toBeHidden();
 });
 
-test("Problem: on phones each day shows only its day and number, at 13 px or more", async ({ browser }) => {
-  const context = await browser.newContext({ viewport: { width: 360, height: 800 } });
-  const page = await context.newPage();
-  try {
-    await page.goto("/");
-    const problem = page.locator('section[aria-labelledby="problem-title"]');
-    for (const mode of ["From a printed sheet", "With FiixBE"]) {
-      await problem.getByRole("button", { name: mode }).click();
-      const days = problem.locator("[data-day]:visible");
-      await expect(days).toHaveCount(7);
-      const cells = await days.evaluateAll((els) =>
-        els.map((el) => {
-          const box = el.getBoundingClientRect();
-          const texts = [...el.querySelectorAll<HTMLElement>("*")].filter(
-            (t) => t.childElementCount === 0 && t.checkVisibility({ visibilityProperty: true }) && t.getBoundingClientRect().width > 1 && t.textContent?.trim(),
-          );
-          return {
-            lines: texts.length,
-            smallest: Math.min(...texts.map((t) => parseFloat(getComputedStyle(t).fontSize))),
-            // Measure the text itself: a block stretches to its cell, so its own width says nothing.
-            fits: texts.every((t) => {
-              const range = document.createRange();
-              range.selectNodeContents(t);
-              const r = range.getBoundingClientRect();
-              return r.left >= box.left + 1 && r.right <= box.right - 1;
-            }),
-          };
-        }),
-      );
-      for (const [i, cell] of cells.entries()) {
-        // Today has no score yet: a dot under the day marks it.
-        expect(cell.lines).toBe(mode === "With FiixBE" && i === 6 ? 1 : 2);
-        expect(cell.smallest).toBeGreaterThanOrEqual(13);
-        expect(cell.fits).toBe(true);
+// Each day shows its name and one value. Nothing may touch or cross the day's content box, at any width the strip takes.
+for (const width of [360, 640, 1024]) {
+  test(`Problem: every day's text fits inside its day at ${width} px, at 13 px or more`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    try {
+      await page.goto("/");
+      const problem = page.locator('section[aria-labelledby="problem-title"]');
+      for (const mode of ["From a printed sheet", "With FiixBE"]) {
+        await problem.getByRole("button", { name: mode }).click();
+        // Wait out the crossfade, so only the shown mode is visible.
+        await page.waitForTimeout(700);
+        const days = problem.locator("[data-day]");
+        await expect(days).toHaveCount(7);
+        const cells = await days.evaluateAll((els) =>
+          els.map((el) => {
+            const cs = getComputedStyle(el);
+            const box = el.getBoundingClientRect();
+            const content = {
+              left: box.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft),
+              right: box.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight),
+            };
+            const shown = (t: Element) => t.checkVisibility({ visibilityProperty: true, opacityProperty: true }) && t.getBoundingClientRect().width > 1;
+            const texts = [...el.querySelectorAll<HTMLElement>("span")].filter((t) => t.childElementCount === 0 && t.textContent?.trim() && shown(t));
+            const marks = [...el.querySelectorAll("svg, [data-mark]")].filter(shown);
+            const rects = [
+              ...texts.map((t) => {
+                const range = document.createRange();
+                range.selectNodeContents(t);
+                return range.getBoundingClientRect();
+              }),
+              ...marks.map((m) => m.getBoundingClientRect()),
+            ];
+            return {
+              lines: texts.length + marks.length,
+              smallest: Math.min(...texts.map((t) => parseFloat(getComputedStyle(t).fontSize))),
+              overflow: Math.max(...rects.map((r) => Math.max(content.left - r.left, r.right - content.right))),
+            };
+          }),
+        );
+        for (const cell of cells) {
+          expect(cell.lines).toBe(2);
+          expect(cell.smallest).toBeGreaterThanOrEqual(13);
+          expect(cell.overflow).toBeLessThanOrEqual(0);
+        }
       }
+    } finally {
+      await context.close();
     }
-  } finally {
-    await context.close();
-  }
-});
+  });
+}
 
 test("Both sides: each card changes the panel and keeps its link", async ({ page }) => {
   await page.goto("/");
@@ -210,6 +221,9 @@ test("Both sides: on tablets the two cards sit side by side, their links in line
     expect(Math.round(links[0].y)).toBe(Math.round(links[1].y));
     const panel = (await sides.locator('[role="tabpanel"]:not([inert])').boundingBox())!;
     expect(a.y).toBeGreaterThan(panel.y + panel.height);
+    // Side by side, both cards show their points, so neither card has a gap.
+    await expect(sides.getByText("Alerts when a session is missed")).toBeVisible();
+    await expect(sides.getByText("Live form correction")).toBeVisible();
   } finally {
     await context.close();
   }

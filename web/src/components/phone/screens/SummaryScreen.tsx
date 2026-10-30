@@ -2,22 +2,25 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import { MAYA_SESSION } from "@/lib/sample";
 import type { StoryProgress } from "../ScreenStack";
 
-// Knee depth per rep, as a share of the target depth. Sample data for the app preview.
-const DEPTH = [62, 70, 74, 68, 80, 84, 79, 88, 92, 90];
+const { depths: DEPTHS, target: TARGET, deepest: DEEPEST, formScore: SCORE, change: CHANGE } = MAYA_SESSION;
+// Knee angles at the bottom and the top of the bar track, as on the physio's rep bars, so a few degrees show.
+const RANGE: [number, number] = [70, 140];
+const heightOf = (angle: number) => Math.min(1, Math.max(0, (RANGE[1] - angle) / (RANGE[1] - RANGE[0])));
 
 const STATS: [string, string][] = [
   ["Reps", "30 of 30"],
-  ["Deepest knee bend", "95°"],
+  ["Deepest knee bend", `${DEEPEST}°`],
   ["Pain after session", "2 of 10"],
 ];
 
-const SCORE = 92;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /**
- * Session summary: form score, depth per rep, and the report sent to the physio.
+ * Session summary of Maya's squats this morning: form score, set 1's knee bend per rep against the target,
+ * and the report sent to the physio. Every number comes from MAYA_SESSION, which is pinned to the clip.
  * With `story`, the score counts up and the bars fill as the story scrolls through the summary
  * chapter (progress 0.34 to 0.5), written straight to the DOM. Without it, or with reduced
  * motion, the full state shows.
@@ -35,7 +38,7 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
       const k = reduced?.matches ? 1 : clamp01((story.progress.current - 0.34) / 0.16);
       if (score.current) score.current.textContent = String(Math.round(k * SCORE));
       bars.current.forEach((el, i) => {
-        if (el) el.style.transform = `scaleY(${k > i / DEPTH.length ? 1 : 0})`;
+        if (el) el.style.transform = `scaleY(${k > i / DEPTHS.length ? 1 : 0})`;
       });
     };
     apply();
@@ -58,31 +61,49 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
         <p className="text-[13px] leading-[1.4] text-muted">
           Form score
           <br />
-          Up 6 from Monday
+          Up {CHANGE} from yesterday
         </p>
       </div>
 
-      <div className="flex h-[90px] items-end gap-[5px] px-0.5" aria-hidden="true">
-        {DEPTH.map((h, i) => (
-          <i
-            key={i}
-            ref={(el) => {
-              bars.current[i] = el;
-            }}
-            className="block flex-1 origin-bottom rounded-b-[2px] rounded-t-[4px] bg-accent transition-transform duration-300 ease-out motion-reduce:transition-none"
-            style={{
-              height: `${h}%`,
-              // With a story, the effect above owns the transform and the bars fill as you scroll.
-              ...(scrolled ? {} : { transform: `scaleY(${active ? 1 : 0})`, transitionDelay: active ? `${120 + i * 45}ms` : "0ms" }),
-            }}
-          />
+      {/* Set 1's three reps: deeper bends stand taller, and a bar that reaches the dashed target line is filled. */}
+      <div className="relative h-[90px]" aria-hidden="true">
+        <span
+          className="absolute inset-x-0 border-t border-dashed border-muted"
+          style={{ bottom: `${heightOf(TARGET) * 100}%` }}
+        />
+        <div className="relative flex h-full items-end justify-around gap-4 px-4">
+          {DEPTHS.map((depth, i) => (
+            <i
+              key={i}
+              ref={(el) => {
+                bars.current[i] = el;
+              }}
+              className={`block w-12 origin-bottom rounded-t-[4px] transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                depth <= TARGET ? "bg-accent" : "bg-line"
+              }`}
+              style={{
+                height: `${heightOf(depth) * 100}%`,
+                // With a story, the effect above owns the transform and the bars fill as you scroll.
+                ...(scrolled ? {} : { transform: `scaleY(${active ? 1 : 0})`, transitionDelay: active ? `${120 + i * 90}ms` : "0ms" }),
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="mt-1 flex justify-around gap-4 px-4 text-[13px] tabular-nums" aria-hidden="true">
+        {DEPTHS.map((depth, i) => (
+          <span key={i} className={`w-12 text-center ${depth <= TARGET ? "text-text" : "text-muted"}`}>
+            {depth}°
+          </span>
         ))}
       </div>
-      <div className="mt-1.5 flex justify-between text-[11px] text-muted">
-        <span>Rep 1</span>
-        <span>Depth per rep</span>
-        <span>Rep 10</span>
+      <div className="mt-1.5 flex justify-between text-[13px] text-muted">
+        <span>Set 1, knee bend per rep</span>
+        <span>Target {TARGET}°</span>
       </div>
+      <p className="sr-only">
+        Set 1, deepest knee bend per rep: {DEPTHS.map((d) => `${d}°`).join(", ")}. Target {TARGET}°.
+      </p>
 
       <dl className="mt-3.5 text-sm">
         {STATS.map(([k, v]) => (
