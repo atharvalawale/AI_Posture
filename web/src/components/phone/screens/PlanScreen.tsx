@@ -23,7 +23,7 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
         <p className="pl-1 text-[13px] text-muted">Tuesday</p>
         <Image src="/images/avatars/maya.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
       </div>
-      <p className="mt-2.5 px-1 text-[26px] font-semibold leading-[1.1] tracking-[-0.02em]">Good morning, Maya</p>
+      <p className="mt-2.5 px-1 text-[24px] font-semibold leading-[1.1] tracking-[-0.02em] whitespace-nowrap">Good morning, Maya</p>
       <p className="mt-1.5 px-1 text-sm text-muted">Week 3 of your knee recovery plan</p>
 
       <ul className="mt-4 grid gap-2">

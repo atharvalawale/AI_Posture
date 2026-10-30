@@ -107,7 +107,7 @@ describe("SummaryScreen", () => {
 
 describe("SummaryScreen scroll fill", () => {
   it("counts the score and fills the bars as the story scrolls", () => {
-    const progress = { current: 0.33 };
+    const progress = { current: 0.34 };
     const listeners = new Set<() => void>();
     const story = {
       progress,
@@ -121,16 +121,21 @@ describe("SummaryScreen scroll fill", () => {
     const bars = [...container.querySelectorAll<HTMLElement>("i")];
     expect(bars.every((b) => b.style.transform === "scaleY(0)")).toBe(true);
 
-    progress.current = 0.495;
+    progress.current = 0.42;
     act(() => listeners.forEach((fn) => fn()));
     const filled = bars.filter((b) => b.style.transform === "scaleY(1)").length;
     expect(filled).toBeGreaterThan(0);
     expect(filled).toBeLessThan(bars.length);
 
-    progress.current = 0.66;
+    progress.current = 0.5;
     act(() => listeners.forEach((fn) => fn()));
     expect(screen.getByText("92")).toBeInTheDocument();
     expect(bars.every((b) => b.style.transform === "scaleY(1)")).toBe(true);
+
+    // It holds through the rest of the chapter.
+    progress.current = 0.62;
+    act(() => listeners.forEach((fn) => fn()));
+    expect(screen.getByText("92")).toBeInTheDocument();
   });
 });
 

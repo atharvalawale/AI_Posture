@@ -19,7 +19,7 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 /**
  * Session summary: form score, depth per rep, and the report sent to the physio.
  * With `story`, the score counts up and the bars fill as the story scrolls through the summary
- * chapter (progress 0.33 to 0.66), written straight to the DOM. Without it, or with reduced
+ * chapter (progress 0.34 to 0.5), written straight to the DOM. Without it, or with reduced
  * motion, the full state shows.
  */
 export function SummaryScreen({ active = true, story }: { active?: boolean; story?: StoryProgress }) {
@@ -27,16 +27,24 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
   const bars = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
-    if (!story || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    if (!story) return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    // The fill finishes at 0.5, where the chapter rail lands, and holds until the plan takes over at 0.66.
+    // With reduced motion the full state shows. The score is written over React's text node on purpose.
     const apply = () => {
-      const k = clamp01((story.progress.current - 0.33) / 0.33);
+      const k = reduced?.matches ? 1 : clamp01((story.progress.current - 0.34) / 0.16);
       if (score.current) score.current.textContent = String(Math.round(k * SCORE));
       bars.current.forEach((el, i) => {
         if (el) el.style.transform = `scaleY(${k > i / DEPTH.length ? 1 : 0})`;
       });
     };
     apply();
-    return story.onProgress(apply);
+    reduced?.addEventListener("change", apply);
+    const off = story.onProgress(apply);
+    return () => {
+      reduced?.removeEventListener("change", apply);
+      off();
+    };
   }, [story]);
 
   const scrolled = !!story;

@@ -244,6 +244,18 @@ test("the chapter rail scrolls the story to the plan", async ({ page }) => {
   await expect(plan).toHaveAttribute("aria-current", "step");
 });
 
+test("the chapter rail lands on the summary with the score and every bar filled", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await expect(page.locator('[data-phone="3d"]')).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+  await page.getByRole("navigation", { name: "App screens" }).getByRole("button", { name: "Summary" }).click();
+  const summary = page.locator('[data-screen="summary"]');
+  await expect(summary.getByText("92", { exact: true })).toBeVisible();
+  await expect(summary.locator("i")).toHaveCount(10);
+  const scales = await summary.locator("i").evaluateAll((els) => els.map((el) => (el as HTMLElement).style.transform));
+  expect(scales.every((t) => t === "scaleY(1)")).toBe(true);
+});
+
 // The layout tests need no 3D. Without WebGL 2 the stage uses the 2D phone (as on a device that
 // fails the 3D check), which is far lighter, so these tests do not slow the software WebGL of the
 // 3D tests running beside them.
