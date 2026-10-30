@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -166,7 +166,7 @@ describe("feature panels", () => {
     render(<FormPanel />);
     const deepest = Math.round(Math.min(...reps.map((r) => r.depth)));
     const deeper = Math.round(weekDepths(clip)[0]) - deepest;
-    expect(await screen.findByText(`${deepest}°`)).toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector("[data-form-deepest]")?.textContent).toBe(`${deepest}°`));
     expect(deepest).toBe(95);
     expect(screen.getByText(`${deeper}° deeper`)).toBeInTheDocument();
     expect(deeper).toBe(46);

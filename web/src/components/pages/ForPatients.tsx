@@ -39,7 +39,7 @@ export function ForPatients() {
   return (
     <>
       <section aria-labelledby="patients-title">
-        <Container className="grid items-center gap-12 pt-12 pb-20 md:pt-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14 lg:pb-28">
+        <Container className="grid items-center gap-12 pt-12 pb-20 md:pt-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14 lg:pb-28">
           <div>
             <h1 id="patients-title" className={h1Class}>
               Recover at home, at your own pace.

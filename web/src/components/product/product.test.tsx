@@ -30,14 +30,16 @@ describe("RepBars", () => {
     expect((container.firstElementChild as HTMLElement).className).toContain("h-52");
   });
 
-  it("draws the target line in the bar track, not across the labels", () => {
+  it("draws the target line in the bar track, not across the labels, with its key below", () => {
     const { container } = render(<RepBars depths={[95, 102]} target={100} range={[70, 140]} />);
     const line = container.querySelector<HTMLElement>("[data-target-line]")!;
     const track = container.querySelector<HTMLElement>("[data-bar-track]")!;
     expect(line.parentElement).toBe(track);
     expect(track.querySelectorAll("[data-bar]")).toHaveLength(2);
     expect(track.textContent).not.toContain("95°");
-    expect(line.textContent).toBe("100° target");
+    // The line carries no label, so the bars stay centred. The key under the chart names the target.
+    expect(line.textContent).toBe("");
+    expect(container.querySelector("[data-target-key]")!.textContent).toBe("100° target");
     expect(parseFloat(line.style.bottom)).toBeCloseTo((40 / 70) * 100, 5);
   });
 

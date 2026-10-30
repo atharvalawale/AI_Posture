@@ -6,8 +6,9 @@ import { PanelFrame, cardClass } from "./featurePanels";
 import { Avatar } from "./PatientList";
 import { useFormScores } from "./usePatientReps";
 
-/** The clinic and hospital lists are the tallest panels on phones, so all three practice frames share their height. */
+/** The clinic and hospital lists are the tallest panels, so all three practice frames share their height. */
 const PHONE_HEIGHT = "h-[420px]";
+const WIDE_HEIGHT = "sm:h-[464px]";
 
 const practices: ShowcaseItem[] = [
   {
@@ -35,7 +36,7 @@ function ClinicPanel() {
     { ...KABIR, avatar: undefined },
   ];
   return (
-    <PanelFrame id="clinics" phoneHeight={PHONE_HEIGHT}>
+    <PanelFrame id="clinics" phoneHeight={PHONE_HEIGHT} wideHeight={WIDE_HEIGHT}>
       <div className={`${cardClass} w-full max-w-[400px] p-5`}>
         <p className="text-[13px] text-muted">Today</p>
         <p className="mt-1 font-serif text-[24px] leading-tight text-text">
@@ -69,7 +70,7 @@ const DISCHARGED = [
 /** A hospital department's discharged patients, ordered by days since surgery. */
 function HospitalPanel() {
   return (
-    <PanelFrame id="hospitals" phoneHeight={PHONE_HEIGHT}>
+    <PanelFrame id="hospitals" phoneHeight={PHONE_HEIGHT} wideHeight={WIDE_HEIGHT}>
       <div className={`${cardClass} w-full max-w-[400px] p-5`}>
         <p className="text-[13px] text-muted">Orthopaedics</p>
         <p className="mt-1 font-serif text-[24px] leading-tight text-balance text-text">Discharged, exercising at home</p>
@@ -106,7 +107,7 @@ function IndependentPanel() {
   const most = Math.max(...CITIES.map((c) => c.patients));
   const total = CITIES.reduce((n, c) => n + c.patients, 0);
   return (
-    <PanelFrame id="independent" phoneHeight={PHONE_HEIGHT}>
+    <PanelFrame id="independent" phoneHeight={PHONE_HEIGHT} wideHeight={WIDE_HEIGHT}>
       <div className={`${cardClass} w-full max-w-[400px] p-5`}>
         <p className="text-[13px] text-muted">Your patients</p>
         <p className="mt-1 font-serif text-[24px] leading-tight text-balance text-text">{total} patients in 4 cities</p>

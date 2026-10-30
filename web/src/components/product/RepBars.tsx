@@ -17,8 +17,7 @@ type Props = {
 
 // The bars and their degree labels share these sizes, so each label sits under its bar.
 const COLUMN = "min-w-11 max-w-16 flex-1";
-// Room on the right for the "100° target" label at the end of the line.
-const LABEL_ROOM = "mr-22";
+const ROW = "flex justify-around gap-3";
 
 /**
  * Each rep's angle as a bar, against a dashed target line: by default the deepest knee bend, where a deeper bend
@@ -47,9 +46,8 @@ export function RepBars({ depths, target, activeRep = null, onRep, direction = "
           style={{ bottom: `${heightOf(target) * 100}%` }}
         >
           <span className="flex-1 border-t border-dashed border-muted" />
-          <span className="pl-2 text-[13px] leading-none tabular-nums text-muted">{target}° target</span>
         </div>
-        <div className={`relative flex h-full justify-around gap-3 ${LABEL_ROOM}`}>
+        <div className={`relative h-full ${ROW}`}>
           {depths.map((depth, i) => {
             const reached = isReached(depth, target, direction);
             const label = `Rep ${i + 1}, ${Math.round(depth)}°, ${reached ? "reached" : "short of"} your target`;
@@ -82,7 +80,7 @@ export function RepBars({ depths, target, activeRep = null, onRep, direction = "
           })}
         </div>
       </div>
-      <div aria-hidden className={`flex justify-around gap-3 pt-2 ${LABEL_ROOM}`}>
+      <div aria-hidden className={`pt-2 ${ROW}`}>
         {depths.map((depth, i) => {
           const reached = isReached(depth, target, direction);
           return (
@@ -97,6 +95,11 @@ export function RepBars({ depths, target, activeRep = null, onRep, direction = "
           );
         })}
       </div>
+      {/* A key under the chart rather than a label at the end of the line, so the bars stay centred on a phone. */}
+      <p data-target-key className="mt-2 flex items-center gap-2 text-[13px] leading-5 tabular-nums text-muted">
+        <span aria-hidden className="w-5 border-t border-dashed border-muted" />
+        {target}° target
+      </p>
     </div>
   );
 }

@@ -13,10 +13,13 @@ export type ScreenId = "live" | "summary" | "plan";
 /**
  * The glass: rounded screen with a punch-hole camera, sized SCREEN_W x SCREEN_H.
  * Shared by the 2D frame and the 3D model so both show exactly the same pixels.
+ * `data-phone-screen` marks app UI drawn at real-phone scale: its text may sit below the
+ * page's 13 px floor, and it never carries anything that is not also said on the page.
  */
 export function ScreenSurface({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
+      data-phone-screen=""
       className={`relative overflow-hidden bg-bg font-sans text-text ${className}`}
       style={{ width: SCREEN_W, height: SCREEN_H, borderRadius: SCREEN_RADIUS }}
     >

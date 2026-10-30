@@ -42,7 +42,7 @@ export function LiveScreen({ active = true, session }: { active?: boolean; sessi
         </div>
         <div className={`min-w-[58px] rounded-2xl px-3.5 pb-2 pt-2.5 text-center ${OVERLAY}`}>
           <p className="text-[30px] font-semibold leading-none tabular-nums">{reps}</p>
-          <p className="mt-1 text-xs text-[#B7C2C0]">of 10</p>
+          <p className="mt-1 text-[13px] text-[#B7C2C0]">of 10</p>
         </div>
       </div>
 

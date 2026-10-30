@@ -44,7 +44,8 @@ function Card({
 }) {
   return (
     <li className="grid content-start gap-5 rounded-xl border border-line bg-surface p-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-6 lg:grid-cols-1 lg:items-start lg:gap-5">
-      <div role="img" aria-label={label} data-demo={name} className="grid h-56 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] items-center gap-6 rounded-lg bg-bg px-6 py-5">
+      {/* Tighter in the three narrow cards from 1024 px, so "Good rep. Stand tall" still takes two lines. */}
+      <div role="img" aria-label={label} data-demo={name} className="grid h-56 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] items-center gap-6 rounded-lg bg-bg px-6 py-5 lg:gap-4 lg:px-5 xl:gap-6 xl:px-6">
         {/* Sized by height, so the figure fills the stage and the readout gets the rest. */}
         <div className="h-full" style={figure ? { aspectRatio: `${figure.bounds.w} / ${figure.bounds.h}` } : { width: 80 }} data-demo-figure>
           {figure && <PoseFigure pose={figure.pose} aspect={figure.aspect} bounds={figure.bounds} highlight={[25]} className="h-full w-full" />}

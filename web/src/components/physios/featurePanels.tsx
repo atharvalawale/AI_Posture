@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { AngleValue } from "@/components/pose/AngleValue";
 import { useClipReps, usePoseClip } from "@/components/pose/usePoseClip";
 import { shortReps, weekDepths } from "@/lib/pose";
 import { KABIR, MAYA, MAYA_TARGET, PATIENTS, PLAN_ITEMS, type DayMark } from "@/lib/sample";
@@ -12,13 +13,23 @@ import { useFormScores } from "./usePatientReps";
 
 /**
  * The frame every feature and practice visual sits in. Fixed height, so switching panels never moves the page.
- * On phones each section's frames are sized to its tallest panel: the feature panels by default, the practice panels taller.
+ * Each section's frames are sized to its tallest panel: the feature panels by default, the practice panels taller.
  */
-export function PanelFrame({ id, phoneHeight = "h-[360px]", children }: { id: string; phoneHeight?: string; children: ReactNode }) {
+export function PanelFrame({
+  id,
+  phoneHeight = "h-[360px]",
+  wideHeight = "sm:h-[440px]",
+  children,
+}: {
+  id: string;
+  phoneHeight?: string;
+  wideHeight?: string;
+  children: ReactNode;
+}) {
   return (
     <div
       data-panel={id}
-      className={`flex ${phoneHeight} items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:h-[440px] sm:p-8`}
+      className={`flex ${phoneHeight} ${wideHeight} items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:p-8`}
     >
       {children}
     </div>
@@ -29,9 +40,10 @@ export const cardClass = "rounded-xl border border-line bg-surface p-4 shadow-[0
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className={`${cardClass} flex items-center justify-between gap-4`}>
+    // On a narrow phone a long value drops under its label whole, rather than breaking mid-phrase.
+    <div className={`${cardClass} flex flex-wrap items-center justify-between gap-x-4 gap-y-1`}>
       <span className="text-[15px] text-text">{label}</span>
-      {children}
+      <span className="whitespace-nowrap">{children}</span>
     </div>
   );
 }
@@ -50,7 +62,10 @@ export function FormPanel() {
     <PanelFrame id="form">
       <div className="grid w-full max-w-[380px] gap-3">
         <Row label="Deepest knee bend">
-          <span className="font-serif text-[44px] leading-none tabular-nums text-text">{deepest === null ? "--" : `${deepest}°`}</span>
+          {/* The same large angle as the hero readouts: digits set close, and a small "°" at the cap line. */}
+          <span data-form-deepest className="font-serif text-[44px] leading-none text-text">
+            <AngleValue value={deepest} />
+          </span>
         </Row>
         <Row label="Since her first session">
           <span className="text-[15px] font-semibold tabular-nums text-text">

@@ -8,8 +8,9 @@ import { reachedCount } from "@/lib/pose";
 import { MAYA_SESSION } from "@/lib/sample";
 
 export const TARGET = MAYA_SESSION.target;
-// Standing is about 170° and the clip's deepest rep about 95°. This range keeps every bar well clear of both ends, so a few degrees show.
-export const RANGE: [number, number] = [70, 140];
+// Standing is about 170° and the clip's deepest rep about 95°. This range keeps every bar clear of both ends, so a few
+// degrees show, and leaves the tallest bar about a quarter of the track below the top, not a third.
+export const RANGE: [number, number] = [80, 140];
 
 /** One rep against the target, in the words the physio reads. */
 function repLine(depth: number, i: number) {
@@ -58,7 +59,8 @@ export function ReviewPanel() {
           activeRep={rep}
           onRep={(i) => setRep((r) => (r === i ? null : i))}
           range={RANGE}
-          className="mt-6 h-52"
+          // Shorter on phones, so this panel is not much taller than the plan and the phone beside it in the stack.
+          className="mt-6 h-44 sm:h-52"
         />
         <p aria-live="polite" className="mt-3 min-h-6 text-[15px] text-pretty text-muted">
           {sessionLine(depths, rep)}

@@ -34,7 +34,7 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
               <Image src={item.img} alt="" width={46} height={46} unoptimized className="h-[46px] w-[46px] rounded-[10px] object-cover" />
               <div className={`flex-1 text-sm font-semibold transition-colors duration-300 ${checked ? "text-muted" : ""}`}>
                 {item.name}
-                <span className="mt-0.5 block text-xs font-normal text-muted">{item.dose}</span>
+                <span className="mt-0.5 block text-[13px] font-normal text-muted">{item.dose}</span>
               </div>
               {checked && <span className="sr-only">Done</span>}
               <span

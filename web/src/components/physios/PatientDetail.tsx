@@ -50,7 +50,8 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
         </p>
       </div>
 
-      <dl className="grid grid-cols-3 border-y border-line">
+      {/* The values shrink a little with the panel, so "2 of 10" stays on one line on a 360 px phone. */}
+      <dl className="@container grid grid-cols-3 border-y border-line">
         {[
           ["Form score", form === null ? "--" : String(form)],
           ["This week", patient.sessions],
@@ -58,7 +59,7 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
         ].map(([label, value], i) => (
           <div key={label} className={`min-w-0 py-3 ${i ? "border-l border-line pl-4" : ""}`}>
             <dt className="text-[13px] text-muted">{label}</dt>
-            <dd className="mt-0.5 text-[24px] leading-tight font-medium tabular-nums text-text">{value}</dd>
+            <dd className="mt-0.5 text-[length:min(24px,8cqi)] leading-tight font-medium whitespace-nowrap tabular-nums text-text">{value}</dd>
           </div>
         ))}
       </dl>

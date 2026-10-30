@@ -49,14 +49,23 @@ test.describe("/for-patients steps and live demos", () => {
     await reps.scrollIntoViewIfNeeded();
     await expect(page.locator("[data-demo-figure] svg")).toHaveCount(3);
     // The demos open primed through the first rep, so every card shows something at first glance.
-    await expect.poll(async () => Number(await reps.textContent()), { timeout: 2_000 }).toBeGreaterThanOrEqual(1);
+    await expect.poll(async () => Number(await reps.textContent()), { timeout: 5_000 }).toBeGreaterThanOrEqual(1);
     await expect(page.locator("[data-demo-scores] > div")).toHaveCount(3);
     await expect(page.locator("[data-demo-score]").first()).toBeVisible();
     await expect(page.locator("[data-demo-cue]")).not.toHaveText("Stand tall to begin");
-    // The clip plays on: the figure moves.
-    const figure = page.locator("[data-demo-figure] svg").first();
-    const before = await figure.innerHTML();
-    await expect.poll(() => figure.innerHTML(), { timeout: 5_000 }).not.toBe(before);
+    // The clip plays on: the figure squats. Its height changes by far more than idle jitter could
+    // (standing to the bottom of a rep is about a third of it), not just by a sub-pixel.
+    const bones = page.locator("[data-demo-figure] [data-figure-bones]").first();
+    const heights: number[] = [];
+    await expect
+      .poll(
+        async () => {
+          heights.push((await bones.boundingBox())!.height);
+          return (Math.max(...heights) - Math.min(...heights)) / Math.max(...heights);
+        },
+        { timeout: 8_000, intervals: [100] },
+      )
+      .toBeGreaterThan(0.15);
   });
 
   test("under reduced motion the demos hold still with reps counted", async ({ browser }) => {

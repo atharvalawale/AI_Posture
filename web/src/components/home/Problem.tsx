@@ -27,7 +27,8 @@ export function Problem() {
         />
         <RuleList items={problems} className="mt-10" />
       </div>
-      <WeekCompare className="lg:mt-2" />
+      {/* Stays beside the list while it scrolls past, so the column under it is never left empty. */}
+      <WeekCompare className="lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:mt-2" />
     </Section>
   );
 }

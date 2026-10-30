@@ -49,7 +49,7 @@ function WeekList({ days }: { days: DayMark[] }) {
 /**
  * The patient's latest session. For Maya, the squat footage with her tracked skeleton, the live knee angle
  * and a timeline marking the bottom of each rep. For the others, the photo of their exercise at its own
- * shape, with their week below it.
+ * shape, with their week below it. On phones both take the same height.
  */
 export function SessionReplay({ patient, session, reps, duration, activeRep, className = "" }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -61,8 +61,16 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
 
   return (
     <div
-      className={`relative overflow-hidden ${footage ? "aspect-[3/4] bg-[#111] sm:aspect-auto" : "flex flex-col bg-surface-2"} ${className}`}
+      className={`relative overflow-hidden ${footage ? "bg-[#111]" : "flex flex-col bg-surface-2"} ${className}`}
     >
+      {/* On phones the footage takes the same height as a photo and its week below it, so the details under the replay
+          stay put when the physio switches patients. From 640 px the replay stretches beside the details instead. */}
+      {footage && (
+        <div aria-hidden="true" className="invisible sm:hidden">
+          <div className="aspect-[4/3]" />
+          <WeekList days={patient.days} />
+        </div>
+      )}
       {/* The video stays mounted while another patient shows, so switching back to Maya is instant. */}
       <video
         ref={videoRef}

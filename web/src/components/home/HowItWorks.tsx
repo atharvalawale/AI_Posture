@@ -7,7 +7,7 @@ import { ReviewPanel } from "./how/ReviewPanel";
 
 const steps: ShowcaseItem[] = [
   { id: "prescribe", title: "Prescribe", body: "Your physio sets your exercises and the angle to reach." },
-  { id: "practice", title: "Practice", body: "Prop your phone up. FiixBE counts, measures and corrects you out loud." },
+  { id: "practice", title: "Practice", body: "FiixBE counts every rep and corrects you out loud." },
   { id: "review", title: "Review", body: "Your physio sees every rep and adjusts your plan." },
 ];
 
