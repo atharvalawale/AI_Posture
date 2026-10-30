@@ -5,7 +5,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FocusEvent, type 
 type Opts = { autoAdvanceMs?: number; initial?: number; idPrefix?: string };
 
 /** True while the visitor prefers reduced motion. Read after mount so server and first client render agree. */
-function useReducedMotion() {
+export function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");

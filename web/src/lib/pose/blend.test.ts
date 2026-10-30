@@ -17,6 +17,13 @@ describe("blend", () => {
     for (let i = 1; i < 6; i++) expect(d[i]).toBeLessThan(d[i - 1]);
     expect(d[5]).toBeCloseTo(kneeAngle(clip, deepestPose(clip).t), 1);
   });
+  it("a shorter history starts at the same week 1 and still ends at full depth", () => {
+    const d = weekDepths(clip, 3);
+    expect(d).toHaveLength(3);
+    expect(d[0]).toBeCloseTo(weekDepths(clip)[0], 6);
+    expect(d[1]).toBeLessThan(d[0]);
+    expect(Math.round(d[2])).toBe(95);
+  });
   it("finds the blend for the 100° target", () => {
     const k = blendForKnee(clip, 100);
     const p = blendPose(standingPose(clip), deepestPose(clip).pose, k);

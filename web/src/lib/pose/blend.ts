@@ -45,20 +45,21 @@ export function deepestPose(clip: PoseClip): { pose: Pose; t: number } {
   return { pose: poseAt(clip, deepest.bottom), t: deepest.bottom };
 }
 
-/** Blend fraction for a recovery week: `WEEK1_BLEND` at week 1, 1 at the last week. */
-export function weekBlend(week: number): number {
-  return WEEK1_BLEND + ((1 - WEEK1_BLEND) * (week - 1)) / (WEEKS - 1);
+/** Blend fraction for a recovery week out of `weeks`: `WEEK1_BLEND` at week 1, 1 at the last week. */
+export function weekBlend(week: number, weeks = WEEKS): number {
+  if (weeks <= 1) return 1;
+  return WEEK1_BLEND + ((1 - WEEK1_BLEND) * (week - 1)) / (weeks - 1);
 }
 
-/** The pose shown for a recovery week. */
-export function weekPose(clip: PoseClip, week: number): Pose {
-  return blendPose(standingPose(clip), deepestPose(clip).pose, weekBlend(week));
+/** The pose shown for a recovery week out of `weeks`. */
+export function weekPose(clip: PoseClip, week: number, weeks = WEEKS): Pose {
+  return blendPose(standingPose(clip), deepestPose(clip).pose, weekBlend(week, weeks));
 }
 
-/** Knee angle of each week's pose, weeks 1 to `WEEKS`, not rounded. */
-export function weekDepths(clip: PoseClip): number[] {
+/** Knee angle of each week's pose, weeks 1 to `weeks`, not rounded. The last week reaches the clip's full depth. */
+export function weekDepths(clip: PoseClip, weeks = WEEKS): number[] {
   const r = clip.h / clip.w;
-  return Array.from({ length: WEEKS }, (_, i) => poseAngle(weekPose(clip, i + 1), 23, 25, 27, r));
+  return Array.from({ length: weeks }, (_, i) => poseAngle(weekPose(clip, i + 1, weeks), 23, 25, 27, r));
 }
 
 /** Blend fraction whose knee angle equals `angle`, found by bisection. Clamped to 0..1 if out of range. */

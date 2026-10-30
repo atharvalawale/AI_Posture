@@ -9,6 +9,8 @@ export type ShowcaseItem = {
   body: string;
   icon?: ReactNode;
   note?: string;
+  /** A shorter title for the phone row of three steps, where a long title would wrap onto several lines. */
+  shortTitle?: string;
   /**
    * Cards layout only: more of the card, under its body. It sits outside the tab, so it may hold links.
    * Its wrapper is a column that fills the card's height, and has `data-active` while the card is the active one,
@@ -177,7 +179,14 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                   item.icon && <span aria-hidden className="mt-0.5 shrink-0 text-accent">{item.icon}</span>
                 )}
                 <span className="min-w-0">
-                  <span className="block text-[17px] font-semibold text-text">{item.title}</span>
+                  {row && item.shortTitle ? (
+                    <>
+                      <span className="block text-[17px] font-semibold text-text sm:hidden">{item.shortTitle}</span>
+                      <span className="hidden text-[17px] font-semibold text-text sm:block">{item.title}</span>
+                    </>
+                  ) : (
+                    <span className="block text-[17px] font-semibold text-text">{item.title}</span>
+                  )}
                   <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-pretty text-muted lg:text-balance`}>{item.body}</span>
                   {item.note && <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[13px] text-muted`}>{item.note}</span>}
                 </span>

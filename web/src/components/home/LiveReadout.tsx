@@ -1,3 +1,4 @@
+import { AngleValue } from "@/components/pose/AngleValue";
 import { JOINT_IDS, MEASURES, type JointId, type LiveState } from "@/lib/pose";
 
 type Props = {
@@ -49,19 +50,11 @@ export function LiveReadout({ state, onJoint, variant }: Props) {
       )}
       {!full && <span data-readout-joint className="sr-only">{m.name}</span>}
       <div
-        className="font-serif leading-[0.9] tabular-nums tracking-[-0.03em]"
+        className="font-serif leading-[0.9] tracking-[-0.03em]"
         style={{ fontSize: full ? "clamp(110px, 12vw, 190px)" : "72px", marginTop: full ? 6 : 0 }}
       >
         {/* Faint while there is nothing to measure yet (the clip is loading), so the placeholder never reads as a value. */}
-        <span data-readout-value className={state.value === null ? "text-line" : undefined}>
-          {state.value === null ? "--" : state.value}
-        </span>
-        <span
-          className={`ml-1 align-top font-sans text-[0.32em] text-muted ${state.value === null ? "invisible" : ""}`}
-          style={{ position: "relative", top: "0.2em" }}
-        >
-          °
-        </span>
+        <AngleValue value={state.value} data-readout-value />
       </div>
       <Track state={state} className={full ? "mt-5" : "mt-3"} />
       {/* Under the phone the phone screen already shows the cue, so the compact readout only announces it. */}
