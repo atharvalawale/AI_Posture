@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const PAGES = ["/", "/for-physios", "/for-patients"] as const;
-const WIDTHS = [360, 390, 430, 768, 1024] as const;
+const WIDTHS = [360, 390, 430, 768, 1024, 1280, 1440] as const;
 const HEIGHT = 800;
 
 /**
@@ -16,12 +16,12 @@ const MIN_TARGET = 44;
 
 type Findings = { overflow: number; smallText: string[]; smallPhoneText: string[]; smallTargets: string[] };
 
-/** Checks every element that is at least partly inside the viewport right now. */
+/** Checks every element that is at least partly inside the viewport right now: the header, the page and the footer. */
 function inspect(page: Page) {
   return page.evaluate(
     ({ MIN_TEXT, PHONE_MIN, MIN_TARGET }): Findings => {
       const vh = window.innerHeight;
-      const main = document.querySelector("main")!;
+      const page = document.body;
       const describe = (el: Element) => {
         const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
         const label = el.getAttribute("aria-label") ?? "";
@@ -37,7 +37,7 @@ function inspect(page: Page) {
 
       const smallText: string[] = [];
       const smallPhoneText: string[] = [];
-      for (const el of main.querySelectorAll("*")) {
+      for (const el of page.querySelectorAll("*")) {
         const ownText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim() !== "");
         if (!ownText || !shown(el)) continue;
         // SVG text is sized in viewBox units, so scale it to what lands on screen.
@@ -69,9 +69,13 @@ function inspect(page: Page) {
         }
         return { width, height };
       };
+      // A link inside a sentence is exempt (WCAG 2.5.8): it can only be as tall as its line.
+      const inSentence = (el: Element) =>
+        getComputedStyle(el).display === "inline" &&
+        [...(el.parentElement?.childNodes ?? [])].some((n) => n !== el && n.nodeType === Node.TEXT_NODE && n.textContent!.trim() !== "");
       const smallTargets: string[] = [];
-      for (const el of main.querySelectorAll("button, [role=tab], input[type=range]")) {
-        if (!shown(el)) continue;
+      for (const el of page.querySelectorAll("a[href], button, [role=tab], input[type=range]")) {
+        if (!shown(el) || inSentence(el)) continue;
         const { width, height } = target(el);
         if (height < MIN_TARGET - 0.5 || width < MIN_TARGET - 0.5) {
           smallTargets.push(`${describe(el)} ${Math.round(width)}x${Math.round(height)}`);

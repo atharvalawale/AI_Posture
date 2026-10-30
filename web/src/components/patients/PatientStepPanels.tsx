@@ -9,7 +9,7 @@ import { PoseFigure, figureBounds } from "@/components/pose/PoseFigure";
 import { usePoseClip } from "@/components/pose/usePoseClip";
 import { useShowcasePanelActive } from "@/components/showcase/Showcase";
 import { standingPose, weekDepths } from "@/lib/pose";
-import { MAYA } from "@/lib/sample";
+import { MAYA, MAYA_TARGET } from "@/lib/sample";
 import { WeekChart } from "./WeekChart";
 
 const panel = "flex h-full rounded-xl border border-line bg-surface p-5 sm:p-6";
@@ -87,7 +87,7 @@ export function ProgressPanel() {
           <AngleValue value={depth} />
         </p>
         <div className="mt-6">
-          {depths ? <WeekChart depths={depths} week={week} onWeek={setWeek} target={100} /> : <div className="h-[172px]" />}
+          {depths ? <WeekChart depths={depths} week={week} onWeek={setWeek} target={MAYA_TARGET} /> : <div className="h-[172px]" />}
         </div>
       </div>
 

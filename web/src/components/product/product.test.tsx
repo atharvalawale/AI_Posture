@@ -69,6 +69,12 @@ describe("RepBars", () => {
     render(<RepBars depths={null} target={100} />);
     expect(screen.getByText("Loading the session")).toBeTruthy();
   });
+
+  it("says the session could not load instead of waiting for good", () => {
+    render(<RepBars depths={null} target={100} failed />);
+    expect(screen.getByText("Session data could not load")).toBeTruthy();
+    expect(screen.queryByText("Loading the session")).toBeNull();
+  });
 });
 
 describe("TargetSlider", () => {

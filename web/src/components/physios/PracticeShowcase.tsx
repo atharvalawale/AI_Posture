@@ -62,9 +62,9 @@ function ClinicPanel() {
 
 const DISCHARGED = [
   { name: "Neha Joshi", initials: "NJ", surgery: "Knee replacement", day: 3, note: "First home session done" },
-  { name: "Sameer Kale", initials: "SK", surgery: "ACL reconstruction", day: 9, note: "5 of 6 this week" },
+  { name: "Sameer Kale", initials: "SK", surgery: "ACL reconstruction", day: 9, note: "6 of 7 this week" },
   { name: "Farah Ansari", initials: "FA", surgery: "Hip replacement", day: 16, note: "Missed 2 sessions", warn: true },
-  { name: "Vikram Desai", initials: "VD", surgery: "Rotator cuff repair", day: 24, note: "6 of 6 this week" },
+  { name: "Vikram Desai", initials: "VD", surgery: "Rotator cuff repair", day: 24, note: "7 of 7 this week" },
 ];
 
 /** A hospital department's discharged patients, ordered by days since surgery. */

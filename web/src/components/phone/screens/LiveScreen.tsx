@@ -17,17 +17,24 @@ export function LiveScreen({ active = true, session }: { active?: boolean; sessi
   const { joint, value, reps, cue, playing } = usePoseVideo(videoRef, canvasRef, { active, session });
 
   return (
-    <div className="absolute inset-0 bg-[#1c2224] text-[#EEF2F1]" data-playing={playing}>
+    // The poster is also the background, so the screen still shows the squat where the video is hidden (without JavaScript).
+    <div
+      className="absolute inset-0 bg-[#1c2224] bg-cover bg-center text-[#EEF2F1]"
+      style={{ backgroundImage: "url(/media/squat-poster.jpg)" }}
+      data-playing={playing}
+    >
       <video
         ref={videoRef}
+        data-pose-video
         className="absolute inset-0 h-full w-full object-cover"
         src="/media/squat-720.mp4"
         poster="/media/squat-poster.jpg"
         muted
         loop
         playsInline
-        autoPlay={active}
-        preload={active ? "auto" : "metadata"}
+        // Nothing loads for a screen that is not on show (How it works Practice before its tab opens), so a page
+        // loads the clip once for the phone in view.
+        preload={active ? "auto" : "none"}
         aria-hidden="true"
         tabIndex={-1}
         disablePictureInPicture

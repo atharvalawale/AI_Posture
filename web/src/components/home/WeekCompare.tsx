@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { MAYA_WEEK } from "@/lib/sample";
+import { MAYA_WEEK, TODAY } from "@/lib/sample";
 
 type Mode = "sheet" | "fiixbe";
 
@@ -27,8 +27,8 @@ const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 /*
  * A day's size comes from the strip's own width, not the viewport's: the strip is narrower on a 1024 px
  * desktop, where the section splits into two columns, than on a 768 px tablet. Three sizes:
- * - under 460 px: the shortest value ("3×10", a score, a mark for missed and today), centred in a 36 to 46 px day;
- * - from 460 px: words ("Missed", "Today") at 13 px, scores at 20 px, in a day of 60 px or more;
+ * - under 460 px: the shortest value ("3×10", a score, a mark for missed), centred in a 36 to 46 px day;
+ * - from 460 px: words ("Missed", and "Today" for Sunday's name) at 13 px, scores at 20 px, in a day of 60 px or more;
  * - from 560 px: words at 15 px, scores at 24 px, in a day of 73 px or more.
  * Each threshold leaves room for the widest value ("Missed") inside the day's padding. Class names stay
  * literal (no template parts) so Tailwind finds them.
@@ -69,15 +69,6 @@ function FiixbeValue({ day }: { day: (typeof MAYA_WEEK)[number] }) {
       </>
     );
   }
-  if (day === "today") {
-    // Today has no score yet. The narrowest days mark it with a dot under the accent day name.
-    return (
-      <>
-        <span aria-hidden data-mark className="size-1.5 rounded-full bg-accent @min-[460px]:hidden" />
-        <span className={`${word} @min-[460px]:text-accent`}>Today</span>
-      </>
-    );
-  }
   return (
     <span className="text-[15px] font-semibold leading-snug tabular-nums text-text @min-[460px]:text-[20px] @min-[460px]:leading-tight @min-[560px]:text-[24px] @min-[560px]:tracking-[-0.01em]">
       {day}
@@ -115,14 +106,25 @@ export function WeekCompare({ className = "" }: { className?: string }) {
         <ol aria-label="One week of squats" className="grid grid-cols-7 gap-1 @min-[460px]:gap-1.5 @min-[560px]:gap-2">
           {DAYS.map((name, i) => {
             const day = MAYA_WEEK[i];
-            const tone = fiixbe && day === "missed" ? "border-warn/50 bg-warn/10" : fiixbe && day === "today" ? "border-accent" : "border-line";
+            const today = i === TODAY;
+            const tone = fiixbe && day === "missed" ? "border-warn/50 bg-warn/10" : fiixbe && today ? "border-accent" : "border-line";
             return (
               <li
                 key={name}
                 data-day
                 className={`grid min-w-0 content-start justify-items-center rounded-lg border bg-bg px-0 py-2.5 text-center transition-[background-color,border-color] duration-300 motion-reduce:transition-none @min-[460px]:px-1.5 @min-[560px]:px-2 @min-[560px]:py-3 ${tone}`}
               >
-                <span className={`text-[13px] leading-snug ${fiixbe && day === "today" ? "font-semibold text-accent" : "text-muted"}`}>{name}</span>
+                {/* Today keeps its own name where there is room for it, and its session this morning gives it a score like any day. */}
+                <span className={`text-[13px] leading-snug ${fiixbe && today ? "font-semibold text-accent" : "text-muted"}`}>
+                  {today ? (
+                    <>
+                      <span className="@min-[460px]:hidden">{name}</span>
+                      <span className="hidden @min-[460px]:inline">Today</span>
+                    </>
+                  ) : (
+                    name
+                  )}
+                </span>
                 {/* The value row is as tall as a score at every size, so a day with a word in one mode keeps its other value level with the rest. */}
                 <span className="mt-1 grid min-h-[21px] w-full items-center justify-items-center @min-[460px]:min-h-[25px] @min-[560px]:min-h-[30px]">
                   <Layer on={!fiixbe} delay={i * 40} className="flex items-center justify-center">

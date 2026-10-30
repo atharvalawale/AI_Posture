@@ -2,15 +2,15 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useClipReps } from "@/components/pose/usePoseClip";
+import { useClipRepsStatus } from "@/components/pose/usePoseClip";
 import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
-import { MAYA } from "@/lib/sample";
+import { MAYA, MAYA_SESSION } from "@/lib/sample";
 import { RANGE, TARGET, sessionLine } from "../how/ReviewPanel";
 
 /** The physio's side: Maya's squats as they arrive from her phone, each rep's deepest knee bend against the target. Sample data from the real clip. */
 export function PhysioPanel() {
-  const reps = useClipReps();
+  const { reps, failed } = useClipRepsStatus();
   const depths = reps?.map((r) => r.depth) ?? null;
   const [rep, setRep] = useState<number | null>(null);
 
@@ -28,7 +28,7 @@ export function PhysioPanel() {
       <div className="mt-5 flex flex-1 flex-col border-t border-line pt-5">
         <div className="my-auto">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="text-[15px] text-muted">Set 1, deepest knee bend per rep</p>
+            <p className="text-[15px] text-muted">{MAYA_SESSION.setLabel}, deepest knee bend</p>
             {depths && (
               <p className="text-[15px] font-semibold tabular-nums text-text">
                 {reachedCount(depths, TARGET)} of {depths.length} reached {TARGET}°
@@ -38,6 +38,7 @@ export function PhysioPanel() {
           <RepBars
             depths={depths}
             target={TARGET}
+          failed={failed}
             activeRep={rep}
             onRep={(i) => setRep((r) => (r === i ? null : i))}
             range={RANGE}

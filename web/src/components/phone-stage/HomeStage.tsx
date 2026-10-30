@@ -33,7 +33,6 @@ import { usePhoneGestures } from "./usePhoneGestures";
 const Phone3D = dynamic(() => import("./Phone3D"), { ssr: false, loading: () => null });
 
 const noop = () => () => {};
-const WIDE = "(min-width: 640px)";
 const DESKTOP = "(min-width: 1024px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 /** How close a tap must land to a joint to pick it, in CSS pixels on screen. */
@@ -64,6 +63,12 @@ class Fallback extends Component<{ children: ReactNode; onError: () => void }, {
     return this.state.failed ? null : this.props.children;
   }
 }
+
+/**
+ * Without JavaScript nothing pins, scrubs or switches chapters: the summary and the plan show as still
+ * sections, and the controls that need a script (the chapter rail, the hint, the joint buttons) step aside.
+ */
+const NO_SCRIPT = `<style>[data-still-chapters]{display:block!important}[data-stage-rail],[data-stage-hint],[data-readout-joints]{display:none!important}</style>`;
 
 /**
  * The stage is sized in CSS, so the server renders it at its final size and nothing shifts on load.
@@ -111,7 +116,6 @@ export function HomeStage() {
   const { progress, screen, pinned, goTo, onProgress } = useScrollStory(sectionRef);
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
-  const wide = useMedia(WIDE, true);
   const desktop = useMedia(DESKTOP, true);
   const can3D = useSyncExternalStore(noop, () => canUse3D(readDeviceEnv()), () => false);
   const { resolvedTheme } = useTheme();
@@ -125,15 +129,15 @@ export function HomeStage() {
     return () => window.clearTimeout(id);
   }, [ready3D]);
   const [failed3D, setFailed3D] = useState(false);
-  // The 2D phone's scale and the 3D canvas need the width as a number, so the phone stays
-  // transparent until it is measured. The layout around it is already final.
+  // The 3D canvas, the scrub and the tap need the width as a number. The 2D phone does not: until it is
+  // measured, it scales in CSS, so the server already renders it visible at its final size.
   const fitted = usePhoneWidth(boxRef);
   const width = fitted ?? PHONE_W;
   const use3D = can3D && !failed3D && !reduced;
   // One clock for the turn-in, so the 3D phone takes over from the 2D one mid-turn without restarting it.
   const [introStart] = useState(() => performance.now());
 
-  const [session] = useState(() => new LiveSession());
+  const [session] = useState(() => new LiveSession(null, { poster: true }));
   const [clip, setClip] = useState<PoseClip | null>(null);
   useEffect(() => {
     let current = true;
@@ -206,6 +210,8 @@ export function HomeStage() {
       <section
         ref={sectionRef}
         data-phone-stage
+        // Set once the pose data has loaded, so tests can tell the poster's angle from a measured one.
+        data-clip-ready={clip ? "" : undefined}
         aria-labelledby="hero-title"
         className="relative bg-bg [--below-phone:317px] max-[350px]:[--below-phone:338px] [--frame-h:calc(100svh-var(--header-h))] sm:[--below-phone:163px] lg:[--frame-h:max(600px,calc(100svh-var(--header-h)))]"
         style={STAGE_VARS}
@@ -232,9 +238,7 @@ export function HomeStage() {
             data-stage-frame
             className="grid min-h-(--frame-h) grid-cols-[minmax(0,1fr)] [align-content:safe_center] justify-items-center py-2 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 lg:col-span-2 lg:h-full lg:grid-cols-subgrid lg:gap-x-8 lg:self-stretch lg:py-0"
           >
-            <div
-              className={`col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none ${fitted === null ? "opacity-0" : "opacity-100"}`}
-            >
+            <div className="col-start-1 row-start-1">
               <div ref={boxRef} className="relative w-(--phone-w)" style={{ aspectRatio: `${PHONE_W} / ${PHONE_H}` }}>
                 {use3D && (
                   <div
@@ -267,7 +271,7 @@ export function HomeStage() {
                       screen={screen}
                       session={session}
                       story={story}
-                      width={width}
+                      width={fitted}
                       lean={lean}
                       introStart={introStart}
                       still={reduced}
@@ -283,7 +287,7 @@ export function HomeStage() {
                   aria-describedby={hintId}
                   onKeyDown={onKeyDown}
                   className={`absolute inset-0 z-20 touch-pan-y select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${live ? "cursor-ew-resize" : ""}`}
-                  style={{ borderRadius: (48 * width) / PHONE_W }}
+                  style={{ borderRadius: `calc(var(--phone-w) * ${48 / PHONE_W})` }}
                   {...gestures.handlers}
                 />
               </div>
@@ -295,15 +299,15 @@ export function HomeStage() {
               className="row-start-2 mt-3 grid w-full max-w-[320px] sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:self-center lg:justify-self-start"
             >
               <Layer on={live} className="self-start sm:self-center">
-                <SessionReadout session={session} variant={wide ? "full" : "compact"} />
+                <SessionReadout session={session} />
               </Layer>
               <Layer on={screen === "summary"} className="self-start sm:self-center">
                 <ChapterNote screen="summary" className="mb-3 sm:mb-8 lg:hidden" />
-                <SummaryDetails variant={wide ? "full" : "compact"} />
+                <SummaryDetails variant="stage" />
               </Layer>
               <Layer on={screen === "plan"} className="self-start sm:self-center">
                 <ChapterNote screen="plan" className="mb-3 sm:mb-8 lg:hidden" />
-                <PlanDetails variant={wide ? "full" : "compact"} />
+                <PlanDetails variant="stage" />
               </Layer>
             </div>
 
@@ -323,6 +327,7 @@ export function HomeStage() {
         </div>
       </section>
       <StillChapters />
+      <noscript dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} />
     </div>
   );
 }
@@ -332,9 +337,9 @@ export function HomeStage() {
  * only the readout needs to follow it: the rest of the stage (the 3D phone above all) re-renders on
  * chapter changes only.
  */
-function SessionReadout({ session, variant }: { session: LiveSession; variant: "full" | "compact" }) {
+function SessionReadout({ session }: { session: LiveSession }) {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  return <LiveReadout state={state} onJoint={(j) => session.setJoint(j)} variant={variant} />;
+  return <LiveReadout state={state} onJoint={(j) => session.setJoint(j)} />;
 }
 
 const FADE = "transition-[opacity,visibility] duration-300 motion-reduce:transition-none";

@@ -86,8 +86,9 @@ export function ForPatients() {
           layout="steps"
           autoAdvanceMs={5000}
         />
-        <p className="mt-12 text-[16px]">
-          <Link href="/session" className="font-medium text-accent underline decoration-1 underline-offset-4 hover:no-underline">
+        {/* A 44 px tall target. The smaller margin keeps the text where it was. */}
+        <p className="mt-10 text-[16px]">
+          <Link href="/session" className="inline-flex min-h-11 items-center font-medium text-accent underline decoration-1 underline-offset-4 hover:no-underline">
             Try a session now. No signup needed.
           </Link>
         </p>

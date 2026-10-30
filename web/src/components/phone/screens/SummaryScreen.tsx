@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { MAYA, MAYA_SESSION } from "@/lib/sample";
 import type { StoryProgress } from "../ScreenStack";
 
-const { depths: DEPTHS, target: TARGET, deepest: DEEPEST, formScore: SCORE, change: CHANGE } = MAYA_SESSION;
+const { depths: DEPTHS, target: TARGET, deepest: DEEPEST, formScore: SCORE, change: CHANGE, setLabel: SET_LABEL } = MAYA_SESSION;
 // Knee angles at the bottom and the top of the bar track, as on the physio's rep bars, so a few degrees show.
 const RANGE: [number, number] = [70, 140];
 const heightOf = (angle: number) => Math.min(1, Math.max(0, (RANGE[1] - angle) / (RANGE[1] - RANGE[0])));
@@ -19,7 +19,7 @@ const STATS: [string, string][] = [
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /**
- * Session summary of Maya's squats this morning: form score, set 1's knee bend per rep against the target,
+ * Session summary of Maya's squats this morning: form score, the knee bend of set 1's first 3 reps against the target,
  * and the report sent to the physio. Every number comes from MAYA_SESSION, which is pinned to the clip.
  * With `story`, the score counts up and the bars fill as the story scrolls through the summary
  * chapter (progress 0.34 to 0.5), written straight to the DOM. Without it, or with reduced
@@ -65,7 +65,7 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
         </p>
       </div>
 
-      {/* Set 1's three reps: deeper bends stand taller, and a bar that reaches the dashed target line is filled. */}
+      {/* The first 3 reps of set 1: deeper bends stand taller, and a bar that reaches the dashed target line is filled. */}
       <div className="relative h-[90px]" aria-hidden="true">
         <span
           className="absolute inset-x-0 border-t border-dashed border-muted"
@@ -79,7 +79,7 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
                 bars.current[i] = el;
               }}
               className={`block w-12 origin-bottom rounded-t-[4px] transition-transform duration-300 ease-out motion-reduce:transition-none ${
-                depth <= TARGET ? "bg-accent" : "bg-line"
+                depth <= TARGET ? "bg-accent" : "bg-muted/35"
               }`}
               style={{
                 height: `${heightOf(depth) * 100}%`,
@@ -98,11 +98,11 @@ export function SummaryScreen({ active = true, story }: { active?: boolean; stor
         ))}
       </div>
       <div className="mt-1.5 flex justify-between text-[13px] text-muted">
-        <span>Set 1, knee bend per rep</span>
+        <span>{SET_LABEL}</span>
         <span>Target {TARGET}°</span>
       </div>
       <p className="sr-only">
-        Set 1, deepest knee bend per rep: {DEPTHS.map((d) => `${d}°`).join(", ")}. Target {TARGET}°.
+        {SET_LABEL}, deepest knee bend per rep: {DEPTHS.map((d) => `${d}°`).join(", ")}. Target {TARGET}°.
       </p>
 
       <dl className="mt-3.5 text-sm">

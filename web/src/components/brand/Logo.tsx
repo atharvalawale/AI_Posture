@@ -20,7 +20,7 @@ export function LogoMark({ className }: { className?: string }) {
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link href="/" className={`inline-flex items-center gap-2 text-text ${className ?? ""}`} aria-label={`${site.name} home`}>
+    <Link href="/" className={`inline-flex min-h-11 items-center gap-2 text-text ${className ?? ""}`} aria-label={`${site.name} home`}>
       <LogoMark className="h-7 w-auto text-accent" />
       <span className="font-sans text-[19px] font-semibold tracking-[-0.01em]">{site.name}</span>
     </Link>

@@ -31,15 +31,29 @@ export function ScreenSurface({ children, className = "" }: { children: ReactNod
 
 /**
  * The 2D device: black body, 10px bezel, 48px outer radius, punch-hole camera.
- * Laid out at 300 x 630 and scaled to `width` (height = width x 2.1).
+ * Laid out at 300 x 630 and scaled to `width` (height = width x 2.1). With `width="fluid"` it takes its
+ * parent's width and scales in CSS (a size container, and `tan(atan2())` to turn its width into a plain
+ * number), so the server renders it at its final size before any script has measured it.
  */
-export function PhoneFrame({ width = PHONE_W, children, className = "", style }: { width?: number; children: ReactNode; className?: string; style?: CSSProperties }) {
-  const scale = width / PHONE_W;
+export function PhoneFrame({
+  width = PHONE_W,
+  children,
+  className = "",
+  style,
+}: {
+  width?: number | "fluid";
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const fluid = width === "fluid";
+  const box: CSSProperties = fluid ? { aspectRatio: `${PHONE_W} / ${PHONE_H}` } : { width, height: width * (PHONE_H / PHONE_W) };
+  const scale = fluid ? `scale(tan(atan2(100cqw, ${PHONE_W}px)))` : width === PHONE_W ? undefined : `scale(${width / PHONE_W})`;
   return (
-    <div className={`relative shrink-0 ${className}`} style={{ width, height: width * (PHONE_H / PHONE_W), ...style }}>
+    <div className={`relative shrink-0 ${fluid ? "@container w-full" : ""} ${className}`} style={{ ...box, ...style }}>
       <div
         className="absolute left-0 top-0 rounded-[48px] bg-device shadow-[0_0_0_1px_var(--device-edge),0_40px_70px_-36px_rgba(0,0,0,.55)]"
-        style={{ width: PHONE_W, height: PHONE_H, padding: BEZEL, transform: scale === 1 ? undefined : `scale(${scale})`, transformOrigin: "0 0" }}
+        style={{ width: PHONE_W, height: PHONE_H, padding: BEZEL, transform: scale, transformOrigin: "0 0" }}
       >
         <ScreenSurface>{children}</ScreenSurface>
       </div>

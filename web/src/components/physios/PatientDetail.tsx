@@ -16,6 +16,8 @@ type Props = {
   activeRep: number | null;
   /** Loops a rep in the replay, or plays it all with null. Only for a patient with footage. */
   onRep?: (i: number | null) => void;
+  /** Maya's clip could not load, so her bars say so instead of waiting. */
+  failed?: boolean;
   className?: string;
 };
 
@@ -33,7 +35,7 @@ export function flagsFor(patient: SamplePatient, values: number[] | null, target
 }
 
 /** Name and week, the three numbers a physio checks first, the reps against the target, and what is worth a look. */
-export function PatientDetail({ patient, values, target, onTarget, activeRep, onRep, className = "" }: Props) {
+export function PatientDetail({ patient, values, target, onTarget, activeRep, onRep, failed = false, className = "" }: Props) {
   const { measure } = patient;
   const form = values ? formScore(values, target, measure.direction) : null;
   const first = patient.name.split(" ")[0];
@@ -41,7 +43,7 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
   const toggle = onRep && ((i: number) => onRep(activeRep === i ? null : i));
 
   return (
-    <div className={`grid content-start gap-6 ${className}`}>
+    <div data-patient-detail className={`grid content-start gap-6 ${className}`}>
       {/* The condition always sits under the name, so a longer one never pushes the rest down for one patient only. */}
       <div>
         <p className="font-serif text-[26px] leading-tight tracking-[-0.01em] text-text">{patient.name}</p>
@@ -83,6 +85,7 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
             range={measure.range}
             activeRep={activeRep}
             onRep={toggle}
+            failed={failed}
             className="h-40"
           />
         </div>

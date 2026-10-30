@@ -25,14 +25,22 @@ export function usePoseClip(): PoseClip | null {
   return usePoseClipStatus().clip;
 }
 
-/** The reps found in the clip, computed once per clip. Null until the clip is ready. */
-export function useClipReps(): Rep[] | null {
-  const clip = usePoseClip();
-  if (!clip) return null;
+function repsOfClip(clip: PoseClip): Rep[] {
   let reps = repsByClip.get(clip);
   if (!reps) {
     reps = findReps(clip);
     repsByClip.set(clip, reps);
   }
   return reps;
+}
+
+/** The reps found in the clip, computed once per clip, and whether loading the clip failed. Null reps until the clip is ready. */
+export function useClipRepsStatus(): { reps: Rep[] | null; failed: boolean } {
+  const { clip, failed } = usePoseClipStatus();
+  return { reps: clip ? repsOfClip(clip) : null, failed };
+}
+
+/** The reps found in the clip, computed once per clip. Null until the clip is ready. */
+export function useClipReps(): Rep[] | null {
+  return useClipRepsStatus().reps;
 }

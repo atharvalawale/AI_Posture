@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useClipReps, usePoseClip } from "@/components/pose/usePoseClip";
+import { useClipRepsStatus, usePoseClip } from "@/components/pose/usePoseClip";
 import { LiveSession, clipDuration } from "@/lib/pose";
-import { MAYA, PATIENTS, type SamplePatient } from "@/lib/sample";
-import { PatientDetail } from "./PatientDetail";
-import { PatientList } from "./PatientList";
+import { MAYA, PATIENTS, TODAY, type SamplePatient } from "@/lib/sample";
+import { PatientDetail, flagsFor } from "./PatientDetail";
+import { MorningQueue, PatientList, type QueueItem } from "./PatientList";
 import { SessionReplay } from "./SessionReplay";
-import { usePatientReps } from "./usePatientReps";
+import { repsOf, usePatientReps } from "./usePatientReps";
 
 type Id = SamplePatient["id"];
 
@@ -20,10 +20,10 @@ const START_TARGETS = Object.fromEntries(PATIENTS.map((p) => [p.id, p.measure.ta
  * on one loops it in her replay.
  */
 export function PhysioDashboard({ className = "" }: { className?: string }) {
-  const [session] = useState(() => new LiveSession());
+  const [session] = useState(() => new LiveSession(null, { poster: true }));
   useEffect(() => () => session.dispose(), [session]);
   const clip = usePoseClip();
-  const reps = useClipReps();
+  const { reps, failed } = useClipRepsStatus();
   const [selected, setSelected] = useState<Id>(MAYA.id);
   const [targets, setTargets] = useState(START_TARGETS);
   const [activeRep, setActiveRep] = useState<number | null>(null);
@@ -31,6 +31,16 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
   const values = usePatientReps(patient);
   // Only Maya has footage, so only her reps replay.
   const replayable = !patient.still;
+
+  // What needs each patient's physio first, from the same flags as "Worth a look", at the targets set here:
+  // a flag about their week, else their first rep short of the target.
+  const queue: QueueItem[] = PATIENTS.flatMap((p) => {
+    const flags = flagsFor(p, repsOf(p, reps), targets[p.id]).filter((f) => !f.ok);
+    const flag = flags.find((f) => f.rep === undefined) ?? flags[0];
+    if (!flag) return [];
+    return [{ id: p.id, name: p.name.split(" ")[0], text: flag.rep === undefined ? flag.text : `Rep ${flag.rep + 1} stopped at ${flag.note}` }];
+  });
+  const inToday = PATIENTS.filter((p) => p.days[TODAY] === "done").length;
 
   const playRep = (i: number | null) => {
     const rep = i === null ? undefined : reps?.[i];
@@ -48,6 +58,7 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
         patients={PATIENTS}
         selected={selected}
         onSelect={setSelected}
+        footer={<MorningQueue done={inToday} total={PATIENTS.length} items={queue} onSelect={setSelected} />}
         className="border-b border-line p-2.5 sm:p-3 lg:border-r lg:border-b-0"
       />
       <div className="sm:grid sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:contents">
@@ -66,6 +77,7 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
           onTarget={(v) => setTargets((t) => ({ ...t, [patient.id]: v }))}
           activeRep={replayable ? activeRep : null}
           onRep={replayable ? playRep : undefined}
+          failed={failed}
           className="p-5 sm:p-6"
         />
       </div>

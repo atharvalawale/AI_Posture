@@ -30,7 +30,7 @@ describe.each([
   { name: "SummaryDetails", Details: SummaryDetails, Screen: SummaryScreen, facts: SUMMARY_FACTS },
   { name: "PlanDetails", Details: PlanDetails, Screen: PlanScreen, facts: PLAN_FACTS },
 ])("$name", ({ Details, Screen, facts }) => {
-  it.each(["full", "compact"] as const)("holds three lines that mirror the phone screen (%s)", (variant) => {
+  it.each(["full", "stage"] as const)("holds three lines that mirror the phone screen (%s)", (variant) => {
     const { container } = render(<Details variant={variant} />);
     const details = container.querySelector("[data-chapter-details]")!;
     expect(details.querySelectorAll("dt")).toHaveLength(3);

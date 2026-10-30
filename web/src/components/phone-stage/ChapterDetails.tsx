@@ -47,38 +47,43 @@ const PLAN: Line[] = [
 ];
 
 /**
- * Three short lines about the screen on the phone. `full`: a label over each value, for the column
- * beside the phone. `compact`: one line each, label left and value right, for under the phone.
+ * Three short lines about the screen on the phone. `full`: a label over each value, for a column beside
+ * the phone. `stage`: under the phone below 640 px, one line each with the label left and the value right,
+ * and `full` from 640 px, where it sits beside the phone. Decided in CSS, so the server and the client agree.
  */
-function Details({ id, lines, variant }: { id: Chapter; lines: Line[]; variant: "full" | "compact" }) {
-  if (variant === "compact") {
-    return (
-      <dl data-chapter-details={id} className="border-t border-line text-[15px]">
-        {lines.map(({ label, value }) => (
-          <div key={label} className="flex items-baseline justify-between gap-4 border-b border-line py-1.5">
-            <dt className="shrink-0 text-muted">{label}</dt>
-            <dd className="text-right font-medium">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    );
-  }
+const STYLES = {
+  full: {
+    row: "border-b border-line py-4",
+    dt: "text-[13px] text-muted",
+    dd: "mt-1 text-[22px] leading-snug font-medium text-pretty",
+  },
+  stage: {
+    row: "flex items-baseline justify-between gap-4 border-b border-line py-1.5 text-[15px] sm:block sm:py-4",
+    dt: "shrink-0 text-muted sm:text-[13px]",
+    dd: "text-right font-medium sm:mt-1 sm:text-left sm:text-[22px] sm:leading-snug sm:text-pretty",
+  },
+} as const;
+
+type Variant = keyof typeof STYLES;
+
+function Details({ id, lines, variant }: { id: Chapter; lines: Line[]; variant: Variant }) {
+  const c = STYLES[variant];
   return (
     <dl data-chapter-details={id} className="border-t border-line">
       {lines.map(({ label, value }) => (
-        <div key={label} className="border-b border-line py-4">
-          <dt className="text-[13px] text-muted">{label}</dt>
-          <dd className="mt-1 text-[22px] leading-snug font-medium text-pretty">{value}</dd>
+        <div key={label} className={c.row}>
+          <dt className={c.dt}>{label}</dt>
+          <dd className={c.dd}>{value}</dd>
         </div>
       ))}
     </dl>
   );
 }
 
-export function SummaryDetails({ variant }: { variant: "full" | "compact" }) {
+export function SummaryDetails({ variant }: { variant: Variant }) {
   return <Details id="summary" lines={SUMMARY} variant={variant} />;
 }
 
-export function PlanDetails({ variant }: { variant: "full" | "compact" }) {
+export function PlanDetails({ variant }: { variant: Variant }) {
   return <Details id="plan" lines={PLAN} variant={variant} />;
 }

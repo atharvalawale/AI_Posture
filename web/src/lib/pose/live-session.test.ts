@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../../public/media/squat.pose.json";
-import { LiveSession, RESUME_MS, STEP_SECONDS, SCRUB_PER_WIDTH, hipAngle, type PoseClip, type VideoLike } from "./index";
+import { LiveSession, POSTER_KNEE, RESUME_MS, STEP_SECONDS, SCRUB_PER_WIDTH, hipAngle, kneeAngle, type PoseClip, type VideoLike } from "./index";
 
 const clip = fixture as PoseClip;
 const fakeVideo = () => ({ currentTime: 0, duration: 29.27, paused: true, play: vi.fn(async () => {}), pause: vi.fn() }) satisfies VideoLike;
@@ -24,6 +24,12 @@ describe("LiveSession", () => {
     s.frame(1, v);
     expect(s.getSnapshot().value).toBeNull();
     expect(s.getSnapshot().t).toBe(0);
+  });
+
+  it("can start on the poster, the clip's first frame, with its knee angle", () => {
+    expect(POSTER_KNEE).toBe(Math.round(kneeAngle(clip, 0)));
+    const s = new LiveSession(null, { poster: true });
+    expect(s.getSnapshot()).toMatchObject({ t: 0, joint: "knee", value: POSTER_KNEE, knee: POSTER_KNEE, reps: 0, extreme: null, form: null });
   });
 
   it("counts the three reps, depths and form over the whole clip", () => {
@@ -169,6 +175,7 @@ describe("LiveSession", () => {
     s.subscribe(fn);
     s.step(1);
     s.dispose();
+    fn.mockClear();
     vi.advanceTimersByTime(2000);
     expect(v.play).not.toHaveBeenCalled();
     s.setJoint("hip");
@@ -253,5 +260,78 @@ describe("LiveSession", () => {
     expect(v.play).toHaveBeenCalledTimes(2);
     // A blocked play is swallowed, not thrown.
     await Promise.resolve();
+  });
+
+  it("is driven by the visitor only while they scrub, step or pick a joint, and calms down after", () => {
+    const s = new LiveSession(clip);
+    const v = fakeVideo();
+    s.attach(v);
+    feed(s, v, 12);
+    expect(s.getSnapshot().driven).toBe(false);
+
+    s.beginScrub();
+    expect(s.getSnapshot().driven).toBe(true);
+    vi.advanceTimersByTime(5000);
+    expect(s.getSnapshot().driven).toBe(true);
+    s.endScrub();
+    vi.advanceTimersByTime(RESUME_MS);
+    expect(s.getSnapshot().driven).toBe(false);
+
+    s.step(1);
+    expect(s.getSnapshot().driven).toBe(true);
+    vi.advanceTimersByTime(RESUME_MS);
+    expect(s.getSnapshot().driven).toBe(false);
+
+    s.setJoint("hip");
+    expect(s.getSnapshot().driven).toBe(true);
+    vi.advanceTimersByTime(RESUME_MS);
+    expect(s.getSnapshot().driven).toBe(false);
+
+    // Frames from the clip playing on its own never count as the visitor.
+    feed(s, v, 20);
+    expect(s.getSnapshot().driven).toBe(false);
+  });
+
+  it("setting the same clip again keeps the count", () => {
+    const s = new LiveSession();
+    const v = fakeVideo();
+    s.attach(v);
+    s.setClip(clip);
+    feed(s, v, 29.2);
+    s.setClip(clip);
+    expect(s.getSnapshot().reps).toBe(3);
+  });
+
+  it("holds still at a time with the reps before it counted, for reduced motion", () => {
+    const s = new LiveSession(clip);
+    const v = fakeVideo();
+    s.attach(v);
+    s.setStill(true);
+    s.holdAt(20);
+    const st = s.getSnapshot();
+    expect(v.pause).toHaveBeenCalled();
+    expect(v.currentTime).toBe(20);
+    expect(st.t).toBe(20);
+    expect(st.value).not.toBeNull();
+    expect(st.reps).toBeGreaterThan(0);
+    expect(st.form).not.toBeNull();
+    expect(v.play).not.toHaveBeenCalled();
+  });
+
+  it("never plays on its own after a scrub or a step while still", () => {
+    const s = new LiveSession(clip);
+    const v = fakeVideo();
+    s.attach(v);
+    s.setStill(true);
+    s.beginScrub();
+    s.scrubTo(70, 280);
+    s.endScrub();
+    s.step(1);
+    vi.advanceTimersByTime(5000);
+    expect(v.play).not.toHaveBeenCalled();
+    expect(s.holding()).toBe(false);
+    // Picking a range is the visitor asking for it to play.
+    s.loop([2, 4]);
+    expect(v.play).toHaveBeenCalledTimes(1);
   });
 });

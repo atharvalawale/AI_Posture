@@ -112,8 +112,9 @@ test("the story releases the pin and the next section follows it", async ({ page
 const liveVideo = (page: Page) => page.locator('[data-screen="live"] video');
 const paused = (page: Page) => liveVideo(page).evaluate((v) => (v as HTMLVideoElement).paused);
 
-/** Waits until the clip is playing and the readout shows a number. */
+/** Waits until the pose data has loaded and the readout shows a number. */
 async function readoutLive(page: Page) {
+  await expect(page.locator("[data-phone-stage][data-clip-ready]")).toHaveCount(1, { timeout: 30_000 });
   await expect(page.locator("[data-readout-value]")).toHaveText(/^\d+$/, { timeout: 30_000 });
 }
 

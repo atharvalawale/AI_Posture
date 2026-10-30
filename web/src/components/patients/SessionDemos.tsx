@@ -70,7 +70,7 @@ function ScoreBars({ depths, slots }: { depths: number[]; slots: number }) {
         return (
           <div key={i} className="flex h-full w-8 flex-col items-center" data-demo-score={score ?? undefined}>
             <span className={`text-[13px] font-semibold tabular-nums text-text ${score === null ? "invisible" : ""}`}>{score ?? 0}</span>
-            <span className="relative mt-1 block w-full flex-1 overflow-hidden rounded-t-md bg-line/60">
+            <span className="relative mt-1 block w-full flex-1 overflow-hidden rounded-t-md bg-muted/25">
               <span
                 className="absolute inset-x-0 bottom-0 block bg-accent transition-[height] duration-500 ease-out"
                 style={{ height: `${score ?? 0}%` }}

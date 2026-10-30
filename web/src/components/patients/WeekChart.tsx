@@ -92,7 +92,7 @@ export function WeekChart({ depths, week, onWeek, target }: Props) {
                     ? "size-4 border-accent bg-accent"
                     : reached
                       ? "size-3 border-accent bg-bg group-hover:size-3.5"
-                      : "size-3 border-line bg-bg group-hover:size-3.5 group-hover:border-muted"
+                      : "size-3 border-muted/80 bg-bg group-hover:size-3.5 group-hover:border-muted"
                 }`}
               />
             </button>

@@ -2,7 +2,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LiveSession, type PoseClip } from "@/lib/pose";
+import { LiveSession, POSTER_KNEE, type PoseClip } from "@/lib/pose";
 import { MAYA_SESSION } from "@/lib/sample";
 import { LiveScreen } from "./screens/LiveScreen";
 import { PlanScreen } from "./screens/PlanScreen";
@@ -48,7 +48,8 @@ describe("LiveScreen", () => {
     expect(ctx.clearRect).toHaveBeenCalled();
     for (const call of [ctx.stroke, ctx.fill, ctx.arc, ctx.lineTo]) expect(call).not.toHaveBeenCalled();
     expect(screen.getByText("Stand tall to begin")).toBeInTheDocument();
-    expect(screen.getByText("Knee --")).toBeInTheDocument();
+    // The poster is the clip's first frame, so the knee reads its angle there.
+    expect(screen.getByText(`Knee ${POSTER_KNEE}°`)).toBeInTheDocument();
   });
 
   it("draws the skeleton once the video plays", async () => {
@@ -106,7 +107,7 @@ describe("SummaryScreen", () => {
     // Set 1's reps from the clip, one bar each.
     expect(document.querySelectorAll("i")).toHaveLength(MAYA_SESSION.depths.length);
     for (const d of MAYA_SESSION.depths) expect(screen.getByText(`${d}°`, { selector: "span" })).toBeInTheDocument();
-    expect(screen.getByText("Set 1, knee bend per rep")).toBeInTheDocument();
+    expect(screen.getByText("Set 1, first 3 reps")).toBeInTheDocument();
     expect(screen.getByText("Sent to your physio")).toBeInTheDocument();
   });
 });

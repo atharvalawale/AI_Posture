@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { AngleValue } from "@/components/pose/AngleValue";
 import { useClipReps, usePoseClip } from "@/components/pose/usePoseClip";
 import { shortReps, weekDepths } from "@/lib/pose";
-import { KABIR, MAYA, MAYA_TARGET, PATIENTS, PLAN_ITEMS, type DayMark } from "@/lib/sample";
+import { KABIR, MAYA, MAYA_TARGET, PATIENTS, PLAN_ITEMS, lastSession, weekCount } from "@/lib/sample";
 import { Avatar } from "./PatientList";
 import { useFormScores } from "./usePatientReps";
 
@@ -29,7 +29,7 @@ export function PanelFrame({
   return (
     <div
       data-panel={id}
-      className={`flex ${phoneHeight} ${wideHeight} items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:p-8`}
+      className={`flex ${phoneHeight} ${wideHeight} items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:p-8 dark:bg-bg`}
     >
       {children}
     </div>
@@ -116,24 +116,20 @@ function DashPanel() {
   );
 }
 
-const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const count = (days: DayMark[], mark: DayMark) => days.filter((d) => d === mark).length;
-
 /** What reaches the physio first, from the same week and reps as the dashboard. */
 export function AlertsPanel() {
   const reps = useClipReps();
   const short = reps ? shortReps(reps.map((r) => r.depth), MAYA_TARGET)[0] : undefined;
   const arjun = PATIENTS.find((p) => p.id === "arjun")!;
   const rohan = PATIENTS.find((p) => p.id === "rohan")!;
-  const lastDone = arjun.days.lastIndexOf("done");
   const alerts: { title: string; note: string; ok?: boolean }[] = [
-    { title: `Arjun missed ${count(arjun.days, "missed")} sessions`, note: `Last session on ${WEEKDAY_NAMES[lastDone]}` },
+    { title: `Arjun missed ${weekCount(arjun.days).missed} sessions`, note: `Last session ${lastSession(arjun.days)}` },
     !reps
       ? { title: "Maya finished this morning's session", note: "Loading her reps" }
       : short
         ? { title: `Maya's rep ${short.rep + 1} stopped at ${short.value}°`, note: `Your target is ${MAYA_TARGET}°` }
         : { title: "Maya reached her target on every rep", note: `Your target is ${MAYA_TARGET}°`, ok: true },
-    { title: "Rohan finished his week", note: `All ${count(rohan.days, "done")} sessions done`, ok: true },
+    { title: "Rohan finished his week", note: `All ${weekCount(rohan.days).done} sessions done`, ok: true },
   ];
   return (
     <PanelFrame id="alerts">
@@ -175,7 +171,8 @@ const CHART = { w: 240, h: 96, pad: 6 };
 
 function ReportPanel() {
   const clip = usePoseClip();
-  const depths = clip ? weekDepths(clip) : null;
+  // Maya's weeks so far, as on her own progress chart for patients.
+  const depths = clip ? weekDepths(clip, MAYA.week) : null;
   // Higher on the chart is a deeper bend, so the line climbs as Maya improves.
   const lo = Math.min(MAYA_TARGET, ...(depths ?? [MAYA_TARGET])) - 6;
   const hi = Math.max(...(depths ?? [MAYA_TARGET + 40])) + 4;

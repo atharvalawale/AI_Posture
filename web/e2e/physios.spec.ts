@@ -52,9 +52,9 @@ test.describe("/for-physios dashboard", () => {
     await dash.getByRole("button", { name: /Arjun Mehta/ }).click();
     await expect(dash.getByText("Rotator cuff repair, week 6")).toBeVisible();
     await expect(dash.getByText("Highest left arm raise per rep")).toBeVisible();
-    await expect(dash.getByText("Deepest knee bend per rep")).toHaveCount(0);
+    await expect(dash.getByText("Set 1, first 3 reps, deepest knee bend")).toHaveCount(0);
     await expect(dash.getByRole("slider", { name: "Your target for Arjun" })).toHaveValue("90");
-    await expect(dash.getByText("Missed 4 sessions this week")).toBeVisible();
+    await expect(dash.locator("[data-patient-detail]").getByText("Missed 4 sessions this week")).toBeVisible();
     await expect(dash.getByText("Rep 2 stopped short of your target")).toBeVisible();
 
     // The photo shows at its own 4:3 shape, on the page's surface, with no black bands.
@@ -77,17 +77,18 @@ test.describe("/for-physios dashboard", () => {
         await page.goto("/for-physios");
         const dash = page.getByRole("region", { name: "Sample physio dashboard" });
         await expect(dash.getByText("2 of 3 reached your target")).toBeVisible();
+        const detail = dash.locator("[data-patient-detail]");
         // Offsets from the patient's name to the slider and to the flags, which must not move between patients.
         const offsets = async () => {
-          const name = (await dash.locator("p.font-serif").first().boundingBox())!;
-          const slider = (await dash.getByRole("slider").boundingBox())!;
-          const flags = (await dash.getByText("Worth a look").boundingBox())!;
+          const name = (await detail.locator("p.font-serif").first().boundingBox())!;
+          const slider = (await detail.getByRole("slider").boundingBox())!;
+          const flags = (await detail.getByText("Worth a look", { exact: true }).boundingBox())!;
           return [Math.round(slider.y - name.y), Math.round(flags.y - name.y)];
         };
         const maya = await offsets();
         for (const name of ["Arjun Mehta", "Rohan Kulkarni"]) {
           await dash.getByRole("button", { name: new RegExp(name) }).click();
-          await expect(dash.locator("p.font-serif").first()).toHaveText(name);
+          await expect(detail.locator("p.font-serif").first()).toHaveText(name);
           expect(await offsets()).toEqual(maya);
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

@@ -13,6 +13,8 @@ type Props = {
   range?: [number, number];
   /** Classes for the whole chart, degree labels included. Sets its height, so it replaces the default `h-44`. */
   className?: string;
+  /** The session's data could not load, so there is nothing to wait for. */
+  failed?: boolean;
 };
 
 // The bars and their degree labels share these sizes, so each label sits under its bar.
@@ -23,11 +25,11 @@ const ROW = "flex justify-around gap-3";
  * Each rep's angle as a bar, against a dashed target line: by default the deepest knee bend, where a deeper bend
  * (a smaller angle) draws a taller bar. With `onRep` a bar is a button that selects its rep; without it, a labelled image.
  */
-export function RepBars({ depths, target, activeRep = null, onRep, direction = "lower", range = [60, 180], className = "h-44" }: Props) {
+export function RepBars({ depths, target, activeRep = null, onRep, direction = "lower", range = [60, 180], className = "h-44", failed = false }: Props) {
   if (!depths) {
     return (
       <div className={`flex items-center justify-center rounded-xl border border-line ${className}`}>
-        <p className="text-[15px] text-muted">Loading the session</p>
+        <p className="text-[15px] text-muted">{failed ? "Session data could not load" : "Loading the session"}</p>
       </div>
     );
   }

@@ -33,21 +33,22 @@ afterEach(() => {
 });
 
 describe("PhysioDashboard", () => {
-  it("renders the patients and a loading line when the clip cannot load", async () => {
+  it("renders the patients, and says the session could not load when the clip cannot", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("offline"))));
     render(<PhysioDashboard />);
     await wait(50);
     for (const name of ["Maya Thomas", "Arjun Mehta", "Rohan Kulkarni"]) {
       expect(screen.getByRole("button", { name: new RegExp(name) })).toBeInTheDocument();
     }
-    expect(screen.getByText("Loading the session")).toBeInTheDocument();
+    expect(screen.getByText("Session data could not load")).toBeInTheDocument();
+    expect(screen.queryByText("Loading the session")).toBeNull();
   });
 
   it("counts the reps that reached the target and flags the short one", async () => {
     serveClip();
     render(<PhysioDashboard />);
     expect(await screen.findByText("2 of 3 reached your target")).toBeInTheDocument();
-    expect(screen.getByText("Deepest knee bend per rep")).toBeInTheDocument();
+    expect(screen.getByText("Set 1, first 3 reps, deepest knee bend")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Rep 2 stopped short of your target/ })).toBeInTheDocument();
   });
 
@@ -112,7 +113,7 @@ describe("PhysioDashboard", () => {
     fireEvent.click(screen.getByRole("button", { name: /Arjun Mehta/ }));
     expect(screen.getByRole("button", { name: /Arjun Mehta/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Rotator cuff repair, week 6")).toBeInTheDocument();
-    expect(screen.queryByText("Deepest knee bend per rep")).toBeNull();
+    expect(screen.queryByText("Set 1, first 3 reps, deepest knee bend")).toBeNull();
     expect(screen.getByText("Highest left arm raise per rep")).toBeInTheDocument();
     expect(screen.getByText("2 of 3 reached your target")).toBeInTheDocument();
     expect(formScore()).toBe("91");
@@ -129,7 +130,7 @@ describe("PhysioDashboard", () => {
     const short = screen.getByText("Rep 2 stopped short of your target").parentElement!;
     expect(short.tagName).not.toBe("BUTTON");
     expect(within(short).getByText("78°")).toBeInTheDocument();
-    expect(screen.getByText("Missed 4 sessions this week")).toBeInTheDocument();
+    expect(within(container.querySelector<HTMLElement>("[data-patient-detail]")!).getByText("Missed 4 sessions this week")).toBeInTheDocument();
 
     const slider = screen.getByRole("slider", { name: "Your target for Arjun" });
     expect(slider).toHaveValue("90");
@@ -143,6 +144,10 @@ describe("PhysioDashboard", () => {
     expect(container.querySelector('img[src*="shoulder_raises"]')).not.toBeNull();
     expect(screen.getByText("Thursday")).toBeInTheDocument();
     expect(screen.getAllByText("Missed")).toHaveLength(4);
+    // Today is Sunday, and his session this morning is the photo above his week.
+    expect(screen.getByText("Shoulder raises, this morning")).toBeInTheDocument();
+    expect(screen.getByText("Sunday").nextSibling?.textContent).toBe("Done this morning");
+    expect(screen.getByText("3 of 7")).toBeInTheDocument();
   });
 
   it("keeps each patient's target when switching between them", async () => {
@@ -157,6 +162,28 @@ describe("PhysioDashboard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Maya Thomas/ }));
     expect(screen.getByRole("slider", { name: "Your target for Maya" })).toHaveValue("110");
+  });
+});
+
+describe("morning queue", () => {
+  it("counts this morning's sessions and puts first what needs the physio, at the targets set on the dashboard", async () => {
+    serveClip();
+    render(<PhysioDashboard />);
+    await screen.findByText("2 of 3 reached your target");
+    expect(screen.getByText("3 of 3 sessions in")).toBeInTheDocument();
+    const queue = () => screen.getByText("Worth a look first").nextElementSibling as HTMLElement;
+    expect(within(queue()).getAllByRole("button").map((b) => b.textContent)).toEqual([
+      `MayaRep 2 stopped at ${Math.round(reps[1].depth)}°`,
+      "ArjunMissed 4 sessions this week",
+      "RohanRep 2 stopped at 37°",
+    ]);
+
+    // Every one of Maya's reps reaches a 105° target, so she leaves the queue.
+    fireEvent.change(screen.getByRole("slider", { name: "Your target for Maya" }), { target: { value: "105" } });
+    expect(within(queue()).queryByText("Maya")).toBeNull();
+
+    fireEvent.click(within(queue()).getByRole("button", { name: /Arjun/ }));
+    expect(screen.getByText("Rotator cuff repair, week 6")).toBeInTheDocument();
   });
 });
 
@@ -178,7 +205,9 @@ describe("feature panels", () => {
     expect(await screen.findByText(`Maya's rep 2 stopped at ${Math.round(reps[1].depth)}°`)).toBeInTheDocument();
     expect(Math.round(reps[1].depth)).toBe(102);
     expect(screen.getByText("Arjun missed 4 sessions")).toBeInTheDocument();
-    expect(screen.getByText("Last session on Thursday")).toBeInTheDocument();
+    // His last session is the one the dashboard replays: this morning's.
+    expect(screen.getByText("Last session this morning")).toBeInTheDocument();
+    expect(screen.getByText("All 7 sessions done")).toBeInTheDocument();
   });
 
   it("books Maya on a real Thursday in a calendar that starts on a real Monday", () => {

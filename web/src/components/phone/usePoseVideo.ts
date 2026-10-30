@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore, type RefObject } from "react";
+import { holdTime } from "@/components/pose/clipClock";
 import { LiveSession, coverBox, drawSkeleton, loadPoseClip, type LiveState, type PoseClip } from "@/lib/pose";
 
 export type PoseVideoState = LiveState & { playing: boolean };
@@ -23,13 +24,15 @@ type Options = {
  * currentTime fallback) so the skeleton never runs ahead of the picture. Draws nothing
  * until the video has actually started (or been seeked), so a blocked autoplay just shows the poster.
  * Every drawn frame is fed to the session, and the arc follows the session's selected joint.
+ * Under reduced motion it never plays on its own: it holds still at the bottom of the last rep (`holdTime`),
+ * with the reps before it counted. A scrub or a step still moves it, and it plays only when the visitor asks.
  */
 export function usePoseVideo(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   { active = true, position = [0.5, 0.5], url, session }: Options = {},
 ): PoseVideoState {
-  const [own] = useState(() => new LiveSession());
+  const [own] = useState(() => new LiveSession(null, { poster: true }));
   const live = session ?? own;
   const state = useSyncExternalStore(live.subscribe, live.getSnapshot, live.getSnapshot);
   const [playing, setPlaying] = useState(false);
@@ -51,6 +54,13 @@ export function usePoseVideo(
     let drawn = { t: -1, w: 0, h: 0, dpr: 0, joint: "" };
     const detach = live.attach(video);
     const hasFrameCallback = typeof video.requestVideoFrameCallback === "function";
+    // Read when the effect runs, not from React state, so a reduced-motion visit never starts the clip during hydration.
+    const motion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const still = () => !!motion?.matches;
+    live.setStill(still());
+    const hold = () => {
+      if (clip && !disposed) live.holdAt(holdTime(clip));
+    };
     const raf$ = window.requestAnimationFrame?.bind(window) ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
     const caf$ = window.cancelAnimationFrame?.bind(window) ?? window.clearTimeout;
 
@@ -62,6 +72,7 @@ export function usePoseVideo(
           loaded.set(live, c);
           live.setClip(c);
         }
+        if (still() && running()) hold();
       })
       .catch(() => {
         // No skeleton without pose data. The video still plays.
@@ -106,7 +117,7 @@ export function usePoseVideo(
     const start = () => {
       if (!raf) raf = raf$(tick);
       // Not while the session holds the clip for a scrub or a step: it resumes the video itself.
-      if (running() && video.paused && !live.holding()) {
+      if (running() && video.paused && !live.holding() && !still()) {
         video.play().catch(() => {
           // Autoplay blocked (for example iOS Low Power Mode). The poster stays up.
         });
@@ -139,6 +150,14 @@ export function usePoseVideo(
     video.addEventListener("pause", onPause);
     video.addEventListener("seeked", onSeeked);
 
+    const onMotion = () => {
+      live.setStill(still());
+      if (!running()) return;
+      if (still()) hold();
+      else start();
+    };
+    motion?.addEventListener?.("change", onMotion);
+
     // Pause off screen: saves battery on phones and keeps the main thread free while scrolling.
     let io: IntersectionObserver | undefined;
     if (typeof IntersectionObserver !== "undefined") {
@@ -159,6 +178,7 @@ export function usePoseVideo(
     return () => {
       disposed = true;
       io?.disconnect();
+      motion?.removeEventListener?.("change", onMotion);
       detach();
       if (raf) caf$(raf);
       if (vfc) video.cancelVideoFrameCallback(vfc);

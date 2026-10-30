@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useClipReps } from "@/components/pose/usePoseClip";
+import { useClipRepsStatus } from "@/components/pose/usePoseClip";
 import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
 import { MAYA_SESSION } from "@/lib/sample";
@@ -30,7 +30,7 @@ export function sessionLine(depths: number[] | null, rep: number | null) {
 
 /** The physio's view of Maya's session: the deepest knee bend of each rep against the target. Sample data from the real clip. */
 export function ReviewPanel() {
-  const reps = useClipReps();
+  const { reps, failed } = useClipRepsStatus();
   const depths = reps?.map((r) => r.depth) ?? null;
   const [rep, setRep] = useState<number | null>(null);
 
@@ -40,13 +40,13 @@ export function ReviewPanel() {
         <Image src="/images/avatars/maya.webp" alt="" width={44} height={44} unoptimized className="size-11 rounded-full object-cover" />
         <div className="min-w-0">
           <p className="text-[17px] font-semibold leading-snug text-text">Maya&apos;s session, this morning</p>
-          <p className="text-[15px] text-muted">Squats, set 1 of 3</p>
+          <p className="text-[15px] text-muted">Squats, deepest knee bend per rep</p>
         </div>
       </div>
 
       <div className="mt-5 flex flex-1 flex-col border-t border-line pt-5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className="text-[15px] text-muted">Deepest knee bend per rep</p>
+          <p className="text-[15px] text-muted">{MAYA_SESSION.setLabel}</p>
           {depths && (
             <p className="text-[15px] font-semibold tabular-nums text-text">
               {reachedCount(depths, TARGET)} of {depths.length} reached {TARGET}°
@@ -56,6 +56,7 @@ export function ReviewPanel() {
         <RepBars
           depths={depths}
           target={TARGET}
+          failed={failed}
           activeRep={rep}
           onRep={(i) => setRep((r) => (r === i ? null : i))}
           range={RANGE}

@@ -22,6 +22,12 @@ export const viewport: Viewport = {
   ],
 };
 
+/**
+ * Without JavaScript a browser shows its own controls on every video, and the pose clips cannot play or draw
+ * their skeleton anyway. They step aside, and the poster behind each one shows instead.
+ */
+const NO_SCRIPT = "<style>video[data-pose-video]{visibility:hidden}</style>";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning className={`${fonts.serif.variable} ${fonts.sans.variable}`}>
@@ -31,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
         </ThemeProvider>
+        <noscript dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} />
       </body>
     </html>
   );

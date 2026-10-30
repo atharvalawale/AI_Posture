@@ -130,7 +130,7 @@ export function BodyMap() {
               inert={!on}
               // Stacked in one cell from 640 px so the layout keeps the tallest panel's height. On phones a hidden panel takes no space.
               // Visibility flips only after the fade, so the outgoing panel fades out too.
-              className={`col-start-1 row-start-1 transition-[opacity,visibility] duration-300 ${on ? "visible opacity-100" : "invisible opacity-0 max-sm:hidden"}`}
+              className={`col-start-1 row-start-1 transition-[opacity,visibility] duration-300 motion-reduce:transition-none ${on ? "visible opacity-100" : "invisible opacity-0 max-sm:hidden"}`}
             >
               <h3 className="font-serif text-[28px] leading-[1.15] tracking-[-0.01em] text-balance">{a.condition}</h3>
               <p className="mt-3 text-[16px] leading-relaxed text-pretty text-muted">{a.body}</p>

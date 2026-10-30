@@ -31,12 +31,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 h-(--header-h) border-b border-line bg-bg">
       <Container className="flex h-full items-center justify-between gap-6">
         <Logo />
-        <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
+        {/* Each link is a 44 px tall target, padded so even "Blog" is 44 px wide. The padding takes the place of the gap. */}
+        <nav aria-label="Main" className="hidden items-center gap-3 lg:flex">
           {site.nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`text-sm transition-colors hover:text-text ${pathname === item.href ? "text-text" : "text-muted"}`}
+              className={`inline-flex h-11 items-center px-2 text-sm transition-colors hover:text-text ${pathname === item.href ? "text-text" : "text-muted"}`}
             >
               {item.label}
             </Link>
@@ -49,7 +50,7 @@ export function SiteHeader() {
           </Button>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text lg:hidden"
+            className="-mr-1 inline-flex size-11 items-center justify-center rounded-lg text-text lg:hidden"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-menu"

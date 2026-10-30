@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import { usePoseVideo } from "@/components/phone/usePoseVideo";
 import type { LiveSession, Rep } from "@/lib/pose";
-import type { DayMark, SamplePatient } from "@/lib/sample";
+import { TODAY, WEEKDAYS, type DayMark, type SamplePatient } from "@/lib/sample";
 import { DAY_COLOR } from "./PatientList";
 
 // Overlays sit on top of footage, so they keep fixed colors in both themes, like the skeleton.
@@ -13,8 +13,7 @@ const BONE = "bg-[#6fd0c3]";
 /** Where the squat footage is anchored when cropped, as fractions. Keeps Maya's feet in frame. */
 const FOOTAGE_POSITION: [number, number] = [0.42, 0.9];
 
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const DAY_TEXT: Record<DayMark, string> = { done: "Done", missed: "Missed", today: "Today" };
+const DAY_TEXT: Record<DayMark, string> = { done: "Done", missed: "Missed" };
 
 type Props = {
   patient: SamplePatient;
@@ -26,7 +25,7 @@ type Props = {
   className?: string;
 };
 
-/** The patient's week, a day per row: done, missed or today. */
+/** The patient's week, a day per row: done or missed. Today is done this morning, and its dot is ringed. */
 function WeekList({ days }: { days: DayMark[] }) {
   return (
     <div className="px-4 pt-3 pb-4 sm:px-5 sm:pt-4">
@@ -36,8 +35,8 @@ function WeekList({ days }: { days: DayMark[] }) {
           <li key={WEEKDAYS[i]} className="flex items-center justify-between gap-3 border-b border-line py-[7px] text-[15px] last:border-b-0">
             <span className="text-text">{WEEKDAYS[i]}</span>
             <span className="flex items-center gap-2 text-muted">
-              <span aria-hidden className={`size-2 rounded-full ${DAY_COLOR[d]} ${d === "today" ? "ring-1 ring-muted/60" : ""}`} />
-              {DAY_TEXT[d]}
+              <span aria-hidden className={`size-2 rounded-full ${DAY_COLOR[d]} ${i === TODAY ? "ring-2 ring-accent/30" : ""}`} />
+              {i === TODAY && d === "done" ? "Done this morning" : DAY_TEXT[d]}
             </span>
           </li>
         ))}
@@ -61,7 +60,9 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
 
   return (
     <div
-      className={`relative overflow-hidden ${footage ? "bg-[#111]" : "flex flex-col bg-surface-2"} ${className}`}
+      className={`relative overflow-hidden ${footage ? "bg-[#111] bg-cover" : "flex flex-col bg-surface-2"} ${className}`}
+      // The poster is also the background, so the replay still shows Maya where the video is hidden (without JavaScript).
+      style={footage ? { backgroundImage: "url(/media/squat-poster.jpg)", backgroundPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` } : undefined}
     >
       {/* On phones the footage takes the same height as a photo and its week below it, so the details under the replay
           stay put when the physio switches patients. From 640 px the replay stretches beside the details instead. */}
@@ -74,6 +75,7 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
       {/* The video stays mounted while another patient shows, so switching back to Maya is instant. */}
       <video
         ref={videoRef}
+        data-pose-video
         className={`absolute inset-0 h-full w-full object-cover ${footage ? "" : "invisible"}`}
         style={{ objectPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` }}
         src="/media/squat-720.mp4"

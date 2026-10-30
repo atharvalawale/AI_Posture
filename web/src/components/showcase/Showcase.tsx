@@ -228,7 +228,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
               ref={on ? activePanel : undefined}
               tabIndex={on && panelNeedsStop ? 0 : undefined}
               inert={!on}
-              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-[opacity,visibility] duration-300 ${on ? "visible opacity-100" : "invisible opacity-0"}`}
+              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-[opacity,visibility] duration-300 motion-reduce:transition-none ${on ? "visible opacity-100" : "invisible opacity-0"}`}
             >
               <PanelActive value={on}>{panel}</PanelActive>
             </div>

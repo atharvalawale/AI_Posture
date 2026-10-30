@@ -101,7 +101,5 @@ export function useShowcase(count: number, opts: Opts = {}) {
     },
   });
 
-  const panelProps = { role: "tabpanel" as const, id: panelId(active), "aria-labelledby": tabId(active) };
-
-  return { active, select, touched, holdProps, tabProps, panelProps, tabId, panelId, rootRef: rootRef as RefObject<HTMLElement | null> };
+  return { active, select, touched, holdProps, tabProps, tabId, panelId, rootRef: rootRef as RefObject<HTMLElement | null> };
 }

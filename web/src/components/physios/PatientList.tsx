@@ -1,7 +1,8 @@
 import Image from "next/image";
-import type { DayMark, SamplePatient } from "@/lib/sample";
+import type { ReactNode } from "react";
+import { weekCount, type DayMark, type SamplePatient } from "@/lib/sample";
 
-export const DAY_COLOR: Record<DayMark, string> = { done: "bg-accent", missed: "bg-warn", today: "bg-line" };
+export const DAY_COLOR: Record<DayMark, string> = { done: "bg-accent", missed: "bg-warn" };
 
 /** The patient's face from their footage, or their initials when there is none. */
 export function Avatar({ avatar, initials, className = "size-10" }: { avatar?: string; initials: string; className?: string }) {
@@ -18,10 +19,9 @@ export function Avatar({ avatar, initials, className = "size-10" }: { avatar?: s
   );
 }
 
-/** This week, Monday first: done in accent, missed in warn, today in line. */
+/** This week, Monday first: done in accent, missed in warn. Today, done this morning, is the last day. */
 export function DaysStrip({ days, className = "" }: { days: DayMark[]; className?: string }) {
-  const done = days.filter((d) => d === "done").length;
-  const missed = days.filter((d) => d === "missed").length;
+  const { done, missed } = weekCount(days);
   return (
     <span role="img" aria-label={`This week: ${done} done, ${missed} missed`} className={`flex gap-[3px] ${className}`}>
       {days.map((d, i) => (
@@ -31,13 +31,20 @@ export function DaysStrip({ days, className = "" }: { days: DayMark[]; className
   );
 }
 
-type Props = { patients: SamplePatient[]; selected: SamplePatient["id"]; onSelect: (id: SamplePatient["id"]) => void; className?: string };
+type Props = {
+  patients: SamplePatient[];
+  selected: SamplePatient["id"];
+  onSelect: (id: SamplePatient["id"]) => void;
+  /** Shown under the list from 1024 px, where the list is a column as tall as the replay. */
+  footer?: ReactNode;
+  className?: string;
+};
 
 /**
  * The physio's patients. A row of faces and first names on phones, three entries on tablets, a column on desktop.
  * Each entry names the patient and their exercise, with this week's sessions.
  */
-export function PatientList({ patients, selected, onSelect, className = "" }: Props) {
+export function PatientList({ patients, selected, onSelect, footer, className = "" }: Props) {
   return (
     <div className={className}>
       <p className="px-2 pb-2 text-[13px] text-muted lg:pb-3">Your patients today</p>
@@ -68,6 +75,47 @@ export function PatientList({ patients, selected, onSelect, className = "" }: Pr
           );
         })}
       </ul>
+      {footer && <div className="hidden lg:block">{footer}</div>}
+    </div>
+  );
+}
+
+/** A patient worth a look, by first name, and what needs the look. */
+export type QueueItem = { id: SamplePatient["id"]; name: string; text: string };
+
+/**
+ * The physio's morning at a glance: how many of today's sessions are in, and the patients worth a look first,
+ * each with the first thing that needs it. A row opens that patient.
+ */
+export function MorningQueue({ done, total, items, onSelect }: { done: number; total: number; items: QueueItem[]; onSelect: (id: SamplePatient["id"]) => void }) {
+  return (
+    <div className="mt-5 border-t border-line px-2 pt-4">
+      <p className="text-[13px] text-muted">This morning</p>
+      <p className="mt-0.5 font-serif text-[22px] leading-tight text-text">
+        {done} of {total} sessions in
+      </p>
+      {items.length > 0 && (
+        <>
+          <p className="mt-5 text-[13px] text-muted">Worth a look first</p>
+          <ul className="mt-1.5 -mx-2 grid gap-1">
+            {items.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(item.id)}
+                  className="flex min-h-11 w-full cursor-pointer items-start gap-2.5 rounded-xl px-2 py-2 text-left transition-colors hover:bg-surface-2/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <span aria-hidden className="mt-[7px] size-2 shrink-0 rounded-full bg-warn" />
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold text-text">{item.name}</span>
+                    <span className="block text-[13px] text-pretty text-muted">{item.text}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

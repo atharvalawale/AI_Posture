@@ -24,15 +24,19 @@ export function SiteFooter() {
           </p>
           <p className="mt-4 text-sm text-muted">{site.appsComingSoon}</p>
         </div>
-        <nav aria-label="Footer" className="flex flex-col gap-3 text-[15px]">
+        {/* Each link is a 44 px tall row as wide as its column. The negative margin keeps the first line level with the logo. */}
+        <nav aria-label="Footer" className="-my-2.5 flex flex-col text-[15px]">
           {[...site.nav.filter((i) => i.href !== "/blog"), ...site.footer].map((item) => (
-            <Link key={item.href + item.label} href={item.href} className="text-muted transition-colors hover:text-text">
+            <Link key={item.href + item.label} href={item.href} className="flex min-h-11 items-center text-muted transition-colors hover:text-text">
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="flex flex-col gap-3 text-[15px]">
-          <a href={`mailto:${site.email}`} className="text-text underline decoration-line underline-offset-4 hover:decoration-text">
+        <div className="-mt-2.5 flex flex-col items-start gap-0.5 text-[15px]">
+          <a
+            href={`mailto:${site.email}`}
+            className="flex min-h-11 items-center text-text underline decoration-line underline-offset-4 hover:decoration-text"
+          >
             {site.email}
           </a>
           <span className="text-muted">{site.location}</span>

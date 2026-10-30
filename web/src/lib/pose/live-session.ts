@@ -18,6 +18,8 @@ export type LiveState = {
   depths: number[];
   form: number | null;
   scrubbing: boolean;
+  /** True while the visitor drives the clip: during a scrub, and for a moment after a scrub, a step or a joint pick. */
+  driven: boolean;
 };
 
 export type VideoLike = {
@@ -49,7 +51,14 @@ const INITIAL: LiveState = {
   depths: [],
   form: null,
   scrubbing: false,
+  driven: false,
 };
+
+/**
+ * The squat clip's poster is its first frame: Maya standing tall, her knee at 178°. A session that starts
+ * on the poster shows that angle before the clip loads, and without JavaScript. live-session.test.ts pins it.
+ */
+export const POSTER_KNEE = 178;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
@@ -71,12 +80,20 @@ export class LiveSession {
   private range: [number, number] | null = null;
   /** The last requested seek target, until the next frame arrives. */
   private pending: number | null = null;
+  /** Ends `driven` a moment after the visitor's last scrub, step or joint pick. */
+  private calm: ReturnType<typeof setTimeout> | null = null;
+  /** Reduced motion: the clip never plays on its own, not even after a scrub or a step. */
+  private still = false;
 
-  constructor(clip: PoseClip | null = null) {
+  /** `poster`: start on the squat clip's poster frame, so the knee reads its angle there before any frame plays. */
+  constructor(clip: PoseClip | null = null, { poster = false }: { poster?: boolean } = {}) {
     this.clip = clip;
+    if (poster) this.state = { ...INITIAL, value: POSTER_KNEE, knee: POSTER_KNEE };
   }
 
+  /** Sets the clip and restarts the count. Setting the same clip again changes nothing. */
   setClip(clip: PoseClip): void {
+    if (clip === this.clip) return;
     this.clip = clip;
     this.resetCounting();
     this.lastT = null;
@@ -144,6 +161,28 @@ export class LiveSession {
     return this.state.scrubbing || this.resume !== null;
   }
 
+  /** Under reduced motion the clip holds still: it plays only when the visitor picks a range or plays it all. */
+  setStill(still: boolean): void {
+    this.still = still;
+    if (still) this.cancelResume();
+  }
+
+  /**
+   * Holds the clip still at `t` (reduced motion): counts the reps from the start up to `t` as if the clip had
+   * played, so the readout shows real values, then shows the frame at `t`, paused.
+   */
+  holdAt(t: number, fps = 30): void {
+    const video = this.video;
+    if (!this.clip || !video) return;
+    this.cancelResume();
+    video.pause();
+    this.resetCounting();
+    this.lastT = null;
+    for (let s = 0; s < t; s += 1 / fps) this.frame(s, video);
+    this.frame(t, video);
+    this.seek(t);
+  }
+
   setJoint(joint: JointId): void {
     if (joint === this.state.joint) return;
     this.set({
@@ -151,7 +190,9 @@ export class LiveSession {
       joint,
       value: this.valueAt(this.state.t, joint),
       extreme: this.roundedExtreme(joint),
+      driven: true,
     });
+    this.scheduleCalm();
   }
 
   cycleJoint(): void {
@@ -162,7 +203,8 @@ export class LiveSession {
     this.cancelResume();
     this.video?.pause();
     this.scrubStart = this.state.t;
-    this.set({ ...this.state, scrubbing: true });
+    this.cancelCalm();
+    this.set({ ...this.state, scrubbing: true, driven: true });
   }
 
   scrubTo(dxPx: number, widthPx: number): void {
@@ -173,6 +215,7 @@ export class LiveSession {
   endScrub(): void {
     this.set({ ...this.state, scrubbing: false });
     this.scheduleResume();
+    this.scheduleCalm();
   }
 
   step(dir: -1 | 1): void {
@@ -181,6 +224,8 @@ export class LiveSession {
     this.video.pause();
     this.seek((this.pending ?? this.state.t) + dir * STEP_SECONDS);
     this.scheduleResume();
+    this.set({ ...this.state, driven: true });
+    this.scheduleCalm();
   }
 
   /**
@@ -198,6 +243,7 @@ export class LiveSession {
 
   dispose(): void {
     this.cancelResume();
+    this.cancelCalm();
     this.listeners.clear();
     this.video = null;
   }
@@ -214,6 +260,7 @@ export class LiveSession {
 
   private scheduleResume(): void {
     this.cancelResume();
+    if (this.still) return;
     this.resume = setTimeout(() => {
       this.resume = null;
       this.video?.play().catch(() => {});
@@ -223,6 +270,19 @@ export class LiveSession {
   private cancelResume(): void {
     if (this.resume !== null) clearTimeout(this.resume);
     this.resume = null;
+  }
+
+  private scheduleCalm(): void {
+    this.cancelCalm();
+    this.calm = setTimeout(() => {
+      this.calm = null;
+      if (!this.state.scrubbing) this.set({ ...this.state, driven: false });
+    }, RESUME_MS);
+  }
+
+  private cancelCalm(): void {
+    if (this.calm !== null) clearTimeout(this.calm);
+    this.calm = null;
   }
 
   private valueAt(t: number, joint: JointId): number | null {
@@ -251,7 +311,7 @@ export class LiveSession {
     if (
       a.t === next.t && a.joint === next.joint && a.value === next.value && a.knee === next.knee &&
       a.reps === next.reps && a.cue === next.cue && a.extreme === next.extreme &&
-      a.depths === next.depths && a.form === next.form && a.scrubbing === next.scrubbing
+      a.depths === next.depths && a.form === next.form && a.scrubbing === next.scrubbing && a.driven === next.driven
     ) return;
     this.state = next;
     for (const fn of [...this.listeners]) fn();

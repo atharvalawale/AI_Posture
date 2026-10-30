@@ -17,9 +17,12 @@ export type JointMeasure = {
   vertex: number;
 };
 
+/** A measure whose goal is the physio's target, written from the target itself so the two never disagree. */
+const physioTarget = (m: Omit<JointMeasure, "goal">): JointMeasure => ({ ...m, goal: `Your physio's target: ${m.target}°` });
+
 export const MEASURES: Record<JointId, JointMeasure> = {
-  knee: { id: "knee", name: "Knee", sub: "bend, measured live", target: 100, goal: "Your physio's target: 100°", range: [90, 180], extreme: "min", extremeLabel: "Deepest", vertex: 25 },
-  hip: { id: "hip", name: "Hip", sub: "hinge, measured live", target: 90, goal: "Your physio's target: 90°", range: [60, 180], extreme: "min", extremeLabel: "Deepest", vertex: 23 },
+  knee: physioTarget({ id: "knee", name: "Knee", sub: "bend, measured live", target: 100, range: [90, 180], extreme: "min", extremeLabel: "Deepest", vertex: 25 }),
+  hip: physioTarget({ id: "hip", name: "Hip", sub: "hinge, measured live", target: 90, range: [60, 180], extreme: "min", extremeLabel: "Deepest", vertex: 23 }),
   back: { id: "back", name: "Back", sub: "lean from upright", target: 45, goal: "Keep it under 45°", range: [0, 60], extreme: "max", extremeLabel: "Most lean", vertex: 11 },
 };
 

@@ -27,7 +27,8 @@ export function Phone2DStage({
   /** Drives the live screen. Leave it out while this phone is not the one on show. */
   session?: LiveSession;
   story?: StoryProgress;
-  width: number;
+  /** The phone's width in CSS pixels once measured. Null before then: the phone takes its box's width in CSS. */
+  width: number | null;
   /** The visitor's own lean of the phone, added on top of the intro and the sway. */
   lean: PhoneLean;
   /** performance.now() when the intro started. Shared with the 3D phone so a hand-over never restarts it. */
@@ -71,7 +72,7 @@ export function Phone2DStage({
 
   return (
     <div ref={ref} data-phone="2d">
-      <PhoneFrame width={width}>
+      <PhoneFrame width={width ?? "fluid"}>
         <ScreenStack screen={screen} session={session} story={story} />
       </PhoneFrame>
     </div>

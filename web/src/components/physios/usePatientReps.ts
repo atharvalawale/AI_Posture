@@ -5,7 +5,7 @@ import { formScore, type Rep } from "@/lib/pose";
 import type { SamplePatient } from "@/lib/sample";
 
 /** Each rep's angle for this patient: Maya's deepest knee bends from the squat clip, the others' from the sample data. Null while the clip loads. */
-function repsOf(patient: SamplePatient, clipReps: Rep[] | null): number[] | null {
+export function repsOf(patient: SamplePatient, clipReps: Rep[] | null): number[] | null {
   return patient.measure.values ?? clipReps?.map((r) => r.depth) ?? null;
 }
 
