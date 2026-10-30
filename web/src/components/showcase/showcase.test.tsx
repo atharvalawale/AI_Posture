@@ -83,6 +83,23 @@ describe("Showcase selection", () => {
     expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("horizontal");
   });
 
+  it("keeps the steps row horizontal on tablets and turns it vertical from 1024 px", () => {
+    const at = (width: number) =>
+      vi.stubGlobal("matchMedia", (query: string) => ({
+        matches: /min-width: (\d+)px/.test(query) && width >= Number(query.match(/min-width: (\d+)px/)![1]),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    at(768);
+    const { unmount } = setup();
+    expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("horizontal");
+    unmount();
+    at(1024);
+    setup();
+    expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("vertical");
+  });
+
   it("selects on focus", () => {
     setup();
     fireEvent.focus(tab("Third"));
@@ -187,6 +204,40 @@ describe("Showcase auto advance", () => {
   });
 });
 
+describe("Showcase card details", () => {
+  const detailed = [
+    { id: "a", title: "First", body: "First line", detail: <a href="/a">First link</a> },
+    { id: "b", title: "Second", body: "Second line", detail: <a href="/b">Second link</a> },
+  ];
+  const renderDetailed = () =>
+    render(<Showcase label="Sides" items={detailed} panels={[<p key="a">Panel A</p>, <p key="b">Panel B</p>]} layout="cards" />);
+
+  it("keeps each detail, with its link, outside the tablist", () => {
+    renderDetailed();
+    const tablist = screen.getByRole("tablist");
+    for (const name of ["First link", "Second link"]) {
+      const link = screen.getByRole("link", { name });
+      expect(tablist.contains(link)).toBe(false);
+    }
+    expect([...tablist.children].every((el) => el.getAttribute("role") === "tab")).toBe(true);
+  });
+
+  it("marks the active card's detail, and a tap or a mouse move on a detail picks its card", () => {
+    renderDetailed();
+    const detailOf = (name: string) => screen.getByRole("link", { name }).parentElement!;
+    expect(detailOf("First link").hasAttribute("data-active")).toBe(true);
+    expect(detailOf("Second link").hasAttribute("data-active")).toBe(false);
+    fireEvent.click(detailOf("Second link"));
+    expect(tab("Second").getAttribute("aria-selected")).toBe("true");
+    expect(detailOf("Second link").hasAttribute("data-active")).toBe(true);
+    expect(detailOf("First link").hasAttribute("data-active")).toBe(false);
+    fireEvent.pointerMove(detailOf("First link"), { pointerType: "touch" });
+    expect(tab("Second").getAttribute("aria-selected")).toBe("true");
+    fireEvent.pointerMove(detailOf("First link"), { pointerType: "mouse" });
+    expect(tab("First").getAttribute("aria-selected")).toBe("true");
+  });
+});
+
 describe("Showcase structure", () => {
   it("drops extras and warns when items and panels differ in length", () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -202,7 +253,7 @@ describe("Showcase structure", () => {
     render(<Showcase label="Steps" items={four} panels={[...panels, <p key="d">D</p>]} layout="steps" />);
     const list = screen.getByRole("tablist");
     expect(list.className).not.toContain("grid-cols-3");
-    expect(list.className).not.toContain("sm:grid-cols-1");
+    expect(list.className).not.toContain("lg:grid-cols-1");
     expect(list.getAttribute("aria-orientation")).toBe("vertical");
     expect(screen.getAllByText("First line")).toHaveLength(1);
   });

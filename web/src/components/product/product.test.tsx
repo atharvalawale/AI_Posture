@@ -23,11 +23,22 @@ describe("RepBars", () => {
     expect(line.style.bottom).toBe("50%");
   });
 
-  it("takes height classes for the chart and its loading state", () => {
-    const { container, rerender } = render(<RepBars depths={[95]} target={100} height="min-h-44 flex-1" />);
-    expect((container.firstElementChild as HTMLElement).className).toContain("min-h-44 flex-1");
-    rerender(<RepBars depths={null} target={100} height="min-h-44 flex-1" />);
-    expect((container.firstElementChild as HTMLElement).className).toContain("min-h-44 flex-1");
+  it("takes classes for the chart and its loading state", () => {
+    const { container, rerender } = render(<RepBars depths={[95]} target={100} className="h-52" />);
+    expect((container.firstElementChild as HTMLElement).className).toContain("h-52");
+    rerender(<RepBars depths={null} target={100} className="h-52" />);
+    expect((container.firstElementChild as HTMLElement).className).toContain("h-52");
+  });
+
+  it("draws the target line in the bar track, not across the labels", () => {
+    const { container } = render(<RepBars depths={[95, 102]} target={100} range={[70, 140]} />);
+    const line = container.querySelector<HTMLElement>("[data-target-line]")!;
+    const track = container.querySelector<HTMLElement>("[data-bar-track]")!;
+    expect(line.parentElement).toBe(track);
+    expect(track.querySelectorAll("[data-bar]")).toHaveLength(2);
+    expect(track.textContent).not.toContain("95°");
+    expect(line.textContent).toBe("100° target");
+    expect(parseFloat(line.style.bottom)).toBeCloseTo((40 / 70) * 100, 5);
   });
 
   it("shows a loading line when depths are null", () => {

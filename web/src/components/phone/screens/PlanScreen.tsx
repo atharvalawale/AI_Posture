@@ -36,8 +36,9 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
                 {item.name}
                 <span className="mt-0.5 block text-xs font-normal text-muted">{item.dose}</span>
               </div>
+              {checked && <span className="sr-only">Done</span>}
               <span
-                aria-label={checked ? "Done" : undefined}
+                aria-hidden="true"
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors duration-300 ${checked ? "border-accent bg-accent text-on-accent" : "border-line"}`}
               >
                 <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 transition-opacity duration-300 ${checked ? "opacity-100" : "opacity-0"}`} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
