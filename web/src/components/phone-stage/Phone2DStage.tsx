@@ -4,7 +4,7 @@ import { useEffect, useRef, type MutableRefObject } from "react";
 import { PhoneFrame, type ScreenId } from "@/components/phone/PhoneFrame";
 import { ScreenStack } from "@/components/phone/ScreenStack";
 import { tiltAt } from "./tilt";
-import type { Spin } from "./useSpin";
+import type { PhoneLean } from "./usePhoneGestures";
 
 /**
  * The 2D phone for devices without 3D (and while the 3D phone loads). Follows the same
@@ -14,14 +14,14 @@ export function Phone2DStage({
   progress,
   screen,
   width,
-  spin,
+  lean,
   still = false,
 }: {
   progress: MutableRefObject<number>;
   screen: ScreenId;
   width: number;
   /** The visitor's own turn of the phone, added on top of the scroll tilt. */
-  spin: Pick<Spin, "state" | "subscribe">;
+  lean: PhoneLean;
   still?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,8 +33,8 @@ export function Phone2DStage({
     const apply = () => {
       raf = 0;
       const tilt = tiltAt(progress.current);
-      const x = tilt.x + spin.state.current.x;
-      const y = tilt.y + spin.state.current.y;
+      const x = tilt.x + lean.state.current.x;
+      const y = tilt.y + lean.state.current.y;
       // CSS rotateX runs the other way round from three.js, rotateY the same way.
       el.style.transform = `perspective(1800px) rotateX(${(-x).toFixed(4)}rad) rotateY(${y.toFixed(4)}rad)`;
     };
@@ -44,7 +44,7 @@ export function Phone2DStage({
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
-    const unsubscribe = spin.subscribe(onScroll);
+    const unsubscribe = lean.subscribe(onScroll);
     onScroll();
     return () => {
       unsubscribe();
@@ -53,7 +53,7 @@ export function Phone2DStage({
       cancelAnimationFrame(raf);
       el.style.transform = "";
     };
-  }, [progress, spin, still]);
+  }, [progress, lean, still]);
 
   return (
     <div ref={ref} data-phone="2d">

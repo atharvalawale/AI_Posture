@@ -2,13 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
-import { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { Component, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { PHONE_H, PHONE_W, type ScreenId } from "@/components/phone/PhoneFrame";
 import { canUse3D, readDeviceEnv } from "@/lib/device";
 import { ChapterRail } from "./ChapterRail";
 import { Phone2DStage } from "./Phone2DStage";
 import { useScrollStory } from "./useScrollStory";
-import { useSpin } from "./useSpin";
+import { usePhoneGestures } from "./usePhoneGestures";
 
 const Phone3D = dynamic(() => import("./Phone3D"), { ssr: false, loading: () => null });
 
@@ -43,9 +43,6 @@ class Fallback extends Component<{ children: ReactNode; onError: () => void }, {
     return this.state.failed ? null : this.props.children;
   }
 }
-
-/** How far the 2D phone turns when dragged. It has no back to show. */
-const MAX_YAW_2D = 0.6;
 
 /** Phone width that fits the pinned frame's height, leaving room for the notes on small screens. */
 function usePhoneWidth(frame: RefObject<HTMLDivElement | null>, desktop: boolean, still: boolean) {
@@ -138,10 +135,9 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
     if (screen !== "live") return;
     setTapped(true);
   }, [screen]);
-  const spin = useSpin({ enabled: !reduced, maxYaw: use3D && ready3D ? Infinity : MAX_YAW_2D, width, onTap });
-  // A stable object, so the phones subscribe once.
-  const { state: spinState, subscribe: spinSubscribe } = spin;
-  const turn = useMemo(() => ({ state: spinState, subscribe: spinSubscribe }), [spinState, spinSubscribe]);
+  // Task 9 wires the scrub callbacks to the live session.
+  const gestures = usePhoneGestures({ enabled: !reduced, onTap });
+  const { lean } = gestures;
 
   const left = notes.slice(0, 2);
   const right = notes.slice(2);
@@ -170,13 +166,13 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
                   className={`absolute inset-0 transition-opacity duration-300 ${ready3D ? "opacity-100" : "opacity-0"}`}
                 >
                   <Fallback onError={() => setFailed3D(true)}>
-                    <Phone3D progress={progress} screen={screen} phoneWidth={width} dark={resolvedTheme === "dark"} spin={turn} onReady={() => setReady3D(true)} />
+                    <Phone3D progress={progress} screen={screen} phoneWidth={width} dark={resolvedTheme === "dark"} lean={lean} onReady={() => setReady3D(true)} />
                   </Fallback>
                 </div>
               )}
               {!(use3D && shown3D) && (
                 <div className="absolute inset-0">
-                  <Phone2DStage progress={progress} screen={screen} width={width} spin={turn} still={reduced} />
+                  <Phone2DStage progress={progress} screen={screen} width={width} lean={lean} still={reduced} />
                 </div>
               )}
               {!reduced && (
@@ -184,8 +180,8 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
                 <div
                   aria-hidden="true"
                   data-phone-handle
-                  className={`absolute inset-0 z-20 touch-pan-y select-none ${spin.dragging ? "cursor-grabbing" : "cursor-grab"}`}
-                  {...spin.handlers}
+                  className={`absolute inset-0 z-20 touch-pan-y select-none ${gestures.dragging ? "cursor-grabbing" : "cursor-grab"}`}
+                  {...gestures.handlers}
                 />
               )}
             </div>
@@ -193,7 +189,7 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
             {!reduced && (
               <div className="mt-7 w-full max-w-[300px]" style={{ width }}>
                 <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />
-                <Hint screen={screen} done={spin.turned && tapped} />
+                <Hint screen={screen} done={gestures.scrubbed && tapped} />
               </div>
             )}
 
@@ -234,13 +230,13 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
   );
 }
 
-/** How to play with the phone. Fades once the visitor has turned it and tapped it. */
+/** How to play with the phone. Fades once the visitor has scrubbed it and tapped it. */
 function Hint({ screen, done }: { screen: ScreenId; done: boolean }) {
   const tap = screen !== "live" ? "" : " Tap a joint to measure it.";
   return (
     <p aria-hidden="true" className={`mt-3 whitespace-nowrap text-center text-xs text-muted transition-opacity duration-500 ${done ? "opacity-0" : "opacity-100"}`}>
-      <span className="pointer-coarse:hidden">Drag to turn the phone.</span>
-      <span className="pointer-fine:hidden">Swipe to turn.</span>
+      <span className="pointer-coarse:hidden">Drag to scrub the clip.</span>
+      <span className="pointer-fine:hidden">Swipe to scrub.</span>
       {tap}
     </p>
   );
