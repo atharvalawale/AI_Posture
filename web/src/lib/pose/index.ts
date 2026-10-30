@@ -18,3 +18,4 @@ export {
   weekPose,
   type Pose,
 } from "./blend";
+export { LiveSession, RESUME_MS, SCRUB_PER_WIDTH, STEP_SECONDS, type LiveState, type VideoLike } from "./live-session";
