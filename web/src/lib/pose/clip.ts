@@ -67,3 +67,8 @@ export function loadPoseClip(url = "/media/squat.pose.json"): Promise<PoseClip> 
   }
   return clip;
 }
+
+/** Forgets every loaded clip, so a test can start from a cold cache whatever ran before it. */
+export function clearPoseClipCache(): void {
+  cache.clear();
+}

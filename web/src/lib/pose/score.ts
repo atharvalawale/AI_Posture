@@ -39,19 +39,40 @@ export function findReps(clip: PoseClip, opts: { down?: number; up?: number; ste
   return reps;
 }
 
-/** 100 at or below the target depth, then 2.2 points off per degree short of it. */
-export function repScore(depth: number, target: number): number {
-  return Math.min(100, Math.max(0, 100 - Math.max(0, depth - target) * 2.2));
+/**
+ * Which way a measure improves. A knee bend is lower-is-better: the smaller the angle, the deeper the squat.
+ * An arm or leg raise is higher-is-better.
+ */
+export type Direction = "lower" | "higher";
+
+/** Degrees a value falls short of the target, or 0 when it reached it. */
+function shortBy(value: number, target: number, direction: Direction): number {
+  return Math.max(0, direction === "lower" ? value - target : target - value);
+}
+
+/** 100 at or past the target, then 2.2 points off per degree short of it. */
+export function repScore(value: number, target: number, direction: Direction = "lower"): number {
+  return Math.min(100, Math.max(0, 100 - shortBy(value, target, direction) * 2.2));
 }
 
 /** Rounded mean rep score, or null when there are no reps. */
-export function formScore(depths: readonly number[], target: number): number | null {
-  if (depths.length === 0) return null;
-  const total = depths.reduce((sum, d) => sum + repScore(d, target), 0);
-  return Math.round(total / depths.length);
+export function formScore(values: readonly number[], target: number, direction: Direction = "lower"): number | null {
+  if (values.length === 0) return null;
+  const total = values.reduce((sum, v) => sum + repScore(v, target, direction), 0);
+  return Math.round(total / values.length);
 }
 
-/** How many reps reached the target depth, comparing whole degrees as the screen shows them. */
-export function reachedCount(depths: readonly number[], target: number): number {
-  return depths.filter((d) => Math.round(d) <= target).length;
+/** True when a rep reached the target, comparing whole degrees as the screen shows them. */
+export function reached(value: number, target: number, direction: Direction = "lower"): boolean {
+  return shortBy(Math.round(value), target, direction) === 0;
+}
+
+/** How many reps reached the target, comparing whole degrees as the screen shows them. */
+export function reachedCount(values: readonly number[], target: number, direction: Direction = "lower"): number {
+  return values.filter((v) => reached(v, target, direction)).length;
+}
+
+/** The reps that fell short of the target, by index, with the value rounded as the screen shows it. */
+export function shortReps(values: readonly number[], target: number, direction: Direction = "lower"): { rep: number; value: number }[] {
+  return values.flatMap((v, rep) => (reached(v, target, direction) ? [] : [{ rep, value: Math.round(v) }]));
 }

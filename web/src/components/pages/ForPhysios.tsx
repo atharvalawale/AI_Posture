@@ -1,70 +1,10 @@
+import { FeatureTabs } from "@/components/physios/FeatureTabs";
+import { PhysioDashboard } from "@/components/physios/PhysioDashboard";
+import { PracticeShowcase } from "@/components/physios/PracticeShowcase";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
-import { ClosingCta, Photo, RuleList, Section, SectionHeading, bodyClass, h1Class, leadClass, type Item } from "./primitives";
-
-const featureGroups: { title: string; items: Item[] }[] = [
-  {
-    title: "See every session",
-    items: [
-      {
-        title: "AI form analysis",
-        body: "FiixBE watches every rep your patient does at home and measures joint angles, range of motion and smoothness.",
-      },
-      {
-        title: "Patient dashboard",
-        body: "All your patients in one place: rep scores, angle data, session history and compliance, updated live.",
-      },
-      {
-        title: "Smart alerts",
-        body: "A notification when a patient misses a session, scores below your threshold or needs your attention.",
-      },
-    ],
-  },
-  {
-    title: "Prescribe and follow up",
-    items: [
-      {
-        title: "Exercise prescription",
-        body: "Assign exercises from a library of physio-validated movements. Set reps, hold time and difficulty per patient.",
-      },
-      {
-        title: "Progress reports",
-        body: "A PDF report for each patient every week. Share it with them or use it for insurance paperwork.",
-      },
-      {
-        title: "Messaging",
-        body: "Chat with patients in the app. Send voice notes, corrections and encouragement.",
-      },
-    ],
-  },
-  {
-    title: "Run your practice",
-    items: [
-      { title: "Appointment booking", body: "Patients book in-clinic or video appointments with you directly." },
-      { title: "Teleconsultation", body: "Video consultations inside FiixBE, with no third-party tools. Planned." },
-      {
-        title: "Multi-clinic support",
-        body: "Running more than one location? Manage every clinic, physio and patient under one account.",
-      },
-    ],
-  },
-];
-
-const practices = [
-  {
-    title: "Standalone clinics",
-    body: "See more patients without hiring more staff. Follow home exercise between visits and keep clinic time for complex cases.",
-  },
-  {
-    title: "Hospital departments",
-    body: "Streamline post-operative rehab. Discharge patients knowing their home exercise is supervised.",
-  },
-  {
-    title: "Independent physios",
-    body: "Build your own practice and reach patients wherever they live in India.",
-  },
-] as const;
+import { ClosingCta, Section, SectionHeading, h1Class, leadClass } from "./primitives";
 
 export function ForPhysios() {
   return (
@@ -88,14 +28,7 @@ export function ForPhysios() {
               </div>
             </div>
           </div>
-          <Photo
-            src="/images/pages/doctor-tablet.webp"
-            alt="A clinician reviewing results on a tablet with a patient"
-            className="mt-14 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]"
-            sizes="(min-width: 1200px) 1120px, 100vw"
-            position="60% 45%"
-            preload
-          />
+          <PhysioDashboard className="mt-14" />
         </Container>
       </section>
 
@@ -105,26 +38,12 @@ export function ForPhysios() {
           title="Everything you need to run a remote physio practice."
           intro="You write the plan. FiixBE measures every rep at home and brings the results back to you."
         />
-        <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-8">
-          {featureGroups.map((group) => (
-            <div key={group.title}>
-              <h3 className="font-serif text-[24px] leading-tight tracking-[-0.01em]">{group.title}</h3>
-              <RuleList items={group.items} className="mt-5" />
-            </div>
-          ))}
-        </div>
+        <FeatureTabs className="mt-12" />
       </Section>
 
       <Section labelledBy="physios-practices">
         <SectionHeading id="physios-practices" title="Built for every kind of practice." />
-        <ul className="mt-12 border-t border-line">
-          {practices.map((p) => (
-            <li key={p.title} className="grid gap-2 border-b border-line py-7 md:grid-cols-[1fr_1.6fr] md:gap-8 md:py-9">
-              <h3 className="font-serif text-[24px] leading-tight tracking-[-0.01em] md:text-[28px]">{p.title}</h3>
-              <p className={`max-w-xl ${bodyClass} md:text-[17px]`}>{p.body}</p>
-            </li>
-          ))}
-        </ul>
+        <PracticeShowcase className="mt-12" />
       </Section>
 
       <ClosingCta

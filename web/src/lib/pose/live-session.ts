@@ -183,9 +183,17 @@ export class LiveSession {
     this.scheduleResume();
   }
 
+  /**
+   * Loops the clip between two times, or plays it all again with null. Picking a range is a user gesture,
+   * so this also plays: a video whose autoplay was blocked starts here instead of showing a still frame.
+   */
   loop(range: [number, number] | null): void {
     this.range = range;
-    if (range && this.video) this.video.currentTime = range[0];
+    if (!this.video) return;
+    if (range) this.video.currentTime = range[0];
+    this.video.play().catch(() => {
+      // Still blocked: the frame at the start of the range shows instead.
+    });
   }
 
   dispose(): void {

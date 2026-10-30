@@ -1,13 +1,15 @@
 "use client";
 
-import { reachedCount } from "@/lib/pose";
+import { reached as isReached, type Direction } from "@/lib/pose";
 
 type Props = {
   depths: number[] | null;
   target: number;
   activeRep?: number | null;
   onRep?: (i: number) => void;
-  /** Knee angles at the bottom and the top of the bar track. A tighter range makes small differences visible. */
+  /** Lower is better for a knee bend (the default), higher for a raise. Sets which reps reached the target and which way bars grow. */
+  direction?: Direction;
+  /** Angles at the two ends of the bar track. A tighter range makes small differences visible. */
   range?: [number, number];
   /** Classes for the whole chart, degree labels included. Sets its height, so it replaces the default `h-44`. */
   className?: string;
@@ -18,8 +20,11 @@ const COLUMN = "min-w-11 max-w-16 flex-1";
 // Room on the right for the "100° target" label at the end of the line.
 const LABEL_ROOM = "mr-22";
 
-/** The deepest knee bend of each rep as a bar, against a dashed target line. A bar is a button that selects its rep. */
-export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 180], className = "h-44" }: Props) {
+/**
+ * Each rep's angle as a bar, against a dashed target line: by default the deepest knee bend, where a deeper bend
+ * (a smaller angle) draws a taller bar. With `onRep` a bar is a button that selects its rep; without it, a labelled image.
+ */
+export function RepBars({ depths, target, activeRep = null, onRep, direction = "lower", range = [60, 180], className = "h-44" }: Props) {
   if (!depths) {
     return (
       <div className={`flex items-center justify-center rounded-xl border border-line ${className}`}>
@@ -29,7 +34,7 @@ export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 
   }
 
   const [lo, hi] = range;
-  const heightOf = (angle: number) => Math.min(1, Math.max(0, (hi - angle) / (hi - lo)));
+  const heightOf = (angle: number) => Math.min(1, Math.max(0, direction === "lower" ? (hi - angle) / (hi - lo) : (angle - lo) / (hi - lo)));
 
   return (
     <div className={`flex flex-col ${className}`}>
@@ -46,32 +51,40 @@ export function RepBars({ depths, target, activeRep = null, onRep, range = [60, 
         </div>
         <div className={`relative flex h-full justify-around gap-3 ${LABEL_ROOM}`}>
           {depths.map((depth, i) => {
-            const reached = reachedCount([depth], target) === 1;
-            return (
+            const reached = isReached(depth, target, direction);
+            const label = `Rep ${i + 1}, ${Math.round(depth)}°, ${reached ? "reached" : "short of"} your target`;
+            const bar = (
+              <span
+                data-bar
+                className={`block w-full rounded-t-md transition-opacity ${reached ? "bg-accent" : "bg-line"} ${
+                  activeRep !== null && activeRep !== i ? "opacity-60" : ""
+                }`}
+                style={{ height: `${heightOf(depth) * 100}%` }}
+              />
+            );
+            return onRep ? (
               <button
                 key={i}
                 type="button"
                 data-reached={reached}
-                aria-label={`Rep ${i + 1}, ${Math.round(depth)}°, ${reached ? "reached" : "short of"} your target`}
+                aria-label={label}
                 aria-pressed={activeRep === i}
-                onClick={() => onRep?.(i)}
+                onClick={() => onRep(i)}
                 className={`${COLUMN} flex cursor-pointer flex-col justify-end rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
               >
-                <span
-                  data-bar
-                  className={`block w-full rounded-t-md transition-opacity ${reached ? "bg-accent" : "bg-line"} ${
-                    activeRep !== null && activeRep !== i ? "opacity-60" : ""
-                  }`}
-                  style={{ height: `${heightOf(depth) * 100}%` }}
-                />
+                {bar}
               </button>
+            ) : (
+              <span key={i} role="img" data-reached={reached} aria-label={label} className={`${COLUMN} flex flex-col justify-end`}>
+                {bar}
+              </span>
             );
           })}
         </div>
       </div>
       <div aria-hidden className={`flex justify-around gap-3 pt-2 ${LABEL_ROOM}`}>
         {depths.map((depth, i) => {
-          const reached = reachedCount([depth], target) === 1;
+          const reached = isReached(depth, target, direction);
           return (
             <span key={i} className={`${COLUMN} text-center text-[15px] tabular-nums ${reached ? "text-text" : "text-muted"}`}>
               {Math.round(depth)}°
