@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { MAYA, MAYA_SESSION, PLAN_ITEMS } from "@/lib/sample";
+import { MAYA, MAYA_SESSION, PHYSIO_NOTE, PLAN_ITEMS } from "@/lib/sample";
 
 /** Today's plan: the exercises the physio set, with a note from them. Squats tick off when the screen shows. */
 export function PlanScreen({ active = true }: { active?: boolean }) {
@@ -55,7 +55,7 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
           <Image src="/images/avatars/physio.webp" alt="" width={30} height={30} unoptimized className="h-[30px] w-[30px] rounded-full object-cover" />
           Your physio
         </div>
-        Your depth is much better this week. I have added split squats. Go slow on the way down.
+        {PHYSIO_NOTE}
       </div>
       <div aria-hidden="true" className="mt-3 flex h-12 items-center justify-center rounded-[10px] bg-accent text-[15px] font-medium text-on-accent">
         Start today&apos;s session

@@ -1,4 +1,4 @@
-import { MAYA_SESSION } from "@/lib/sample";
+import { MAYA, MAYA_SESSION } from "@/lib/sample";
 
 type Chapter = "summary" | "plan";
 
@@ -41,7 +41,7 @@ const SUMMARY: Line[] = [
 ];
 
 const PLAN: Line[] = [
-  { label: "This week", value: "Week 3 of the knee plan" },
+  { label: "This week", value: `Week ${MAYA.week} of the knee plan` },
   { label: "Added", value: "Split squats" },
   { label: "Physio's note", value: "“Go slow on the way down.”" },
 ];

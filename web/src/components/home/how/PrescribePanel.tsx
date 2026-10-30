@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { PLAN_ITEMS } from "@/lib/sample";
+import { MAYA, MAYA_TARGET, PHYSIO_NOTE, PLAN_ITEMS } from "@/lib/sample";
 
 /** The physio's plan editor: Maya's exercises with their dose, the knee bend target on squats, and the note she reads on her plan screen. Sample data. */
 export function PrescribePanel() {
@@ -8,8 +8,8 @@ export function PrescribePanel() {
       <div className="flex items-center gap-3">
         <Image src="/images/avatars/maya.webp" alt="" width={44} height={44} unoptimized className="size-11 rounded-full object-cover" />
         <div className="min-w-0">
-          <p className="text-[17px] font-semibold leading-snug text-text">Maya Thomas</p>
-          <p className="text-[15px] text-muted">Knee recovery plan, week 3</p>
+          <p className="text-[17px] font-semibold leading-snug text-text">{MAYA.name}</p>
+          <p className="text-[15px] text-muted">Knee recovery plan, week {MAYA.week}</p>
         </div>
       </div>
 
@@ -23,7 +23,7 @@ export function PrescribePanel() {
               {i === 0 && (
                 <div className="mt-3 flex h-11 items-center justify-between gap-3 rounded-lg border border-line bg-bg px-3.5">
                   <span className="text-[15px] text-muted">Knee bend target</span>
-                  <span className="text-[15px] font-semibold tabular-nums text-text">100°</span>
+                  <span className="text-[15px] font-semibold tabular-nums text-text">{MAYA_TARGET}°</span>
                 </div>
               )}
             </div>
@@ -34,9 +34,7 @@ export function PrescribePanel() {
       {/* The same note Maya reads on her plan screen. */}
       <div className="mt-auto rounded-lg border border-line bg-bg px-3.5 py-3">
         <p className="text-[13px] text-muted">Note to Maya</p>
-        <p className="mt-1 text-[15px] text-pretty text-text">
-          Your depth is much better this week. I have added split squats. Go slow on the way down.
-        </p>
+        <p className="mt-1 text-[15px] text-pretty text-text">{PHYSIO_NOTE}</p>
       </div>
     </div>
   );

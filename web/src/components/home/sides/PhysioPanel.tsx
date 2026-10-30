@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useClipReps } from "@/components/pose/usePoseClip";
 import { RepBars } from "@/components/product/RepBars";
 import { reachedCount } from "@/lib/pose";
+import { MAYA } from "@/lib/sample";
 import { RANGE, TARGET, sessionLine } from "../how/ReviewPanel";
 
 /** The physio's side: Maya's squats as they arrive from her phone, each rep's deepest knee bend against the target. Sample data from the real clip. */
@@ -18,7 +19,7 @@ export function PhysioPanel() {
       <div className="flex items-center gap-3">
         <Image src="/images/avatars/maya.webp" alt="" width={44} height={44} unoptimized className="size-11 rounded-full object-cover" />
         <div className="min-w-0">
-          <p className="text-[17px] font-semibold leading-snug text-text">Maya Thomas</p>
+          <p className="text-[17px] font-semibold leading-snug text-text">{MAYA.name}</p>
           <p className="text-[15px] text-muted">Squats, sent from Maya&apos;s phone this morning</p>
         </div>
       </div>

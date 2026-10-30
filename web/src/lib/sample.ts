@@ -8,6 +8,9 @@ export const PLAN_ITEMS: { name: string; dose: string; img: string; target?: str
   { name: "Split squats", dose: "2 sets of 8 each leg", img: "/images/home/plan-split-squats.webp" },
 ];
 
+/** The note from Maya's physio with this week's plan. Her plan screen and the physio's plan editor show the same words. */
+export const PHYSIO_NOTE = "Your depth is much better this week. I have added split squats. Go slow on the way down.";
+
 export type DayMark = "done" | "missed" | "today";
 
 /** Maya's knee bend target when the page opens, in degrees. The dashboard, the feature panels and the messages all start from it. */

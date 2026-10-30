@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { MAYA_SESSION } from "@/lib/sample";
+import { MAYA, MAYA_SESSION } from "@/lib/sample";
 import type { StoryProgress } from "../ScreenStack";
 
 const { depths: DEPTHS, target: TARGET, deepest: DEEPEST, formScore: SCORE, change: CHANGE } = MAYA_SESSION;
@@ -13,7 +13,7 @@ const heightOf = (angle: number) => Math.min(1, Math.max(0, (RANGE[1] - angle) /
 const STATS: [string, string][] = [
   ["Reps", "30 of 30"],
   ["Deepest knee bend", `${DEEPEST}°`],
-  ["Pain after session", "2 of 10"],
+  ["Pain after session", MAYA.pain],
 ];
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
