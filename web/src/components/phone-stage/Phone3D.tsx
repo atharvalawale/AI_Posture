@@ -5,9 +5,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefO
 import { CanvasTexture, MathUtils, PMREMGenerator, type Group, type PerspectiveCamera } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { BEZEL, PHONE_H, PHONE_W, ScreenSurface, type ScreenId } from "@/components/phone/PhoneFrame";
-import { ScreenStack } from "@/components/phone/ScreenStack";
+import { ScreenStack, type StoryProgress } from "@/components/phone/ScreenStack";
+import type { LiveSession } from "@/lib/pose";
 import { BODY, PhoneModel } from "./PhoneModel";
-import { tiltAt } from "./tilt";
+import { introTilt, swayAt } from "./tilt";
 import type { PhoneLean } from "./usePhoneGestures";
 
 const FOV = 18;
@@ -25,13 +26,24 @@ const ELEVATION = 9;
 type Props = {
   progress: MutableRefObject<number>;
   screen: ScreenId;
+  session: LiveSession;
+  story?: StoryProgress;
   /** On-screen phone width in CSS pixels. The canvas is larger so the phone can tilt. */
   phoneWidth: number;
   dark: boolean;
-  /** The visitor's own turn of the phone, added on top of the scroll tilt. */
+  /** The visitor's own lean of the phone, added on top of the intro and the sway. */
   lean: PhoneLean;
+  /** performance.now() when the intro started. Shared with the 2D phone so the hand-over never restarts it. */
+  introStart: number;
   onReady: () => void;
 };
+
+/** Where the phone is turned to: the intro turn-in plus the scroll sway. Also says if the intro still runs. */
+function poseAt(progress: number, introStart: number) {
+  const intro = introTilt(performance.now() - introStart);
+  const sway = swayAt(progress);
+  return { x: intro.x + sway.x, y: intro.y + sway.y, intro: intro.x !== 0 || intro.y !== 0 };
+}
 
 /** Places the camera so the phone is exactly `phoneHeight` CSS pixels tall, like the 2D phone. */
 function CameraRig({ phoneHeight }: { phoneHeight: number }) {
@@ -105,16 +117,19 @@ function SoftShadow({ dark }: { dark: boolean }) {
 function Phone({
   progress,
   screen,
+  session,
+  story,
   lean,
+  introStart,
   onReady,
   portal,
-}: Pick<Props, "progress" | "screen" | "lean" | "onReady"> & { portal: RefObject<HTMLDivElement | null> }) {
+}: Pick<Props, "progress" | "screen" | "session" | "story" | "lean" | "introStart" | "onReady"> & { portal: RefObject<HTMLDivElement | null> }) {
   const group = useRef<Group>(null);
   const turn = useRef<Group>(null);
   const frames = useRef(0);
   const invalidate = useThree((s) => s.invalidate);
 
-  // Frames render on demand: on scroll, and while the rotation is still easing.
+  // Frames render on demand: on scroll, during the intro, and while the rotation is still easing.
   useEffect(() => {
     const onScroll = () => invalidate();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -131,7 +146,7 @@ function Phone({
     if (!g) return;
     // The visitor's turn is already smoothed by its spring, so it applies directly.
     turn.current?.rotation.set(lean.state.current.x, lean.state.current.y, 0);
-    const target = tiltAt(progress.current);
+    const target = poseAt(progress.current, introStart);
     // Damped, so a fast flick of the scroll wheel still reads as smooth motion.
     const k = Math.min(dt, 1 / 30);
     g.rotation.x = MathUtils.damp(g.rotation.x, target.x, 8, k);
@@ -139,21 +154,21 @@ function Phone({
     const settled = Math.abs(g.rotation.x - target.x) < 1e-4 && Math.abs(g.rotation.y - target.y) < 1e-4;
     if (settled) g.rotation.set(target.x, target.y, 0);
     if (frames.current < 3 && ++frames.current === 3) onReady();
-    if (!settled || frames.current < 3) state.invalidate();
+    if (!settled || target.intro || frames.current < 3) state.invalidate();
   }, -1);
 
-  // Start at the scroll pose, not at rest, so the first frame does not jump.
+  // Start where the intro and the scroll have the phone now, not at rest, so the first frame does not jump.
   useLayoutEffect(() => {
-    const t = tiltAt(progress.current);
+    const t = poseAt(progress.current, introStart);
     group.current?.rotation.set(t.x, t.y, 0);
-  }, [progress]);
+  }, [progress, introStart]);
   return (
     <group scale={WORLD}>
       <group ref={turn}>
         <PhoneModel ref={group} portal={portal}>
           <div className="rounded-[48px] bg-device" style={{ width: PHONE_W, height: PHONE_H, padding: BEZEL }}>
             <ScreenSurface>
-              <ScreenStack screen={screen} />
+              <ScreenStack screen={screen} session={session} story={story} />
             </ScreenSurface>
           </div>
         </PhoneModel>
@@ -166,7 +181,7 @@ function Phone({
  * The 3D phone. Renders only while on screen. Loaded with next/dynamic (ssr: false) so three.js
  * stays out of the first load.
  */
-export default function Phone3D({ progress, screen, phoneWidth, dark, lean, onReady }: Props) {
+export default function Phone3D({ progress, screen, session, story, phoneWidth, dark, lean, introStart, onReady }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const phoneHeight = phoneWidth * (BODY.h / BODY.w);
@@ -199,7 +214,16 @@ export default function Phone3D({ progress, screen, phoneWidth, dark, lean, onRe
         <ambientLight intensity={0.25} />
         <directionalLight position={[-0.5, 0.7, 1]} intensity={1.4} />
         <directionalLight position={[0.7, 0.25, -0.8]} intensity={dark ? 2.4 : 1.1} />
-        <Phone progress={progress} screen={screen} lean={lean} onReady={onReady} portal={wrap} />
+        <Phone
+          progress={progress}
+          screen={screen}
+          session={session}
+          story={story}
+          lean={lean}
+          introStart={introStart}
+          onReady={onReady}
+          portal={wrap}
+        />
         <SoftShadow dark={dark} />
       </Canvas>
     </div>

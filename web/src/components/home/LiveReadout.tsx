@@ -17,8 +17,9 @@ function Track({ state }: { state: LiveState }) {
   const m = MEASURES[state.joint];
   const goalAt = place(m.target, m.range, m.extreme) * 100;
   const dotAt = state.value === null ? null : place(state.value, m.range, m.extreme) * 100;
+  // A drawn graphic, so assistive tech gets it as one image named by the goal.
   return (
-    <div className="relative mt-5 h-[42px] max-w-[320px]" aria-hidden="true">
+    <div role="img" aria-label={m.goal} className="relative mt-5 h-[42px] max-w-[320px]">
       <div className="absolute inset-x-0 top-4 h-0.5 bg-line" />
       <div className="absolute top-2 h-[18px] border-l-2 border-accent" style={{ left: `${goalAt}%` }}>
         <span className="absolute right-[-2px] top-[22px] whitespace-nowrap text-[13px] text-accent">{m.goal}</span>
@@ -51,8 +52,16 @@ export function LiveReadout({ state, onJoint, variant }: Props) {
         className="font-serif leading-[0.9] tabular-nums tracking-[-0.03em]"
         style={{ fontSize: full ? "clamp(110px, 12vw, 190px)" : "72px", marginTop: full ? 6 : 0 }}
       >
-        <span data-readout-value>{state.value === null ? "--" : state.value}</span>
-        <span className="ml-1 align-top font-sans text-[0.4em] text-muted" style={{ position: "relative", top: "0.2em" }}>°</span>
+        {/* Faint while there is nothing to measure yet (the clip is loading), so the placeholder never reads as a value. */}
+        <span data-readout-value className={state.value === null ? "text-line" : undefined}>
+          {state.value === null ? "--" : state.value}
+        </span>
+        <span
+          className={`ml-1 align-top font-sans text-[0.32em] text-muted ${state.value === null ? "invisible" : ""}`}
+          style={{ position: "relative", top: "0.2em" }}
+        >
+          °
+        </span>
       </div>
       <Track state={state} />
       <p aria-live="polite" className={`${full ? "mt-6 text-[17px]" : "mt-5 text-[15px]"} min-h-[1.4em]`}>
@@ -76,7 +85,7 @@ export function LiveReadout({ state, onJoint, variant }: Props) {
               type="button"
               aria-pressed={state.joint === j}
               onClick={() => onJoint(j)}
-              className="min-h-11 min-w-16 cursor-pointer rounded-lg border border-line px-4 text-[15px] text-muted transition-colors hover:text-text aria-pressed:border-text aria-pressed:text-text"
+              className="min-h-11 min-w-16 cursor-pointer rounded-lg border border-line px-4 text-[15px] text-muted transition-colors hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-pressed:border-text aria-pressed:text-text"
             >
               {MEASURES[j].name}
             </button>

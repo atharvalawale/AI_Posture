@@ -31,7 +31,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-bg">
       <Container className="flex h-16 items-center justify-between gap-6">
         <Logo />
-        <nav aria-label="Main" className="hidden items-center gap-7 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
           {site.nav.map((item) => (
             <Link
               key={item.href}
@@ -44,12 +44,12 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button href="/session" size="sm" className="max-md:hidden">
+          <Button href="/session" size="sm" className="max-lg:hidden">
             Try it on the web
           </Button>
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text lg:hidden"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-menu"
@@ -62,7 +62,7 @@ export function SiteHeader() {
         </div>
       </Container>
       {open && (
-        <div id="mobile-menu" className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto bg-bg md:hidden">
+        <div id="mobile-menu" className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto bg-bg lg:hidden">
           <Container className="flex flex-col py-6">
             {[...site.nav, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }].map((item) => (
               <Link key={item.href} href={item.href} className="border-b border-line py-4 font-serif text-[28px] leading-tight text-text">

@@ -32,6 +32,13 @@ describe("LiveReadout", () => {
     expect(screen.getByText("Your physio's target: 100°")).toBeTruthy();
   });
 
+  it("exposes the goal to assistive tech, not only inside the drawn track", () => {
+    const { rerender } = render(<LiveReadout state={base} onJoint={() => {}} variant="full" />);
+    expect(screen.getByRole("img", { name: "Your physio's target: 100°" })).toBeTruthy();
+    rerender(<LiveReadout state={{ ...base, joint: "back", value: 20 }} onJoint={() => {}} variant="compact" />);
+    expect(screen.getByRole("img", { name: "Keep it under 45°" })).toBeTruthy();
+  });
+
   it("picks a joint and marks the selected one", () => {
     const onJoint = vi.fn();
     render(<LiveReadout state={base} onJoint={onJoint} variant="full" />);
