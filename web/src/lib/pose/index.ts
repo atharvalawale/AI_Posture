@@ -4,3 +4,17 @@ export { JOINT_IDS, MEASURES, hipAngle, measure, nearestJoint, trunkLean, type J
 export { RepCounter, type Cue } from "./reps";
 export { findReps, formScore, reachedCount, repScore, type Rep } from "./score";
 export { drawAngleLabels, drawSkeleton, MEASURED } from "./draw";
+export {
+  WEEKS,
+  WEEK1_BLEND,
+  blendForKnee,
+  blendPose,
+  deepestPose,
+  poseAngle,
+  poseAt,
+  standingPose,
+  weekBlend,
+  weekDepths,
+  weekPose,
+  type Pose,
+} from "./blend";
