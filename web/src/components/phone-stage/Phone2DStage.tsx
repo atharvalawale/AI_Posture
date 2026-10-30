@@ -13,15 +13,12 @@ import type { Spin } from "./useSpin";
 export function Phone2DStage({
   progress,
   screen,
-  tracking = false,
   width,
   spin,
   still = false,
 }: {
   progress: MutableRefObject<number>;
   screen: ScreenId;
-  /** Shows the live screen's tracking view. */
-  tracking?: boolean;
   width: number;
   /** The visitor's own turn of the phone, added on top of the scroll tilt. */
   spin: Pick<Spin, "state" | "subscribe">;
@@ -61,7 +58,7 @@ export function Phone2DStage({
   return (
     <div ref={ref} data-phone="2d">
       <PhoneFrame width={width}>
-        <ScreenStack screen={screen} tracking={tracking} />
+        <ScreenStack screen={screen} />
       </PhoneFrame>
     </div>
   );

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
-import { RepCounter, coverBox, drawAngleLabels, drawSkeleton, kneeAngle, loadPoseClip, type Cue, type PoseClip } from "@/lib/pose";
+import { useEffect, useState, useSyncExternalStore, type RefObject } from "react";
+import { LiveSession, coverBox, drawSkeleton, loadPoseClip, type LiveState, type PoseClip } from "@/lib/pose";
 
-export type PoseVideoState = { angle: number | null; reps: number; cue: Cue; playing: boolean };
+export type PoseVideoState = LiveState & { playing: boolean };
+
+const loaded = new WeakMap<LiveSession, PoseClip>();
 
 type Options = {
   /** False pauses the video and stops drawing (for example while another screen shows). */
@@ -11,30 +13,27 @@ type Options = {
   /** The video's object-position as fractions, so the skeleton lines up with `object-fit: cover`. */
   position?: [number, number];
   url?: string;
-  /** Labels the measured joints with their angles. */
-  tracking?: boolean;
+  /** The session that owns time, joint, reps and form. Without one the hook makes its own. */
+  session?: LiveSession;
 };
-
-const INITIAL: PoseVideoState = { angle: null, reps: 0, cue: "Stand tall to begin", playing: false };
 
 /**
  * Plays a muted looping clip and draws its pose skeleton on a canvas laid over it.
  * Uses the media time of the frame on screen (requestVideoFrameCallback, with a
  * currentTime fallback) so the skeleton never runs ahead of the picture. Draws nothing
- * until the video has actually started, so a blocked autoplay just shows the poster.
+ * until the video has actually started (or been seeked), so a blocked autoplay just shows the poster.
+ * Every drawn frame is fed to the session, and the arc follows the session's selected joint.
  */
 export function usePoseVideo(
   videoRef: RefObject<HTMLVideoElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
-  { active = true, position = [0.5, 0.5], url, tracking = false }: Options = {},
+  { active = true, position = [0.5, 0.5], url, session }: Options = {},
 ): PoseVideoState {
-  const [state, setState] = useState<PoseVideoState>(INITIAL);
+  const [own] = useState(() => new LiveSession());
+  const live = session ?? own;
+  const state = useSyncExternalStore(live.subscribe, live.getSnapshot, live.getSnapshot);
+  const [playing, setPlaying] = useState(false);
   const [posX, posY] = position;
-  // A ref, so switching the labels redraws without restarting the video or the rep count.
-  const labels = useRef(tracking);
-  useEffect(() => {
-    labels.current = tracking;
-  }, [tracking]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -49,10 +48,8 @@ export function usePoseVideo(
     let raf = 0;
     let vfc = 0;
     let shown = 0;
-    let drawn = { t: -1, w: 0, h: 0, dpr: 0, labels: false };
-    // next/font gives the family a generated name, so read it from the page.
-    const font = getComputedStyle(canvas).fontFamily || "sans-serif";
-    const counter = new RepCounter();
+    let drawn = { t: -1, w: 0, h: 0, dpr: 0, joint: "" };
+    const detach = live.attach(video);
     const hasFrameCallback = typeof video.requestVideoFrameCallback === "function";
     const raf$ = window.requestAnimationFrame?.bind(window) ?? ((cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
     const caf$ = window.cancelAnimationFrame?.bind(window) ?? window.clearTimeout;
@@ -60,6 +57,11 @@ export function usePoseVideo(
     loadPoseClip(url)
       .then((c) => {
         clip = c;
+        // Setting the clip restarts the count, so do it once per session, not on every effect run.
+        if (!disposed && loaded.get(live) !== c) {
+          loaded.set(live, c);
+          live.setClip(c);
+        }
       })
       .catch(() => {
         // No skeleton without pose data. The video still plays.
@@ -70,15 +72,7 @@ export function usePoseVideo(
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
-    const update = (next: Partial<PoseVideoState>) =>
-      setState((s) => {
-        const merged = { ...s, ...next };
-        return merged.angle === s.angle && merged.reps === s.reps && merged.cue === s.cue && merged.playing === s.playing ? s : merged;
-      });
-
-    const tick = () => {
-      raf = 0;
-      if (disposed || !running()) return;
+    const paint = (t: number) => {
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
@@ -86,20 +80,25 @@ export function usePoseVideo(
         canvas.width = Math.round(w * dpr);
         canvas.height = Math.round(h * dpr);
       }
-      const t = hasFrameCallback ? shown : video.currentTime;
-      if (t !== drawn.t || w !== drawn.w || h !== drawn.h || dpr !== drawn.dpr || labels.current !== drawn.labels) {
-        drawn = { t, w, h, dpr, labels: labels.current };
-        clear();
-        if (started && clip && w && h) {
+      if (started && clip && w && h) {
+        if (t !== drawn.t) live.frame(t, video);
+        const { joint } = live.getSnapshot();
+        if (t !== drawn.t || w !== drawn.w || h !== drawn.h || dpr !== drawn.dpr || joint !== drawn.joint) {
+          drawn = { t, w, h, dpr, joint };
+          clear();
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          const box = coverBox(w, h, clip.w, clip.h, posX, posY);
-          drawSkeleton(ctx, clip, t, box, { arcAt: 25 });
-          if (labels.current) drawAngleLabels(ctx, clip, t, box, font);
-          const angle = kneeAngle(clip, t);
-          const { reps, cue } = counter.update(angle);
-          update({ angle: Math.round(angle), reps, cue });
+          drawSkeleton(ctx, clip, t, coverBox(w, h, clip.w, clip.h, posX, posY), { arc: joint });
         }
+      } else if (t !== drawn.t || w !== drawn.w || h !== drawn.h || dpr !== drawn.dpr) {
+        drawn = { t, w, h, dpr, joint: "" };
+        clear();
       }
+    };
+
+    const tick = () => {
+      raf = 0;
+      if (disposed || !running()) return;
+      paint(hasFrameCallback ? shown : video.currentTime);
       raf = raf$(tick);
     };
 
@@ -126,10 +125,15 @@ export function usePoseVideo(
 
     const onPlaying = () => {
       started = true;
-      update({ playing: true });
+      setPlaying(true);
     };
-    const onPause = () => update({ playing: false });
-    const onSeeked = () => counter.reset();
+    const onPause = () => setPlaying(false);
+    // A seek while paused (scrubbing, stepping) shows a new frame the loop may not see, so draw it now.
+    const onSeeked = () => {
+      started = true;
+      shown = video.currentTime;
+      if (!disposed && running()) paint(shown);
+    };
     video.addEventListener("playing", onPlaying);
     video.addEventListener("pause", onPause);
     video.addEventListener("seeked", onSeeked);
@@ -154,6 +158,7 @@ export function usePoseVideo(
     return () => {
       disposed = true;
       io?.disconnect();
+      detach();
       if (raf) caf$(raf);
       if (vfc) video.cancelVideoFrameCallback(vfc);
       video.removeEventListener("playing", onPlaying);
@@ -161,7 +166,7 @@ export function usePoseVideo(
       video.removeEventListener("seeked", onSeeked);
       video.pause();
     };
-  }, [videoRef, canvasRef, active, posX, posY, url]);
+  }, [videoRef, canvasRef, active, posX, posY, url, live]);
 
-  return state;
+  return { ...state, playing };
 }

@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LiveSession, type PoseClip } from "@/lib/pose";
 import { LiveScreen } from "./screens/LiveScreen";
 import { PlanScreen } from "./screens/PlanScreen";
 import { SummaryScreen } from "./screens/SummaryScreen";
@@ -45,7 +46,7 @@ describe("LiveScreen", () => {
     expect(ctx.clearRect).toHaveBeenCalled();
     for (const call of [ctx.stroke, ctx.fill, ctx.arc, ctx.lineTo]) expect(call).not.toHaveBeenCalled();
     expect(screen.getByText("Stand tall to begin")).toBeInTheDocument();
-    expect(screen.getByText("--")).toBeInTheDocument();
+    expect(screen.getByText("Knee --")).toBeInTheDocument();
   });
 
   it("draws the skeleton once the video plays", async () => {
@@ -61,7 +62,37 @@ describe("LiveScreen", () => {
     expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.arc).toHaveBeenCalled();
     // Standing at t = 0: the knee is nearly straight.
-    expect(screen.getByText(/^1[7-8]\d°$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Knee 1[7-8]\d°$/)).toBeInTheDocument();
+  });
+});
+
+describe("LiveScreen session", () => {
+  it("shows the selected joint", async () => {
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    const session = new LiveSession(clip as PoseClip);
+    const { container } = render(<LiveScreen session={session} />);
+    await act(async () => {
+      container.querySelector("video")!.dispatchEvent(new Event("playing"));
+    });
+    await wait(150);
+    act(() => session.setJoint("hip"));
+    expect(screen.getByText(/^Hip /)).toBeInTheDocument();
+  });
+
+  it("draws and feeds the session on seeked while paused", async () => {
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockRejectedValue(new DOMException("Blocked", "NotAllowedError"));
+    const session = new LiveSession(clip as PoseClip);
+    const { container } = render(<LiveScreen session={session} />);
+    await wait(150);
+    expect(ctx.arc).not.toHaveBeenCalled();
+
+    const video = container.querySelector("video")!;
+    video.currentTime = 3;
+    await act(async () => {
+      video.dispatchEvent(new Event("seeked"));
+    });
+    expect(ctx.arc).toHaveBeenCalled();
+    expect(session.getSnapshot().knee).not.toBeNull();
   });
 });
 

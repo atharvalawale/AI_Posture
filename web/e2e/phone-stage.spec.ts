@@ -75,43 +75,6 @@ test("the 3D phone comes back after navigating away and back", async ({ page }) 
   expect(errors).toEqual([]);
 });
 
-test("the visitor can turn the phone, see the tracking and jump between screens", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/");
-  await expect(page.locator('[data-phone="3d"]')).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
-  // The 2D phone stays on top until the 3D one has faded in.
-  await expect(page.locator('[data-phone="2d"]')).toHaveCount(0);
-  await scrollStory(page, 0.1);
-
-  // A tap on the live screen switches the tracking view on and off.
-  const handle = page.locator("[data-phone-handle]");
-  const live = page.locator('[data-screen="live"] [data-tracking]');
-  await expect(live).toHaveAttribute("data-tracking", "false");
-  await handle.click();
-  await expect(live).toHaveAttribute("data-tracking", "true");
-  await expect(page.getByText("Tap to hide the tracking.")).toBeVisible();
-  await handle.click();
-  await expect(live).toHaveAttribute("data-tracking", "false");
-
-  // A drag turns the phone; it is not a tap, so the tracking view stays off.
-  const box = (await handle.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  for (let i = 1; i <= 8; i++) await page.mouse.move(box.x + box.width / 2 + i * 15, box.y + box.height / 2);
-  await expect(handle).toHaveClass(/cursor-grabbing/);
-  await page.mouse.up();
-  await expect(handle).toHaveClass(/cursor-grab(?!bing)/);
-  await expect(live).toHaveAttribute("data-tracking", "false");
-
-  // The chapter rail and the notes scroll the story to their screen.
-  const rail = page.getByRole("navigation", { name: "App screens" });
-  await rail.getByRole("button", { name: "Plan" }).click();
-  await expect(page.getByText("Good morning, Riya", { exact: true }).filter({ visible: true })).toBeVisible();
-  await expect(rail.getByRole("button", { name: "Plan" })).toHaveAttribute("aria-current", "step");
-  await page.getByRole("button", { name: "Corrects you out loud" }).click();
-  await expect(page.getByText("Session complete", { exact: true }).filter({ visible: true })).toBeVisible();
-});
-
 test("the story releases the pin and the next section follows it", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");

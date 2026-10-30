@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import fixture from "../../../public/media/squat.pose.json";
-import { EDGES, JOINTS, MEASURED, drawAngleLabels, drawSkeleton, type PoseClip } from "./index";
+import { EDGES, JOINTS, drawSkeleton, type PoseClip } from "./index";
 
 const clip = fixture as PoseClip;
 
@@ -29,17 +29,31 @@ function fakeContext() {
 }
 
 describe("drawSkeleton", () => {
-  it("draws outline, line, joints and the knee arc with the fixed colors", () => {
+  it("draws outline, line, joints and the arc with the fixed colors", () => {
     const { ctx, calls, styles } = fakeContext();
-    drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, { arcAt: 25 });
+    drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, { arc: "hip" });
     expect(styles).toContain("rgba(6,20,22,.45)");
     expect(styles).toContain("#5ED6C6");
     expect(styles).toContain("#FFFFFF");
     expect(styles).toContain("#0B5E57");
     expect(calls.filter((c) => c === "lineTo")).toHaveLength(EDGES.length * 2);
-    // One circle per joint plus the knee arc.
+    // One circle per joint plus the arc.
     expect(calls.filter((c) => c === "arc")).toHaveLength(JOINTS.length + 1);
     expect(ctx.lineWidth).toBe(1.5);
+  });
+
+  it("draws one arc for each joint", () => {
+    for (const arc of ["knee", "hip", "back"] as const) {
+      const { ctx, calls } = fakeContext();
+      drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, { arc });
+      expect(calls.filter((c) => c === "arc")).toHaveLength(JOINTS.length + 1);
+    }
+  });
+
+  it("draws no arc by default", () => {
+    const { ctx, calls } = fakeContext();
+    drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, {});
+    expect(calls.filter((c) => c === "arc")).toHaveLength(JOINTS.length);
   });
 
   it("uses a minimum line width of 2", () => {
@@ -49,19 +63,5 @@ describe("drawSkeleton", () => {
     drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 160, h: 300 });
     expect(widths[0]).toBe(4.5);
     expect(widths[1]).toBe(2);
-  });
-});
-
-describe("drawAngleLabels", () => {
-  it("labels each measured joint with its angle in whole degrees", () => {
-    const { ctx } = fakeContext();
-    const texts: string[] = [];
-    Object.assign(ctx, {
-      measureText: (t: string) => ({ width: t.length * 6 }),
-      fillText: (t: string) => texts.push(t),
-    });
-    drawAngleLabels(ctx, clip, 3, { ox: 0, oy: 0, w: 320, h: 607 }, "sans-serif");
-    expect(texts).toHaveLength(MEASURED.length);
-    for (const [i, [name]] of MEASURED.entries()) expect(texts[i]).toMatch(new RegExp(`^${name} \\d{1,3}°$`));
   });
 });

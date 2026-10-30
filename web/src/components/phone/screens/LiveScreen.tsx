@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { MEASURES, type LiveSession } from "@/lib/pose";
 import { usePoseVideo } from "../usePoseVideo";
 
 // Overlay colors sit on top of video, so they stay the same in both themes (like the skeleton).
@@ -8,18 +9,18 @@ const OVERLAY = "bg-[rgba(10,14,15,.72)]";
 
 /**
  * The live session: the squat clip with real pose tracking, rep count and spoken cue.
- * `tracking` dims the picture and labels the measured joints with their angles.
+ * The skeleton and the bottom card follow `session`'s selected joint. Without a session it keeps its own.
  */
-export function LiveScreen({ active = true, tracking = false }: { active?: boolean; tracking?: boolean }) {
+export function LiveScreen({ active = true, session }: { active?: boolean; session?: LiveSession }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { angle, reps, cue, playing } = usePoseVideo(videoRef, canvasRef, { active, tracking });
+  const { joint, value, reps, cue, playing } = usePoseVideo(videoRef, canvasRef, { active, session });
 
   return (
-    <div className="absolute inset-0 bg-[#1c2224] text-[#EEF2F1]" data-playing={playing} data-tracking={tracking}>
+    <div className="absolute inset-0 bg-[#1c2224] text-[#EEF2F1]" data-playing={playing}>
       <video
         ref={videoRef}
-        className={`absolute inset-0 h-full w-full object-cover transition-[filter] duration-500 ${tracking ? "brightness-[.38] saturate-[.2]" : ""}`}
+        className="absolute inset-0 h-full w-full object-cover"
         src="/media/squat-720.mp4"
         poster="/media/squat-poster.jpg"
         muted
@@ -49,9 +50,7 @@ export function LiveScreen({ active = true, tracking = false }: { active?: boole
         <p className="min-h-6 text-[19px] font-semibold leading-tight">{cue}</p>
         <div className="mt-2.5 flex justify-between text-[13px] text-[#A9B6B4]">
           <span>Squat, set 1 of 3</span>
-          <span>
-            Knee <b className="font-semibold text-white tabular-nums">{angle === null ? "--" : `${angle}°`}</b>
-          </span>
+          <span className="font-semibold tabular-nums text-white">{`${MEASURES[joint].name} ${value === null ? "--" : `${value}°`}`}</span>
         </div>
         <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-white/[.12]">
           <div className="h-full rounded-full bg-[#6FD0C3] transition-[width] duration-400" style={{ width: `${reps * 10}%` }} />

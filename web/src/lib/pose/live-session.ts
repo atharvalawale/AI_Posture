@@ -61,7 +61,7 @@ export class LiveSession {
   private clip: PoseClip | null;
   private state: LiveState = INITIAL;
   private readonly listeners = new Set<() => void>();
-  private readonly counter = new RepCounter({ target: 1000 });
+  private readonly counter = new RepCounter({ down: DOWN, target: 1000 });
   private video: VideoLike | null = null;
   private lastT: number | null = null;
   private minKnee = Infinity;
@@ -69,6 +69,8 @@ export class LiveSession {
   private resume: ReturnType<typeof setTimeout> | null = null;
   private scrubStart = 0;
   private range: [number, number] | null = null;
+  /** The last requested seek target, until the next frame arrives. */
+  private pending: number | null = null;
 
   constructor(clip: PoseClip | null = null) {
     this.clip = clip;
@@ -94,6 +96,7 @@ export class LiveSession {
     if (!this.clip || source !== this.video) return;
     if (this.lastT !== null && t < this.lastT - BACKWARD) this.resetCounting();
     this.lastT = t;
+    this.pending = null;
 
     const knee = measure(this.clip, t, "knee");
     for (const j of JOINT_IDS) {
@@ -168,7 +171,7 @@ export class LiveSession {
     if (!this.video) return;
     this.cancelResume();
     this.video.pause();
-    this.seek(this.state.t + dir * STEP_SECONDS);
+    this.seek((this.pending ?? this.state.t) + dir * STEP_SECONDS);
     this.scheduleResume();
   }
 
@@ -185,7 +188,12 @@ export class LiveSession {
 
   private seek(t: number): void {
     if (!this.video) return;
-    this.video.currentTime = clamp(t, 0, Math.max(0, this.video.duration - END_GUARD));
+    // duration is NaN before metadata loads and Infinity for some streams: no upper bound then.
+    const d = this.video.duration;
+    const max = Number.isFinite(d) ? Math.max(0, d - END_GUARD) : Infinity;
+    const target = clamp(t, 0, max);
+    this.pending = target;
+    this.video.currentTime = target;
   }
 
   private scheduleResume(): void {

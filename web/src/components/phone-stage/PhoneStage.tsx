@@ -132,12 +132,10 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
   const [failed3D, setFailed3D] = useState(false);
   const width = usePhoneWidth(frameRef, desktop, reduced);
   const use3D = can3D && !failed3D && !reduced;
-  // Tapping the phone on the live screen shows what FiixBE measures.
-  const [tracking, setTracking] = useState(false);
   const [tapped, setTapped] = useState(false);
+  // Task 9 rewires the tap to pick a joint.
   const onTap = useCallback(() => {
     if (screen !== "live") return;
-    setTracking((t) => !t);
     setTapped(true);
   }, [screen]);
   const spin = useSpin({ enabled: !reduced, maxYaw: use3D && ready3D ? Infinity : MAX_YAW_2D, width, onTap });
@@ -172,13 +170,13 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
                   className={`absolute inset-0 transition-opacity duration-300 ${ready3D ? "opacity-100" : "opacity-0"}`}
                 >
                   <Fallback onError={() => setFailed3D(true)}>
-                    <Phone3D progress={progress} screen={screen} tracking={tracking} phoneWidth={width} dark={resolvedTheme === "dark"} spin={turn} onReady={() => setReady3D(true)} />
+                    <Phone3D progress={progress} screen={screen} phoneWidth={width} dark={resolvedTheme === "dark"} spin={turn} onReady={() => setReady3D(true)} />
                   </Fallback>
                 </div>
               )}
               {!(use3D && shown3D) && (
                 <div className="absolute inset-0">
-                  <Phone2DStage progress={progress} screen={screen} tracking={tracking} width={width} spin={turn} still={reduced} />
+                  <Phone2DStage progress={progress} screen={screen} width={width} spin={turn} still={reduced} />
                 </div>
               )}
               {!reduced && (
@@ -195,7 +193,7 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
             {!reduced && (
               <div className="mt-7 w-full max-w-[300px]" style={{ width }}>
                 <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />
-                <Hint screen={screen} tracking={tracking} done={spin.turned && tapped} />
+                <Hint screen={screen} done={spin.turned && tapped} />
               </div>
             )}
 
@@ -237,8 +235,8 @@ export function PhoneStage({ notes }: { notes: StageNote[] }) {
 }
 
 /** How to play with the phone. Fades once the visitor has turned it and tapped it. */
-function Hint({ screen, tracking, done }: { screen: ScreenId; tracking: boolean; done: boolean }) {
-  const tap = screen !== "live" ? "" : tracking ? " Tap to hide the tracking." : " Tap to see the tracking.";
+function Hint({ screen, done }: { screen: ScreenId; done: boolean }) {
+  const tap = screen !== "live" ? "" : " Tap a joint to measure it.";
   return (
     <p aria-hidden="true" className={`mt-3 whitespace-nowrap text-center text-xs text-muted transition-opacity duration-500 ${done ? "opacity-0" : "opacity-100"}`}>
       <span className="pointer-coarse:hidden">Drag to turn the phone.</span>

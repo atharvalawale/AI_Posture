@@ -139,6 +139,28 @@ describe("LiveSession", () => {
     expect(v.play).toHaveBeenCalledTimes(1);
   });
 
+  it("treats a non-finite duration as no upper bound", () => {
+    for (const duration of [NaN, Infinity]) {
+      const s = new LiveSession(clip);
+      const v = { ...fakeVideo(), duration };
+      s.attach(v);
+      expect(() => s.step(1)).not.toThrow();
+      expect(v.currentTime).toBeCloseTo(0.25);
+      expect(() => s.scrubTo(100, 280)).not.toThrow();
+      expect(Number.isFinite(v.currentTime)).toBe(true);
+    }
+  });
+
+  it("keeps rapid steps that arrive before the next frame", () => {
+    const s = new LiveSession(clip);
+    const v = fakeVideo();
+    s.attach(v);
+    s.frame(1, v);
+    s.step(1);
+    s.step(1);
+    expect(v.currentTime).toBeCloseTo(1.5);
+  });
+
   it("dispose clears the pending resume and subscribers", () => {
     const s = new LiveSession(clip);
     const v = fakeVideo();
