@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { GuidePanel, PlanPanel, ProgressPanel } from "@/components/patients/PatientStepPanels";
 import { RecoverySlider } from "@/components/patients/RecoverySlider";
+import { SessionDemos } from "@/components/patients/SessionDemos";
+import { Showcase, type ShowcaseItem } from "@/components/showcase/Showcase";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
@@ -7,7 +10,6 @@ import {
   ClosingCta,
   Photo,
   RuleColumns,
-  RuleList,
   Section,
   SectionHeading,
   bodyClass,
@@ -22,32 +24,11 @@ const facts = [
   { title: "A fraction of the cost", body: "Guided exercise at home, without a trip to the clinic for every session." },
 ] as const;
 
-const steps = [
-  {
-    title: "Get your plan",
-    body: "Your physiotherapist writes a personalised exercise plan and shares it with you through FiixBE.",
-  },
-  {
-    title: "Exercise with the camera on",
-    body: "Point your phone at yourself and start. FiixBE watches every movement and guides you in real time.",
-  },
-  {
-    title: "Track your progress",
-    body: "Watch your scores improve session by session. Your physio sees every session and adjusts your plan as you recover.",
-  },
-] as const;
-
-const inEverySession = [
-  {
-    title: "Real-time form correction",
-    body: "FiixBE watches your posture and tells you out loud when to adjust, the way a physio standing next to you would.",
-  },
-  { title: "Automatic rep counting", body: "No counting in your head. Only full, controlled reps count." },
-  {
-    title: "A score for every rep",
-    body: "Each rep gets a score from 0 to 100, based on range of motion, hold time and smoothness.",
-  },
-] as const;
+const steps: ShowcaseItem[] = [
+  { id: "plan", title: "Get your plan", shortTitle: "Plan", body: "Your physio writes your plan and it arrives in the app." },
+  { id: "camera", title: "Exercise with the camera on", shortTitle: "Exercise", body: "Prop your phone up so your whole body fits the guide." },
+  { id: "progress", title: "Track your progress", shortTitle: "Progress", body: "Your deepest bend improves week by week, and your physio sees it." },
+];
 
 const withTheApps = [
   { title: "Session history", body: "Every session is saved, so you can see how you have improved over days and weeks." },
@@ -105,9 +86,14 @@ export function ForPatients() {
 
       <Section id="how-it-works" labelledBy="patients-how">
         <SectionHeading id="patients-how" title="As simple as pointing your phone at yourself." />
-        <div className="mt-14">
-          <RuleColumns items={steps} numbered />
-        </div>
+        <Showcase
+          className="mt-14"
+          label="How FiixBE works for you"
+          items={steps}
+          panels={[<PlanPanel key="plan" />, <GuidePanel key="guide" />, <ProgressPanel key="progress" />]}
+          layout="steps"
+          autoAdvanceMs={5000}
+        />
         <p className="mt-12 text-[16px]">
           <Link href="/session" className="font-medium text-accent underline decoration-1 underline-offset-4 hover:no-underline">
             Try a session now. No signup needed.
@@ -116,24 +102,24 @@ export function ForPatients() {
       </Section>
 
       <Section labelledBy="patients-features">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
-          <SectionHeading
-            className="lg:sticky lg:top-28 lg:self-start"
-            id="patients-features"
-            title="Your physio's eyes, between visits."
-            intro="FiixBE does not replace your physiotherapist. It keeps watch while you exercise, so they know how every session went."
-          />
-          <div className="grid gap-12">
-            <div>
-              <h3 className="text-[15px] text-muted">In every session today</h3>
-              <RuleList items={inEverySession} className="mt-4" />
-            </div>
-            <div>
-              <h3 className="text-[15px] text-muted">Coming with the iPhone and Android apps</h3>
-              <RuleList items={withTheApps} className="mt-4" />
-            </div>
-          </div>
+        <SectionHeading
+          id="patients-features"
+          title="Your physio's eyes, between visits."
+          intro="FiixBE does not replace your physiotherapist. It keeps watch while you exercise, so they know how every session went."
+        />
+        <h3 className="mt-14 text-[15px] text-muted">In every session today</h3>
+        <div className="mt-4">
+          <SessionDemos />
         </div>
+        <h3 className="mt-16 text-[15px] text-muted">Coming with the iPhone and Android apps</h3>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-3 lg:gap-5">
+          {withTheApps.map((item) => (
+            <li key={item.title} className="rounded-xl border border-line bg-surface p-5">
+              <h4 className={h3Class}>{item.title}</h4>
+              <p className={`mt-1.5 ${bodyClass}`}>{item.body}</p>
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section labelledBy="patients-conditions">

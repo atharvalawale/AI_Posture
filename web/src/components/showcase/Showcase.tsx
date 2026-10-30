@@ -3,7 +3,15 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useShowcase } from "./useShowcase";
 
-export type ShowcaseItem = { id: string; title: string; body: string; icon?: ReactNode; note?: string };
+export type ShowcaseItem = {
+  id: string;
+  title: string;
+  body: string;
+  icon?: ReactNode;
+  note?: string;
+  /** A shorter title for the phone row of three steps, where a long title would wrap onto several lines. */
+  shortTitle?: string;
+};
 
 type Props = {
   label: string;
@@ -99,7 +107,14 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                   item.icon && <span aria-hidden className="mt-0.5 shrink-0 text-accent">{item.icon}</span>
                 )}
                 <span className="min-w-0">
-                  <span className="block text-[17px] font-semibold text-text">{item.title}</span>
+                  {row && item.shortTitle ? (
+                    <>
+                      <span className="block text-[17px] font-semibold text-text sm:hidden">{item.shortTitle}</span>
+                      <span className="hidden text-[17px] font-semibold text-text sm:block">{item.title}</span>
+                    </>
+                  ) : (
+                    <span className="block text-[17px] font-semibold text-text">{item.title}</span>
+                  )}
                   <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[15px] text-pretty text-muted`}>{item.body}</span>
                   {item.note && <span className={`${row ? "hidden sm:block" : "block"} mt-1 text-[13px] text-muted`}>{item.note}</span>}
                 </span>
