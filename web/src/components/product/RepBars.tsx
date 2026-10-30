@@ -1,3 +1,5 @@
+"use client";
+
 import { reachedCount } from "@/lib/pose";
 
 const HEIGHT = "h-44";
