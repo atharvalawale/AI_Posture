@@ -66,14 +66,21 @@ describe("Showcase selection", () => {
     expect(selected()[0]).toBe(tab("Second"));
   });
 
-  it("selects on mouse pointer enter only", () => {
+  it("selects on a real mouse move, not on pointer enter or touch", () => {
     setup();
-    fireEvent.pointerEnter(tab("Second"), { pointerType: "touch" });
+    fireEvent.pointerEnter(tab("Second"), { pointerType: "mouse" });
+    expect(selected()[0]).toBe(tab("First"));
+    fireEvent.pointerMove(tab("Second"), { pointerType: "touch" });
     expect(selected()[0]).toBe(tab("First"));
     fireEvent.click(tab("Second"));
     expect(selected()[0]).toBe(tab("Second"));
-    fireEvent.pointerEnter(tab("Third"), { pointerType: "mouse" });
+    fireEvent.pointerMove(tab("Third"), { pointerType: "mouse" });
     expect(selected()[0]).toBe(tab("Third"));
+  });
+
+  it("sets aria-orientation to horizontal for the phone row", () => {
+    setup();
+    expect(screen.getByRole("tablist").getAttribute("aria-orientation")).toBe("horizontal");
   });
 
   it("selects on focus", () => {
@@ -193,7 +200,10 @@ describe("Showcase structure", () => {
   it("stays stacked, with no phone row, when steps are not three", () => {
     const four = [...items, { id: "d", title: "Fourth", body: "Fourth line" }];
     render(<Showcase label="Steps" items={four} panels={[...panels, <p key="d">D</p>]} layout="steps" />);
-    expect(screen.getByRole("tablist").className).not.toContain("grid-cols-3");
+    const list = screen.getByRole("tablist");
+    expect(list.className).not.toContain("grid-cols-3");
+    expect(list.className).not.toContain("sm:grid-cols-1");
+    expect(list.getAttribute("aria-orientation")).toBe("vertical");
     expect(screen.getAllByText("First line")).toHaveLength(1);
   });
 

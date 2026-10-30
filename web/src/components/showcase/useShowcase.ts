@@ -75,8 +75,9 @@ export function useShowcase(count: number, opts: Opts = {}) {
     tabIndex: (active === i ? 0 : -1) as 0 | -1,
     onClick: () => select(i),
     onFocus: () => select(i),
-    onPointerEnter: (e: PointerEvent) => {
-      if (e.pointerType === "mouse") select(i);
+    // A real mouse move, not pointerenter: scrolling the page under a still cursor fires enter without any intent.
+    onPointerMove: (e: PointerEvent) => {
+      if (e.pointerType === "mouse" && i !== active) select(i);
     },
     onKeyDown: (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey) return;

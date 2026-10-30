@@ -31,7 +31,13 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
   // WAI-ARIA: a panel with nothing focusable inside takes tabindex 0 so keyboard users can reach its content.
   const [panelNeedsStop, setPanelNeedsStop] = useState(false);
   useEffect(() => {
-    setPanelNeedsStop(!activePanel.current?.querySelector(FOCUSABLE));
+    const el = activePanel.current;
+    const check = () => setPanelNeedsStop(!el?.querySelector(FOCUSABLE));
+    check();
+    if (!el || typeof MutationObserver === "undefined") return;
+    const mo = new MutationObserver(check);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => mo.disconnect();
   }, [active]);
   // Phone row is horizontal. From 640 px the steps stack, so the keys that matter are vertical.
   const [wide, setWide] = useState(false);
