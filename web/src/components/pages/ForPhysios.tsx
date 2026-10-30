@@ -1,7 +1,8 @@
+import { PhysioDashboard } from "@/components/physios/PhysioDashboard";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
-import { ClosingCta, Photo, RuleList, Section, SectionHeading, bodyClass, h1Class, leadClass, type Item } from "./primitives";
+import { ClosingCta, RuleList, Section, SectionHeading, bodyClass, h1Class, leadClass, type Item } from "./primitives";
 
 const featureGroups: { title: string; items: Item[] }[] = [
   {
@@ -88,14 +89,7 @@ export function ForPhysios() {
               </div>
             </div>
           </div>
-          <Photo
-            src="/images/pages/doctor-tablet.webp"
-            alt="A clinician reviewing results on a tablet with a patient"
-            className="mt-14 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]"
-            sizes="(min-width: 1200px) 1120px, 100vw"
-            position="60% 45%"
-            preload
-          />
+          <PhysioDashboard className="mt-14" />
         </Container>
       </section>
 
