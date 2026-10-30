@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../../public/media/squat.pose.json";
 import type { PoseClip } from "./clip";
-import { findReps, formScore, reachedCount, repScore } from "./score";
+import { findReps, formScore, reachedCount, repScore, shortReps } from "./score";
 
 const clip = fixture as PoseClip;
 
@@ -32,5 +32,16 @@ describe("score", () => {
     expect(reachedCount(d, 102)).toBe(3);
     expect(reachedCount(d, 85)).toBe(0);
     expect(reachedCount(d, 130)).toBe(3);
+  });
+  it("scores, counts and lists short reps when higher is better", () => {
+    expect(repScore(92, 90, "higher")).toBe(100);
+    expect(repScore(78, 90, "higher")).toBeCloseTo(73.6, 5);
+    expect(formScore([91, 78, 93], 90, "higher")).toBe(91);
+    expect(reachedCount([91, 78, 89.6], 90, "higher")).toBe(2);
+    expect(shortReps([91, 78, 93], 90, "higher")).toEqual([{ rep: 1, value: 78 }]);
+  });
+  it("lists the reps short of the target, rounded as the screen shows them", () => {
+    expect(shortReps([95.1, 101.9, 99.5], 100)).toEqual([{ rep: 1, value: 102 }]);
+    expect(shortReps([95.1, 101.9, 99.5], 102)).toEqual([]);
   });
 });

@@ -45,14 +45,57 @@ test.describe("/for-physios dashboard", () => {
     await expect(dash.getByText("Pick a rep to replay it.")).toBeVisible();
   });
 
-  test("picking a patient shows their photo, numbers and flags", async ({ page }) => {
+  test("picking a patient shows their photo, their own measure and their target", async ({ page }) => {
     await page.goto("/for-physios");
     const dash = page.getByRole("region", { name: "Sample physio dashboard" });
+    await expect(dash.getByText("2 of 3 reached your target")).toBeVisible();
     await dash.getByRole("button", { name: /Arjun Mehta/ }).click();
     await expect(dash.getByText("Rotator cuff repair, week 6")).toBeVisible();
+    await expect(dash.getByText("Highest left arm raise per rep")).toBeVisible();
+    await expect(dash.getByText("Deepest knee bend per rep")).toHaveCount(0);
+    await expect(dash.getByRole("slider", { name: "Your target for Arjun" })).toHaveValue("90");
     await expect(dash.getByText("Missed 4 sessions this week")).toBeVisible();
-    await expect(dash.getByRole("img", { name: "Arjun Mehta doing shoulder raises" })).toBeVisible();
+    await expect(dash.getByText("Rep 2 stopped short of your target")).toBeVisible();
+
+    // The photo shows at its own 4:3 shape, on the page's surface, with no black bands.
+    const photo = dash.getByRole("img", { name: "Arjun Mehta doing shoulder raises" });
+    await expect(photo).toBeVisible();
+    const box = (await photo.boundingBox())!;
+    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
+    const [natural, rendered] = await photo.evaluate(async (img: HTMLImageElement) => {
+      await img.decode();
+      return [img.naturalWidth / img.naturalHeight, img.clientWidth / img.clientHeight];
+    });
+    expect(rendered).toBeCloseTo(natural, 1);
   });
+
+  for (const width of [390, 768, 1440]) {
+    test(`switching patients at ${width} px keeps the measure, slider and flags in place`, async ({ browser }) => {
+      const context = await browser.newContext({ viewport: { width, height: 900 } });
+      const page = await context.newPage();
+      try {
+        await page.goto("/for-physios");
+        const dash = page.getByRole("region", { name: "Sample physio dashboard" });
+        await expect(dash.getByText("2 of 3 reached your target")).toBeVisible();
+        // Offsets from the patient's name to the slider and to the flags, which must not move between patients.
+        const offsets = async () => {
+          const name = (await dash.locator("p.font-serif").first().boundingBox())!;
+          const slider = (await dash.getByRole("slider").boundingBox())!;
+          const flags = (await dash.getByText("Worth a look").boundingBox())!;
+          return [Math.round(slider.y - name.y), Math.round(flags.y - name.y)];
+        };
+        const maya = await offsets();
+        for (const name of ["Arjun Mehta", "Rohan Kulkarni"]) {
+          await dash.getByRole("button", { name: new RegExp(name) }).click();
+          await expect(dash.locator("p.font-serif").first()).toHaveText(name);
+          expect(await offsets()).toEqual(maya);
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      } finally {
+        await context.close();
+      }
+    });
+  }
 });
 
 test.describe("/for-physios features", () => {
@@ -133,6 +176,44 @@ test.describe("/for-physios features", () => {
       const [scrollW, clientW] = await list.evaluate((el) => [el.scrollWidth, el.clientWidth]);
       expect(scrollW).toBeGreaterThan(clientW);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      // The row runs into the gutter, edge to edge, so a cut tab runs off the screen.
+      const box = (await list.boundingBox())!;
+      expect([box.x, box.width]).toEqual([0, 390]);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("every feature and practice panel fits its frame on phones", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    try {
+      await page.goto("/for-physios");
+      await expect(page.getByText("2 of 3 reached your target")).toBeVisible();
+      const section = features(page);
+      const tabs = section.getByRole("tablist", { name: "Features" }).getByRole("tab");
+      const fits = (panel: ReturnType<typeof page.locator>) =>
+        panel.evaluate((el) => {
+          const cs = getComputedStyle(el);
+          const room = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+          return [...el.children].every((c) => (c as HTMLElement).offsetHeight <= room);
+        });
+      for (let t = 0; t < 3; t++) {
+        await tabs.nth(t).click();
+        const cards = section.getByRole("tablist").nth(1).getByRole("tab");
+        for (let c = 0; c < 3; c++) {
+          await cards.nth(c).click();
+          const panel = visiblePanel(page);
+          await expect(panel).toHaveAttribute("data-panel", PANELS[t][c]);
+          expect(await fits(panel), PANELS[t][c]).toBe(true);
+        }
+      }
+      const practices = page.locator("section", { has: page.locator("#physios-practices") });
+      for (const name of ["Standalone clinics", "Hospital departments", "Independent physios"]) {
+        await practices.getByRole("tab", { name: new RegExp(name) }).click();
+        const panel = practices.locator("[data-panel]:visible");
+        expect(await fits(panel), name).toBe(true);
+      }
     } finally {
       await context.close();
     }

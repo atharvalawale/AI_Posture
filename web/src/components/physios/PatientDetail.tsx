@@ -2,46 +2,50 @@
 
 import { RepBars } from "@/components/product/RepBars";
 import { TargetSlider } from "@/components/product/TargetSlider";
-import { formScore, reachedCount } from "@/lib/pose";
+import { formScore, reachedCount, shortReps } from "@/lib/pose";
 import type { SamplePatient } from "@/lib/sample";
 
 type Flag = { text: string; note: string; ok?: boolean; rep?: number };
 
 type Props = {
   patient: SamplePatient;
-  /** Deepest knee bend per rep of Maya's clip, or null while it loads. */
-  depths: number[] | null;
+  /** Each rep's angle for this patient, or null while Maya's clip loads. */
+  values: number[] | null;
   target: number;
   onTarget: (v: number) => void;
   activeRep: number | null;
-  onRep: (i: number | null) => void;
+  /** Loops a rep in the replay, or plays it all with null. Only for a patient with footage. */
+  onRep?: (i: number | null) => void;
   className?: string;
 };
 
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-/** Maya's flags come from her reps against the target: one per short rep, or one saying every rep reached it. */
-function flagsFor(patient: SamplePatient, depths: number[] | null, target: number): Flag[] {
-  if (patient.form !== "clip") return patient.flags;
-  if (!depths) return patient.flags;
-  const short: Flag[] = depths.flatMap((d, i) =>
-    Math.round(d) > target ? [{ text: `Rep ${i + 1} stopped short of your target`, note: `${Math.round(d)}°`, rep: i }] : [],
-  );
+/** One flag per rep short of the target, or one saying every rep reached it, then the patient's other flags. */
+export function flagsFor(patient: SamplePatient, values: number[] | null, target: number): Flag[] {
+  if (!values) return patient.flags;
+  const short: Flag[] = shortReps(values, target, patient.measure.direction).map(({ rep, value }) => ({
+    text: `Rep ${rep + 1} stopped short of your target`,
+    note: `${value}°`,
+    rep,
+  }));
   return [...(short.length ? short : [{ text: "Every rep reached your target", note: `${target}°`, ok: true }]), ...patient.flags];
 }
 
 /** Name and week, the three numbers a physio checks first, the reps against the target, and what is worth a look. */
-export function PatientDetail({ patient, depths, target, onTarget, activeRep, onRep, className = "" }: Props) {
-  const fromClip = patient.form === "clip";
-  const form = fromClip ? (depths ? formScore(depths, target) : null) : patient.form;
+export function PatientDetail({ patient, values, target, onTarget, activeRep, onRep, className = "" }: Props) {
+  const { measure } = patient;
+  const form = values ? formScore(values, target, measure.direction) : null;
   const first = patient.name.split(" ")[0];
-  const flags = flagsFor(patient, depths, target);
+  const flags = flagsFor(patient, values, target);
+  const toggle = onRep && ((i: number) => onRep(activeRep === i ? null : i));
 
   return (
     <div className={`grid content-start gap-6 ${className}`}>
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      {/* The condition always sits under the name, so a longer one never pushes the rest down for one patient only. */}
+      <div>
         <p className="font-serif text-[26px] leading-tight tracking-[-0.01em] text-text">{patient.name}</p>
-        <p className="text-[15px] text-muted">
+        <p className="mt-1 text-[15px] text-muted">
           {patient.condition}, week {patient.week}
         </p>
       </div>
@@ -59,41 +63,51 @@ export function PatientDetail({ patient, depths, target, onTarget, activeRep, on
         ))}
       </dl>
 
-      {/* The rep bars and target describe Maya's squat clip. For the others they rest, dimmed and out of reach. */}
-      <div inert={!fromClip} className={`grid gap-6 transition-opacity ${fromClip ? "" : "opacity-35"}`}>
-        <div>
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="text-[15px] text-muted">Deepest knee bend per rep</p>
-            {depths && (
-              <p aria-live="polite" className="text-[15px] font-semibold tabular-nums text-text">
-                {reachedCount(depths, target)} of {depths.length} reached your target
-              </p>
-            )}
-          </div>
-          <div className="mt-4">
-            <RepBars depths={depths} target={target} activeRep={activeRep} onRep={(i) => onRep(activeRep === i ? null : i)} height="h-40" />
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-[15px] text-muted">{activeRep === null ? "Pick a rep to replay it." : `Replaying rep ${activeRep + 1}.`}</p>
-            <button
-              type="button"
-              aria-pressed={activeRep === null}
-              onClick={() => onRep(null)}
-              className={`h-11 shrink-0 cursor-pointer rounded-lg border px-3.5 text-[15px] text-text transition-colors ${focus} ${
-                activeRep === null ? "border-transparent bg-surface-2" : "border-line hover:bg-surface-2"
-              }`}
-            >
-              Play all
-            </button>
-          </div>
+      {/* Every patient gets the same rows here, so switching patients never moves what comes after. */}
+      <div>
+        {/* Stacked, with room kept for the count while the clip loads, so every patient's rows line up. */}
+        <div className="grid min-h-[50px] content-start gap-1">
+          <p className="text-[15px] text-muted">{measure.label}</p>
+          {values && (
+            <p aria-live="polite" className="text-[15px] font-semibold tabular-nums text-text">
+              {reachedCount(values, target, measure.direction)} of {values.length} reached your target
+            </p>
+          )}
         </div>
+        <div className="mt-4">
+          <RepBars
+            depths={values}
+            target={target}
+            direction={measure.direction}
+            range={measure.range}
+            activeRep={activeRep}
+            onRep={toggle}
+            className="h-40"
+          />
+        </div>
+        <div className="mt-3 flex min-h-11 items-center justify-between gap-3">
+          {onRep ? (
+            <>
+              <p className="text-[15px] text-muted">{activeRep === null ? "Pick a rep to replay it." : `Replaying rep ${activeRep + 1}.`}</p>
+              <button
+                type="button"
+                onClick={() => onRep(null)}
+                className={`h-11 shrink-0 cursor-pointer rounded-lg border border-line px-3.5 text-[15px] text-text transition-colors hover:bg-surface-2 ${focus}`}
+              >
+                Play all
+              </button>
+            </>
+          ) : (
+            <p className="text-[15px] text-muted">Angles from this morning&apos;s session.</p>
+          )}
+        </div>
+      </div>
 
-        <div>
-          <TargetSlider label={`Your target for ${first}`} value={target} onChange={onTarget} />
-          <p className="mt-1 text-[13px] text-pretty text-muted">
-            Change it here and {first}&apos;s phone shows the new target at the next session.
-          </p>
-        </div>
+      <div>
+        <TargetSlider label={`Your target for ${first}`} value={target} onChange={onTarget} min={measure.slider[0]} max={measure.slider[1]} />
+        <p className="mt-1 text-[13px] text-pretty text-muted">
+          Change it here and {first}&apos;s phone shows the new target at the next session.
+        </p>
       </div>
 
       <div>
@@ -110,12 +124,12 @@ export function PatientDetail({ patient, depths, target, onTarget, activeRep, on
             const row = "flex min-h-11 w-full items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-2.5 text-left";
             return (
               <li key={f.text}>
-                {f.rep !== undefined ? (
+                {toggle && f.rep !== undefined ? (
                   <button
                     type="button"
                     aria-pressed={activeRep === f.rep}
-                    onClick={() => onRep(f.rep!)}
-                    className={`${row} cursor-pointer transition-colors hover:bg-line/70 ${focus}`}
+                    onClick={() => toggle(f.rep!)}
+                    className={`${row} cursor-pointer transition-colors hover:bg-line/70 aria-pressed:bg-line/70 ${focus}`}
                   >
                     {body}
                   </button>

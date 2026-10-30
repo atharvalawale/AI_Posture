@@ -3,28 +3,22 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { useClipReps, usePoseClip } from "@/components/pose/usePoseClip";
-import { formScore, weekDepths } from "@/lib/pose";
-import { PATIENTS, PLAN_ITEMS, type SamplePatient } from "@/lib/sample";
+import { shortReps, weekDepths } from "@/lib/pose";
+import { KABIR, MAYA, MAYA_TARGET, PATIENTS, PLAN_ITEMS, type DayMark } from "@/lib/sample";
 import { Avatar } from "./PatientList";
+import { useFormScores } from "./usePatientReps";
 
 // The visuals behind the For physios feature cards. All sample data, shown inside product views.
 
-/** The physio's starting knee bend target for Maya, the same one the dashboard opens on. */
-export const MAYA_TARGET = 100;
-
-/** A patient's form score: Maya's from her clip against the target, the others' from the sample data. Null while the clip loads. */
-export function useFormScore(patient: SamplePatient): number | null {
-  const reps = useClipReps();
-  if (patient.form !== "clip") return patient.form;
-  return reps ? formScore(reps.map((r) => r.depth), MAYA_TARGET) : null;
-}
-
-/** The frame every feature and practice visual sits in. Fixed height, so switching panels never moves the page. */
-export function PanelFrame({ id, children }: { id: string; children: ReactNode }) {
+/**
+ * The frame every feature and practice visual sits in. Fixed height, so switching panels never moves the page.
+ * On phones each section's frames are sized to its tallest panel: the feature panels by default, the practice panels taller.
+ */
+export function PanelFrame({ id, phoneHeight = "h-[360px]", children }: { id: string; phoneHeight?: string; children: ReactNode }) {
   return (
     <div
       data-panel={id}
-      className="flex h-[420px] items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:h-[440px] sm:p-8"
+      className={`flex ${phoneHeight} items-center justify-center overflow-hidden rounded-2xl border border-line bg-surface-2 p-3 sm:h-[440px] sm:p-8`}
     >
       {children}
     </div>
@@ -46,15 +40,22 @@ function Dot({ ok = false }: { ok?: boolean }) {
   return <span aria-hidden className={`mt-[7px] size-2 shrink-0 rounded-full ${ok ? "bg-accent" : "bg-warn"}`} />;
 }
 
-function FormPanel() {
+/** Maya's deepest knee bend this morning, and how much deeper it is than at her first session. Both from the squat clip. */
+export function FormPanel() {
+  const clip = usePoseClip();
+  const reps = useClipReps();
+  const deepest = reps?.length ? Math.round(Math.min(...reps.map((r) => r.depth))) : null;
+  const firstSession = clip ? Math.round(weekDepths(clip)[0]) : null;
   return (
     <PanelFrame id="form">
       <div className="grid w-full max-w-[380px] gap-3">
-        <Row label="Knee bend">
-          <span className="font-serif text-[44px] leading-none tabular-nums text-text">96°</span>
+        <Row label="Deepest knee bend">
+          <span className="font-serif text-[44px] leading-none tabular-nums text-text">{deepest === null ? "--" : `${deepest}°`}</span>
         </Row>
-        <Row label="Range of motion">
-          <span className="text-[15px] font-semibold text-text">+14° since week 1</span>
+        <Row label="Since her first session">
+          <span className="text-[15px] font-semibold tabular-nums text-text">
+            {deepest === null || firstSession === null ? "--" : `${firstSession - deepest}° deeper`}
+          </span>
         </Row>
         <Row label="Smoothness">
           <span className="text-[15px] text-muted">Steady on the way down</span>
@@ -79,15 +80,9 @@ function DashRow({ entry }: { entry: DashEntry }) {
   );
 }
 
-/** A fourth sample patient, only in the feature and practice views. No footage, so initials. */
-export const KABIR = { name: "Kabir Rao", initials: "KR", exercise: "Calf raises", sessions: "4 of 6", form: 81 };
-
 function DashPanel() {
-  const maya = useFormScore(PATIENTS[0]);
-  const entries: DashEntry[] = [
-    ...PATIENTS.map((p) => ({ ...p, form: p.form === "clip" ? maya : p.form })),
-    KABIR,
-  ];
+  const formOf = useFormScores();
+  const entries: DashEntry[] = [...PATIENTS.map((p) => ({ ...p, form: formOf(p) })), KABIR];
   return (
     <PanelFrame id="dash">
       <div className={`${cardClass} w-full max-w-[400px] px-3 py-2 sm:px-4`}>
@@ -106,11 +101,24 @@ function DashPanel() {
   );
 }
 
-function AlertsPanel() {
-  const alerts = [
-    { title: "Arjun missed 4 sessions", note: "Last session on Thursday" },
-    { title: "Maya's rep 2 stopped at 102°", note: `Your target is ${MAYA_TARGET}°` },
-    { title: "Rohan finished his week", note: "All 6 sessions done", ok: true },
+const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const count = (days: DayMark[], mark: DayMark) => days.filter((d) => d === mark).length;
+
+/** What reaches the physio first, from the same week and reps as the dashboard. */
+export function AlertsPanel() {
+  const reps = useClipReps();
+  const short = reps ? shortReps(reps.map((r) => r.depth), MAYA_TARGET)[0] : undefined;
+  const arjun = PATIENTS.find((p) => p.id === "arjun")!;
+  const rohan = PATIENTS.find((p) => p.id === "rohan")!;
+  const lastDone = arjun.days.lastIndexOf("done");
+  const alerts: { title: string; note: string; ok?: boolean }[] = [
+    { title: `Arjun missed ${count(arjun.days, "missed")} sessions`, note: `Last session on ${WEEKDAY_NAMES[lastDone]}` },
+    !reps
+      ? { title: "Maya finished this morning's session", note: "Loading her reps" }
+      : short
+        ? { title: `Maya's rep ${short.rep + 1} stopped at ${short.value}°`, note: `Your target is ${MAYA_TARGET}°` }
+        : { title: "Maya reached her target on every rep", note: `Your target is ${MAYA_TARGET}°`, ok: true },
+    { title: "Rohan finished his week", note: `All ${count(rohan.days, "done")} sessions done`, ok: true },
   ];
   return (
     <PanelFrame id="alerts">
@@ -166,7 +174,9 @@ function ReportPanel() {
       <div className={`${cardClass} grid w-full max-w-[320px] gap-3 p-5 sm:p-6`}>
         <div>
           <p className="font-serif text-[22px] leading-tight text-text">Weekly report</p>
-          <p className="mt-0.5 text-[13px] text-muted">Maya Thomas, week 3</p>
+          <p className="mt-0.5 text-[13px] text-muted">
+            {MAYA.name}, week {MAYA.week}
+          </p>
         </div>
         <svg
           viewBox={`0 0 ${CHART.w} ${CHART.h}`}
@@ -200,12 +210,12 @@ function ReportPanel() {
           )}
         </svg>
         <div className="flex justify-between text-[13px] text-muted">
-          <span>Week 1</span>
-          <span>Week 3</span>
+          <span>First session</span>
+          <span>This morning</span>
         </div>
         <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3">
-          <span className="text-[13px] text-muted">Deepest bend</span>
-          <span className="text-[15px] font-semibold tabular-nums text-text">{first !== null ? `${first}° to ${last}°` : "--"}</span>
+          <span className="text-[13px] text-muted">Deepest knee bend</span>
+          <span className="text-[15px] font-semibold whitespace-nowrap tabular-nums text-text">{first !== null ? `${first}° to ${last}°` : "--"}</span>
         </div>
       </div>
     </PanelFrame>
@@ -233,17 +243,21 @@ function MessagingPanel() {
           <span className="sr-only">Voice note,</span>
           <span className="tabular-nums">0:14</span>
         </p>
-        <p className={`${bubble} self-end bg-accent text-on-accent`}>Slow down on the way down, and stop at {MAYA_TARGET}°.</p>
+        <p className={`${bubble} self-end bg-accent text-on-accent`}>Slow down on the way down, and reach {MAYA_TARGET}° on every rep.</p>
       </div>
     </PanelFrame>
   );
 }
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
-/** Two weeks of November, Monday the 3rd first. */
-const DAYS = Array.from({ length: 14 }, (_, i) => i + 3);
-const BOOKED = 6;
-const TAKEN = [4, 8, 11, 13];
+const SHORT_DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** Two weeks of November 2026, from Monday the 2nd. Built from real dates, so each day sits under its weekday. */
+export const CALENDAR_START = new Date(2026, 10, 2);
+const DAYS = Array.from({ length: 14 }, (_, i) => new Date(2026, 10, CALENDAR_START.getDate() + i).getDate());
+/** Maya's video check-in, a Thursday. */
+export const BOOKED = 5;
+const TAKEN = [3, 7, 10, 12];
+const BOOKED_LABEL = `${SHORT_DAY[new Date(2026, 10, BOOKED).getDay()]} ${BOOKED}, 10:30`;
 
 function BookingPanel() {
   return (
@@ -267,27 +281,49 @@ function BookingPanel() {
         </div>
         <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3 text-[15px]">
           <span className="text-text">Maya, video check-in</span>
-          <span className="font-semibold text-text">Thu 6, 10:30</span>
+          <span className="font-semibold text-text">{BOOKED_LABEL}</span>
         </div>
       </div>
     </PanelFrame>
   );
 }
 
+const CALL_ICONS = [
+  // Microphone, camera, end call.
+  <path key="mic" d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0M12 17v4" />,
+  <path key="cam" d="M3 7.5A1.5 1.5 0 0 1 4.5 6h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5zM15 10.5l6-3.5v10l-6-3.5" />,
+  <path key="end" d="M3.5 14.5c4.7-4.2 12.3-4.2 17 0l-2 2.5-3.2-1.6.3-2.4a10 10 0 0 0-7.2 0l.3 2.4L5.5 17z" />,
+];
+
 function TelePanel() {
+  // The call tile is drawn at half the photo's pixel size, so it stays sharp on 2x screens.
   return (
     <PanelFrame id="tele">
-      <div className="relative aspect-[3/4] h-full max-h-[360px] overflow-hidden rounded-xl border border-line shadow-[0_16px_40px_-28px_rgb(0_0_0/0.4)]">
-        <Image src="/images/avatars/maya-call.webp" alt="Maya on a video call" fill sizes="270px" className="object-cover" />
-        <span className="absolute bottom-3 left-3 rounded-lg bg-[rgba(10,14,15,.62)] px-2.5 py-1 text-[13px] text-white">Maya Thomas</span>
-        <Image
-          src="/images/avatars/physio.webp"
-          alt="Her physio"
-          width={80}
-          height={80}
-          unoptimized
-          className="absolute top-3 right-3 size-20 rounded-lg border-2 border-white object-cover"
-        />
+      <div className={`${cardClass} grid justify-items-center gap-3 p-3`}>
+        <div className="relative h-[240px] w-[180px] overflow-hidden rounded-lg">
+          <Image src="/images/avatars/maya-call.webp" alt="Maya on a video call" fill sizes="180px" className="object-cover" />
+          <span className="absolute bottom-2 left-2 rounded-md bg-[rgba(10,14,15,.62)] px-2 py-0.5 text-[13px] text-white">Maya Thomas</span>
+          <Image
+            src="/images/avatars/physio.webp"
+            alt="Her physio"
+            width={64}
+            height={64}
+            unoptimized
+            className="absolute top-2 right-2 size-16 rounded-md border-2 border-white object-cover"
+          />
+        </div>
+        <div aria-hidden className="flex gap-3">
+          {CALL_ICONS.map((icon, i) => (
+            <span
+              key={i}
+              className={`flex size-10 items-center justify-center rounded-full ${i === 2 ? "bg-warn text-surface" : "bg-surface-2 text-text"}`}
+            >
+              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                {icon}
+              </svg>
+            </span>
+          ))}
+        </div>
       </div>
     </PanelFrame>
   );

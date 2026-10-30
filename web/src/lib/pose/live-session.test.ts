@@ -241,4 +241,17 @@ describe("LiveSession", () => {
     s.frame(4.1, v);
     expect(v.currentTime).toBe(2);
   });
+
+  it("plays when a range is picked or cleared, since the pick is a user gesture", async () => {
+    const s = new LiveSession(clip);
+    const v = fakeVideo();
+    v.play = vi.fn(async () => { throw new Error("blocked"); });
+    s.attach(v);
+    s.loop([2, 4]);
+    expect(v.play).toHaveBeenCalledTimes(1);
+    s.loop(null);
+    expect(v.play).toHaveBeenCalledTimes(2);
+    // A blocked play is swallowed, not thrown.
+    await Promise.resolve();
+  });
 });

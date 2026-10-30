@@ -1,29 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useClipReps, usePoseClip } from "@/components/pose/usePoseClip";
 import { LiveSession, clipDuration } from "@/lib/pose";
-import { PATIENTS, type SamplePatient } from "@/lib/sample";
+import { MAYA, PATIENTS, type SamplePatient } from "@/lib/sample";
 import { PatientDetail } from "./PatientDetail";
 import { PatientList } from "./PatientList";
 import { SessionReplay } from "./SessionReplay";
+import { usePatientReps } from "./usePatientReps";
 
-/** Maya's knee bend target when the page opens, in degrees. */
-const START_TARGET = 100;
+type Id = SamplePatient["id"];
+
+/** Each patient's target when the page opens. The physio's changes are kept per patient. */
+const START_TARGETS = Object.fromEntries(PATIENTS.map((p) => [p.id, p.measure.target])) as Record<Id, number>;
 
 /**
- * A physio dashboard with sample patients, in one product window. Maya's session replays from the real squat
- * clip: her rep bars, form score and flags are computed from it, follow the target slider, and loop a rep on click.
+ * A physio dashboard with sample patients, in one product window. Each patient's rep bars, form score and flags
+ * come from their reps against the target slider. Maya's reps are computed from the real squat clip, and a click
+ * on one loops it in her replay.
  */
 export function PhysioDashboard({ className = "" }: { className?: string }) {
   const [session] = useState(() => new LiveSession());
+  useEffect(() => () => session.dispose(), [session]);
   const clip = usePoseClip();
   const reps = useClipReps();
-  const [selected, setSelected] = useState<SamplePatient["id"]>("maya");
-  const [target, setTarget] = useState(START_TARGET);
+  const [selected, setSelected] = useState<Id>(MAYA.id);
+  const [targets, setTargets] = useState(START_TARGETS);
   const [activeRep, setActiveRep] = useState<number | null>(null);
-  const patient = PATIENTS.find((p) => p.id === selected) ?? PATIENTS[0];
-  const depths = reps?.map((r) => r.depth) ?? null;
+  const patient = PATIENTS.find((p) => p.id === selected) ?? MAYA;
+  const values = usePatientReps(patient);
+  // Only Maya has footage, so only her reps replay.
+  const replayable = !patient.still;
 
   const playRep = (i: number | null) => {
     const rep = i === null ? undefined : reps?.[i];
@@ -50,15 +57,15 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
           reps={reps}
           duration={clip ? clipDuration(clip) : null}
           activeRep={activeRep}
-          className="aspect-[3/4] sm:aspect-auto lg:min-h-[520px]"
+          className="lg:min-h-[520px]"
         />
         <PatientDetail
           patient={patient}
-          depths={depths}
-          target={target}
-          onTarget={setTarget}
-          activeRep={activeRep}
-          onRep={playRep}
+          values={values}
+          target={targets[patient.id]}
+          onTarget={(v) => setTargets((t) => ({ ...t, [patient.id]: v }))}
+          activeRep={replayable ? activeRep : null}
+          onRep={replayable ? playRep : undefined}
           className="p-5 sm:p-6"
         />
       </div>

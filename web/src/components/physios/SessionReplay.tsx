@@ -4,13 +4,17 @@ import Image from "next/image";
 import { useRef } from "react";
 import { usePoseVideo } from "@/components/phone/usePoseVideo";
 import type { LiveSession, Rep } from "@/lib/pose";
-import type { SamplePatient } from "@/lib/sample";
+import type { DayMark, SamplePatient } from "@/lib/sample";
+import { DAY_COLOR } from "./PatientList";
 
 // Overlays sit on top of footage, so they keep fixed colors in both themes, like the skeleton.
 const OVERLAY = "bg-[rgba(10,14,15,.62)] text-white backdrop-blur-sm";
 const BONE = "bg-[#6fd0c3]";
 /** Where the squat footage is anchored when cropped, as fractions. Keeps Maya's feet in frame. */
 const FOOTAGE_POSITION: [number, number] = [0.42, 0.9];
+
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_TEXT: Record<DayMark, string> = { done: "Done", missed: "Missed", today: "Today" };
 
 type Props = {
   patient: SamplePatient;
@@ -22,9 +26,30 @@ type Props = {
   className?: string;
 };
 
+/** The patient's week, a day per row: done, missed or today. */
+function WeekList({ days }: { days: DayMark[] }) {
+  return (
+    <div className="px-4 pt-3 pb-4 sm:px-5 sm:pt-4">
+      <p className="text-[15px] text-muted">This week</p>
+      <ul className="mt-1.5">
+        {days.map((d, i) => (
+          <li key={WEEKDAYS[i]} className="flex items-center justify-between gap-3 border-b border-line py-[7px] text-[15px] last:border-b-0">
+            <span className="text-text">{WEEKDAYS[i]}</span>
+            <span className="flex items-center gap-2 text-muted">
+              <span aria-hidden className={`size-2 rounded-full ${DAY_COLOR[d]} ${d === "today" ? "ring-1 ring-muted/60" : ""}`} />
+              {DAY_TEXT[d]}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /**
  * The patient's latest session. For Maya, the squat footage with her tracked skeleton, the live knee angle
- * and a timeline marking the bottom of each rep. For the others, the photo of their exercise.
+ * and a timeline marking the bottom of each rep. For the others, the photo of their exercise at its own
+ * shape, with their week below it.
  */
 export function SessionReplay({ patient, session, reps, duration, activeRep, className = "" }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,7 +60,10 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
   const looped = activeRep !== null ? reps?.[activeRep] : undefined;
 
   return (
-    <div className={`relative overflow-hidden bg-[#111] ${className}`}>
+    <div
+      className={`relative overflow-hidden ${footage ? "aspect-[3/4] bg-[#111] sm:aspect-auto" : "flex flex-col bg-surface-2"} ${className}`}
+    >
+      {/* The video stays mounted while another patient shows, so switching back to Maya is instant. */}
       <video
         ref={videoRef}
         className={`absolute inset-0 h-full w-full object-cover ${footage ? "" : "invisible"}`}
@@ -52,25 +80,25 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
       />
       <canvas ref={canvasRef} aria-hidden="true" className={`pointer-events-none absolute inset-0 h-full w-full ${footage ? "" : "invisible"}`} />
 
-      {patient.still && (
-        <Image
-          key={patient.id}
-          src={patient.still}
-          alt={`${patient.name} doing ${patient.exercise.toLowerCase()}`}
-          fill
-          sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
-          // Landscape photos in a portrait frame: shown whole, like a landscape clip in a player, so the exercise stays readable.
-          className="object-contain"
-        />
-      )}
-
-      {/* Over a photo the label sits low, clear of the patient's face. Over footage the timeline takes the bottom. */}
-      <p className={`absolute left-3 rounded-lg px-2.5 py-1.5 text-[13px] ${OVERLAY} ${footage ? "top-3" : "bottom-3"}`}>
-        {footage ? "Session replay, this morning" : `${patient.exercise}, this morning`}
-      </p>
-
-      {footage && (
+      {patient.still ? (
         <>
+          <div className="relative aspect-[4/3] w-full shrink-0">
+            <Image
+              key={patient.id}
+              src={patient.still}
+              alt={`${patient.name} doing ${patient.exercise.toLowerCase()}`}
+              fill
+              sizes="(min-width: 1024px) 420px, (min-width: 640px) 45vw, 100vw"
+              className="object-cover"
+            />
+            {/* Low on the photo, clear of the patient's face. */}
+            <p className={`absolute bottom-3 left-3 rounded-lg px-2.5 py-1.5 text-[13px] ${OVERLAY}`}>{patient.exercise}, this morning</p>
+          </div>
+          <WeekList days={patient.days} />
+        </>
+      ) : (
+        <>
+          <p className={`absolute top-3 left-3 rounded-lg px-2.5 py-1.5 text-[13px] ${OVERLAY}`}>Session replay, this morning</p>
           <p className={`absolute top-3 right-3 rounded-xl px-3 py-2 text-right ${OVERLAY}`}>
             <span className="block text-[26px] leading-none font-medium tabular-nums">{knee === null ? "--" : `${knee}°`}</span>
             <span className="mt-1 block text-[13px] text-white/80">Knee</span>

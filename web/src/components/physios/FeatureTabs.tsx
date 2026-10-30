@@ -110,9 +110,11 @@ export function FeatureTabs({ className = "" }: { className?: string }) {
     const list = listRef.current;
     if (!tab || !list) return;
     if (moveFocus) tab.focus();
-    // Bring the tab fully into the scrolling row without scrolling the page.
-    if (tab.offsetLeft < list.scrollLeft) list.scrollLeft = tab.offsetLeft;
-    else if (tab.offsetLeft + tab.offsetWidth > list.scrollLeft + list.clientWidth) list.scrollLeft = tab.offsetLeft + tab.offsetWidth - list.clientWidth;
+    // Bring the tab fully into the scrolling row, clear of the gutter, without scrolling the page.
+    const pad = parseFloat(getComputedStyle(list).paddingLeft) || 0;
+    if (tab.offsetLeft - pad < list.scrollLeft) list.scrollLeft = tab.offsetLeft - pad;
+    else if (tab.offsetLeft + tab.offsetWidth + pad > list.scrollLeft + list.clientWidth)
+      list.scrollLeft = tab.offsetLeft + tab.offsetWidth + pad - list.clientWidth;
   };
 
   const onKeyDown = (e: KeyboardEvent, i: number) => {
@@ -126,11 +128,12 @@ export function FeatureTabs({ className = "" }: { className?: string }) {
 
   return (
     <div className={className}>
+      {/* Below 1024 px the row runs into the page gutter, so a cut tab runs off the screen edge like a native scroller. */}
       <div
         ref={listRef}
         role="tablist"
         aria-label="Features"
-        className="relative flex gap-9 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative -mx-6 flex gap-9 overflow-x-auto px-6 shadow-[inset_0_-1px_0_var(--line)] [scrollbar-width:none] lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
       >
         {GROUPS.map((g, i) => {
           const on = i === active;
@@ -159,7 +162,7 @@ export function FeatureTabs({ className = "" }: { className?: string }) {
       </div>
 
       <div role="tabpanel" id={panelId} aria-labelledby={tabId(active)}>
-        <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-pretty text-muted">{group.intro}</p>
+        <p className="mt-6 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted">{group.intro}</p>
         <Showcase
           key={active}
           className="mt-8"

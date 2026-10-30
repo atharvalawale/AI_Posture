@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { DayMark, SamplePatient } from "@/lib/sample";
 
-const DAY_COLOR: Record<DayMark, string> = { done: "bg-accent", missed: "bg-warn", today: "bg-line" };
+export const DAY_COLOR: Record<DayMark, string> = { done: "bg-accent", missed: "bg-warn", today: "bg-line" };
 
 /** The patient's face from their footage, or their initials when there is none. */
 export function Avatar({ avatar, initials, className = "size-10" }: { avatar?: string; initials: string; className?: string }) {

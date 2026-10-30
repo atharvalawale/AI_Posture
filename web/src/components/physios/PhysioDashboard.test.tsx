@@ -1,8 +1,10 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LiveSession, findReps, type PoseClip } from "@/lib/pose";
+import { LiveSession, findReps, weekDepths, type PoseClip } from "@/lib/pose";
+import { clearPoseClipCache } from "@/lib/pose/clip";
+import { AlertsPanel, BOOKED, CALENDAR_START, FEATURE_PANELS, FormPanel } from "./featurePanels";
 import { PhysioDashboard } from "./PhysioDashboard";
 
 const clip = JSON.parse(readFileSync(resolve(process.cwd(), "public/media/squat.pose.json"), "utf8")) as PoseClip;
@@ -13,7 +15,11 @@ const formScore = () => screen.getByText("Form score").nextElementSibling?.textC
 
 const wait = (ms: number) => act(() => new Promise((r) => setTimeout(r, ms)));
 
+const serveClip = () => vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(clip))));
+
 beforeEach(() => {
+  // Each test loads the clip itself, so the tests pass in any order.
+  clearPoseClipCache();
   const ctx = new Proxy({}, { get: () => vi.fn() });
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => ctx as never);
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
@@ -26,8 +32,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// The pose clip loader caches per URL and drops a failed load, so the failing case runs first.
-describe("PhysioDashboard without the clip", () => {
+describe("PhysioDashboard", () => {
   it("renders the patients and a loading line when the clip cannot load", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("offline"))));
     render(<PhysioDashboard />);
@@ -37,20 +42,17 @@ describe("PhysioDashboard without the clip", () => {
     }
     expect(screen.getByText("Loading the session")).toBeInTheDocument();
   });
-});
-
-describe("PhysioDashboard", () => {
-  beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(clip))));
-  });
 
   it("counts the reps that reached the target and flags the short one", async () => {
+    serveClip();
     render(<PhysioDashboard />);
     expect(await screen.findByText("2 of 3 reached your target")).toBeInTheDocument();
+    expect(screen.getByText("Deepest knee bend per rep")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Rep 2 stopped short of your target/ })).toBeInTheDocument();
   });
 
   it("recounts, rescores and reflags as the target slider moves", async () => {
+    serveClip();
     render(<PhysioDashboard />);
     await screen.findByText("2 of 3 reached your target");
     const formAt100 = formScore();
@@ -66,41 +68,124 @@ describe("PhysioDashboard", () => {
     expect(Number(formScore())).toBeLessThan(Number(formAt100));
   });
 
-  it("loops a rep from its bar or its flag, and plays all again", async () => {
+  it("loops and plays a rep from its bar or its flag, toggles it off, and plays all again", async () => {
+    serveClip();
     const loop = vi.spyOn(LiveSession.prototype, "loop");
+    const play = HTMLMediaElement.prototype.play as ReturnType<typeof vi.fn>;
     render(<PhysioDashboard />);
     await screen.findByText("2 of 3 reached your target");
 
+    play.mockClear();
     fireEvent.click(screen.getByRole("button", { name: /^Rep 1, / }));
     expect(loop).toHaveBeenLastCalledWith([reps[0].start, reps[0].end]);
+    expect(play).toHaveBeenCalled();
     expect(screen.getByRole("button", { name: /^Rep 1, / })).toHaveAttribute("aria-pressed", "true");
 
-    fireEvent.click(screen.getByRole("button", { name: /Rep 2 stopped short of your target/ }));
+    const flag = screen.getByRole("button", { name: /Rep 2 stopped short of your target/ });
+    fireEvent.click(flag);
     expect(loop).toHaveBeenLastCalledWith([reps[1].start, reps[1].end]);
-
-    fireEvent.click(screen.getByRole("button", { name: "Play all" }));
+    expect(flag).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(flag);
     expect(loop).toHaveBeenLastCalledWith(null);
-    expect(screen.getByRole("button", { name: "Play all" })).toHaveAttribute("aria-pressed", "true");
+    expect(flag).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: /^Rep 3, / }));
+    const playAll = screen.getByRole("button", { name: "Play all" });
+    expect(playAll).not.toHaveAttribute("aria-pressed");
+    fireEvent.click(playAll);
+    expect(loop).toHaveBeenLastCalledWith(null);
+    expect(screen.getByText("Pick a rep to replay it.")).toBeInTheDocument();
   });
 
   it("marks each rep's bottom on the replay timeline", async () => {
+    serveClip();
     const { container } = render(<PhysioDashboard />);
     await screen.findByText("2 of 3 reached your target");
     expect(container.querySelectorAll("[data-rep-mark]")).toHaveLength(reps.length);
   });
 
-  it("switches to another patient, with their photo and their flags", async () => {
+  it("shows Arjun his own arm raises against his 90° target, with his photo and his week", async () => {
+    serveClip();
     const { container } = render(<PhysioDashboard />);
     await screen.findByText("2 of 3 reached your target");
 
     fireEvent.click(screen.getByRole("button", { name: /Arjun Mehta/ }));
     expect(screen.getByRole("button", { name: /Arjun Mehta/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("Rotator cuff repair, week 6")).toBeInTheDocument();
+    expect(screen.queryByText("Deepest knee bend per rep")).toBeNull();
+    expect(screen.getByText("Highest left arm raise per rep")).toBeInTheDocument();
+    expect(screen.getByText("2 of 3 reached your target")).toBeInTheDocument();
+    expect(formScore()).toBe("91");
+
+    // His bars show his angles but replay nothing: there is no footage.
+    expect(screen.queryByRole("button", { name: /^Rep \d, / })).toBeNull();
+    expect(screen.getAllByRole("img", { name: /^Rep \d, / }).map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Rep 1, 91°, reached your target",
+      "Rep 2, 78°, short of your target",
+      "Rep 3, 93°, reached your target",
+    ]);
+    expect(screen.queryByRole("button", { name: "Play all" })).toBeNull();
+
+    const short = screen.getByText("Rep 2 stopped short of your target").parentElement!;
+    expect(short.tagName).not.toBe("BUTTON");
+    expect(within(short).getByText("78°")).toBeInTheDocument();
     expect(screen.getByText("Missed 4 sessions this week")).toBeInTheDocument();
-    expect(screen.getByText("Raise stopped at 78° on the left")).toBeInTheDocument();
-    expect(formScore()).toBe("74");
+
+    const slider = screen.getByRole("slider", { name: "Your target for Arjun" });
+    expect(slider).toHaveValue("90");
+    expect(slider).toHaveAttribute("min", "70");
+    expect(slider).toHaveAttribute("max", "120");
+    fireEvent.change(slider, { target: { value: "78" } });
+    expect(screen.getByText("3 of 3 reached your target")).toBeInTheDocument();
+    expect(screen.getByText("Every rep reached your target")).toBeInTheDocument();
+    expect(formScore()).toBe("100");
+
     expect(container.querySelector('img[src*="shoulder_raises"]')).not.toBeNull();
-    // The squat rep bars and slider only describe Maya's clip, so they rest, dimmed and inert.
-    expect(screen.getByRole("slider", { hidden: true }).closest("[inert]")).not.toBeNull();
+    expect(screen.getByText("Thursday")).toBeInTheDocument();
+    expect(screen.getAllByText("Missed")).toHaveLength(4);
+  });
+
+  it("keeps each patient's target when switching between them", async () => {
+    serveClip();
+    render(<PhysioDashboard />);
+    await screen.findByText("2 of 3 reached your target");
+    fireEvent.change(screen.getByRole("slider"), { target: { value: "110" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Rohan Kulkarni/ }));
+    expect(screen.getByText("Highest leg lift per rep")).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "Your target for Rohan" })).toHaveValue("40");
+
+    fireEvent.click(screen.getByRole("button", { name: /Maya Thomas/ }));
+    expect(screen.getByRole("slider", { name: "Your target for Maya" })).toHaveValue("110");
+  });
+});
+
+describe("feature panels", () => {
+  it("computes Maya's knee bend and its change from the clip", async () => {
+    serveClip();
+    render(<FormPanel />);
+    const deepest = Math.round(Math.min(...reps.map((r) => r.depth)));
+    const deeper = Math.round(weekDepths(clip)[0]) - deepest;
+    expect(await screen.findByText(`${deepest}°`)).toBeInTheDocument();
+    expect(deepest).toBe(95);
+    expect(screen.getByText(`${deeper}° deeper`)).toBeInTheDocument();
+    expect(deeper).toBe(46);
+  });
+
+  it("alerts on the rep the dashboard flags, with its angle from the clip", async () => {
+    serveClip();
+    render(<AlertsPanel />);
+    expect(await screen.findByText(`Maya's rep 2 stopped at ${Math.round(reps[1].depth)}°`)).toBeInTheDocument();
+    expect(Math.round(reps[1].depth)).toBe(102);
+    expect(screen.getByText("Arjun missed 4 sessions")).toBeInTheDocument();
+    expect(screen.getByText("Last session on Thursday")).toBeInTheDocument();
+  });
+
+  it("books Maya on a real Thursday in a calendar that starts on a real Monday", () => {
+    expect(CALENDAR_START.getDay()).toBe(1);
+    expect(new Date(2026, 10, BOOKED).getDay()).toBe(4);
+    const Booking = FEATURE_PANELS.book;
+    render(<Booking />);
+    expect(screen.getByText("Thu 5, 10:30")).toBeInTheDocument();
   });
 });
