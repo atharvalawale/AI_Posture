@@ -68,9 +68,9 @@ test.describe("newsletter form", () => {
       await route.fulfill({ status: 200, json: { ok: true } });
     });
     await page.goto("/blog");
-    await submit(page, "riya@example.com");
+    await submit(page, "reader@example.com");
     await expect(page.getByText("You are on the list.")).toBeVisible();
-    expect(body).toEqual({ email: "riya@example.com", company: "" });
+    expect(body).toEqual({ email: "reader@example.com", company: "" });
   });
 
   test("shows the server's validation error under the field", async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe("newsletter form", () => {
       route.fulfill({ status: 400, json: { ok: false, error: "Enter a valid email address." } }),
     );
     await page.goto("/blog");
-    await submit(page, "riya@example.com");
+    await submit(page, "reader@example.com");
     const error = page.getByText("Enter a valid email address.");
     await expect(error).toBeVisible();
     await expect(page.getByLabel("Email address")).toHaveAttribute("aria-invalid", "true");
@@ -87,21 +87,21 @@ test.describe("newsletter form", () => {
   test("shows the rate limit message", async ({ page }) => {
     await page.route("**/api/newsletter", (route) => route.fulfill({ status: 429, json: { ok: false } }));
     await page.goto("/blog");
-    await submit(page, "riya@example.com");
+    await submit(page, "reader@example.com");
     await expect(page.getByText("Too many attempts. Try again in a few minutes.")).toBeVisible();
   });
 
   test("shows the fallback message on a 502", async ({ page }) => {
     await page.route("**/api/newsletter", (route) => route.fulfill({ status: 502, json: { ok: false } }));
     await page.goto("/blog");
-    await submit(page, "riya@example.com");
+    await submit(page, "reader@example.com");
     await expect(page.getByText("We could not add you right now. Email hello@fiixbee.com.")).toBeVisible();
   });
 
   test("shows the fallback message on a network error", async ({ page }) => {
     await page.route("**/api/newsletter", (route) => route.abort());
     await page.goto("/blog");
-    await submit(page, "riya@example.com");
+    await submit(page, "reader@example.com");
     await expect(page.getByText("We could not add you right now. Email hello@fiixbee.com.")).toBeVisible();
   });
 

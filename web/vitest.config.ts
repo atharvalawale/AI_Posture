@@ -11,5 +11,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // macOS AppleDouble files (._name) are binary metadata, never tests.
+    exclude: ["**/node_modules/**", "**/._*"],
   },
 });

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // macOS AppleDouble files that the external drive scatters next to every file.
+    "**/._*",
   ]),
 ]);
 

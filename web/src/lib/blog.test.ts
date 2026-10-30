@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { formatPostDate, getAllPosts, getPost, parsePost } from "./blog";
 
 const dir = path.join(process.cwd(), "content/blog");
-const files = readdirSync(dir).filter((f) => f.endsWith(".md"));
+// Skip macOS AppleDouble files (._name.md), which the blog loader skips too.
+const files = readdirSync(dir).filter((f) => f.endsWith(".md") && !f.startsWith("."));
 const emoji = /\p{Extended_Pictographic}/u;
 
 describe("blog content", () => {
