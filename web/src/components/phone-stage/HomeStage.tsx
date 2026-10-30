@@ -19,15 +19,15 @@ import {
 } from "react";
 import { HeroCopy } from "@/components/home/HeroCopy";
 import { LiveReadout } from "@/components/home/LiveReadout";
-import { PHONE_H, PHONE_W, PhoneFrame, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
-import { PlanScreen } from "@/components/phone/screens/PlanScreen";
-import { SummaryScreen } from "@/components/phone/screens/SummaryScreen";
+import { PHONE_H, PHONE_W, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
 import { canUse3D, readDeviceEnv } from "@/lib/device";
 import { LiveSession, coverBox, loadPoseClip, nearestJoint, type PoseClip } from "@/lib/pose";
 import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
 import { ChapterRail } from "./ChapterRail";
 import { phonePointToScreen } from "./gestures";
 import { Phone2DStage } from "./Phone2DStage";
+import { PIN_QUERY } from "./pin";
+import { StillChapters } from "./StillChapters";
 import { useScrollStory } from "./useScrollStory";
 import { usePhoneGestures } from "./usePhoneGestures";
 
@@ -68,9 +68,10 @@ class Fallback extends Component<{ children: ReactNode; onError: () => void }, {
 
 /**
  * The stage is sized in CSS, so the server renders it at its final size and nothing shifts on load.
- * `--frame-h` (set on the section): the viewport below the 64 px header, and on desktop at least
- * 600 px. `--phone-w`: the phone width that leaves `--below-phone` of the frame free (the chapter
- * rail and the hint, and on phones the compact readout too), up to the design width.
+ * `--frame-h` (set on the section): the viewport below the site header (`--header-h`), and on
+ * desktop at least 600 px. `--phone-w`: the phone width that leaves `--below-phone` of the frame
+ * free (the chapter rail and the hint, and on phones the compact readout too), between 110 px and
+ * the design width. Below 350 px the plan details wrap to one more line, so they leave 21 px more.
  */
 const STAGE_VARS = {
   "--phone-w": `clamp(110px, calc((var(--frame-h) - var(--below-phone)) * ${PHONE_W} / ${PHONE_H}), ${PHONE_W}px)`,
@@ -99,8 +100,9 @@ function usePhoneWidth(box: RefObject<HTMLDivElement | null>): number | null {
  * note, and the readout to each screen's details. Below 1024 px the copy scrolls away first, then
  * the phone and the readout pin together (side by side from 640 px, stacked below). Uses the 3D
  * phone when the device can take it, and the 2D phone otherwise (and while the 3D code loads).
- * With reduced motion: no pin, no tilt and no chapter rail; the summary and the plan follow as
- * still sections, and scrub, tap and keys still work.
+ * With reduced motion, or a viewport too short for the pinned stack (`PIN_QUERY`): no pin and no
+ * chapter rail (and with reduced motion no tilt); the summary and the plan follow as still
+ * sections, and scrub, tap and keys still work.
  */
 export function HomeStage() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -111,6 +113,7 @@ export function HomeStage() {
   const reduced = useMedia(REDUCED, false);
   const wide = useMedia(WIDE, true);
   const desktop = useMedia(DESKTOP, true);
+  const pinned = useMedia(PIN_QUERY, true);
   const can3D = useSyncExternalStore(noop, () => canUse3D(readDeviceEnv()), () => false);
   const { resolvedTheme } = useTheme();
   const [ready3D, setReady3D] = useState(false);
@@ -204,7 +207,7 @@ export function HomeStage() {
         ref={sectionRef}
         data-phone-stage
         aria-labelledby="hero-title"
-        className="relative bg-bg [--below-phone:318px] [--frame-h:calc(100svh-64px)] sm:[--below-phone:164px] lg:[--frame-h:max(600px,calc(100svh-64px))]"
+        className="relative bg-bg [--below-phone:317px] max-[350px]:[--below-phone:338px] [--frame-h:calc(100svh-var(--header-h))] sm:[--below-phone:163px] lg:[--frame-h:max(600px,calc(100svh-var(--header-h)))]"
         style={STAGE_VARS}
       >
         <div className="mx-auto grid w-full max-w-[1200px] px-6 lg:h-(--frame-h) lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-8 lg:px-10">
@@ -227,7 +230,7 @@ export function HomeStage() {
           {/* What pins: the phone, the readout and the rail. On desktop it starts at the top of the stage and spans the center and right columns. */}
           <div
             data-stage-frame
-            className="grid h-[calc(100svh-64px)] min-h-fit grid-cols-[minmax(0,1fr)] content-center justify-items-center py-2 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 lg:col-span-2 lg:h-full lg:grid-cols-subgrid lg:gap-x-8 lg:self-stretch lg:py-0"
+            className="grid min-h-(--frame-h) grid-cols-[minmax(0,1fr)] [align-content:safe_center] justify-items-center py-2 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 lg:col-span-2 lg:h-full lg:grid-cols-subgrid lg:gap-x-8 lg:self-stretch lg:py-0"
           >
             <div
               className={`col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none ${fitted === null ? "opacity-0" : "opacity-100"}`}
@@ -306,7 +309,7 @@ export function HomeStage() {
 
             {/* Under the phone. At least as wide as the rail's three labels need, even when the phone is small. */}
             <div className="row-start-3 mt-3 w-[max(var(--phone-w),240px)] sm:col-start-1 sm:row-start-2 sm:mt-7">
-              {!reduced && <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />}
+              {pinned && <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />}
               <Hint id={hintId} shown={live && !(gestures.scrubbed && tapped)} />
             </div>
           </div>
@@ -340,48 +343,6 @@ function Layer({ on, className = "", children }: { on: boolean; className?: stri
     <div {...hiddenWhen(!on)} className={`[grid-area:1/1] ${FADE} ${on ? "visible opacity-100" : "invisible opacity-0"} ${className}`}>
       {children}
     </div>
-  );
-}
-
-/**
- * With reduced motion nothing pins, so the summary and the plan follow the hero as still sections:
- * the screen on a flat phone, with its note and details beside it. Hidden otherwise.
- */
-function StillChapters() {
-  return (
-    <div className="motion-safe:hidden">
-      <StillChapter screen="summary">
-        <SummaryScreen />
-      </StillChapter>
-      <StillChapter screen="plan">
-        <PlanScreen />
-      </StillChapter>
-    </div>
-  );
-}
-
-/**
- * Laid out like the stage at each width: the note, phone and details in three columns on desktop,
- * the note and details beside the phone on tablets, and both under the phone on phones.
- */
-function StillChapter({ screen, children }: { screen: "summary" | "plan"; children: ReactNode }) {
-  const titleId = useId();
-  return (
-    <section data-still-chapter={screen} aria-labelledby={titleId} className="border-t border-line">
-      <div className="mx-auto grid w-full max-w-[1200px] justify-items-center gap-y-8 px-6 py-16 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 sm:gap-y-8 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-8 lg:px-10 lg:py-20">
-        <ChapterNote
-          screen={screen}
-          titleId={titleId}
-          className="@container row-start-2 w-full max-w-[320px] sm:col-start-2 sm:row-start-1 sm:self-end lg:col-start-1 lg:max-w-none lg:self-center"
-        />
-        <PhoneFrame width={240} className="row-start-1 sm:col-start-1 sm:row-span-2 sm:self-center lg:col-start-2 lg:row-span-1">
-          {children}
-        </PhoneFrame>
-        <div className="row-start-3 w-full max-w-[320px] sm:col-start-2 sm:row-start-2 sm:self-start lg:col-start-3 lg:row-start-1 lg:self-center lg:justify-self-start">
-          {screen === "summary" ? <SummaryDetails variant="full" /> : <PlanDetails variant="full" />}
-        </div>
-      </div>
-    </section>
   );
 }
 

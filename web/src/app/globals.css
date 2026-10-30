@@ -2,8 +2,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* The homepage stage pins only when it fits under the header. Same list as PIN_QUERIES in phone-stage/pin.ts. */
+@custom-variant pin {
+  @media (prefers-reduced-motion: no-preference) and (max-width: 349.98px) and (min-height: 626px),
+    (prefers-reduced-motion: no-preference) and (min-width: 350px) and (max-width: 639.98px) and (min-height: 606px),
+    (prefers-reduced-motion: no-preference) and (min-width: 640px) and (max-width: 1023.98px) and (min-height: 503px),
+    (prefers-reduced-motion: no-preference) and (min-width: 1024px) and (min-height: 640px) {
+    @slot;
+  }
+}
+
 /* Light is the base. Dark overrides it. Components use tokens only. */
 :root {
+  /* The site header's height, its 1 px bottom border included. Everything that sits below it uses this. */
+  --header-h: 65px;
   --bg: #f6f6f3;
   --surface: #ffffff;
   --surface-2: #eff1ee;

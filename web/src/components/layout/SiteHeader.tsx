@@ -28,8 +28,8 @@ export function SiteHeader() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg">
-      <Container className="flex h-16 items-center justify-between gap-6">
+    <header className="sticky top-0 z-40 h-(--header-h) border-b border-line bg-bg">
+      <Container className="flex h-full items-center justify-between gap-6">
         <Logo />
         <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
           {site.nav.map((item) => (
@@ -62,7 +62,7 @@ export function SiteHeader() {
         </div>
       </Container>
       {open && (
-        <div id="mobile-menu" className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto bg-bg lg:hidden">
+        <div id="mobile-menu" className="fixed inset-x-0 bottom-0 top-(--header-h) z-40 overflow-y-auto bg-bg lg:hidden">
           <Container className="flex flex-col py-6">
             {[...site.nav, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }].map((item) => (
               <Link key={item.href} href={item.href} className="border-b border-line py-4 font-serif text-[28px] leading-tight text-text">

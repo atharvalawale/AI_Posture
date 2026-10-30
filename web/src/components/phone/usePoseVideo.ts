@@ -105,7 +105,8 @@ export function usePoseVideo(
     const running = () => active && visible;
     const start = () => {
       if (!raf) raf = raf$(tick);
-      if (running() && video.paused) {
+      // Not while the session holds the clip for a scrub or a step: it resumes the video itself.
+      if (running() && video.paused && !live.holding()) {
         video.play().catch(() => {
           // Autoplay blocked (for example iOS Low Power Mode). The poster stays up.
         });

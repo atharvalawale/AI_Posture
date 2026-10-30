@@ -27,7 +27,7 @@ export function Section({
   rule?: boolean;
 }) {
   return (
-    <section id={id} aria-labelledby={labelledBy} className={`scroll-mt-16 ${rule ? "border-t border-line" : ""}`}>
+    <section id={id} aria-labelledby={labelledBy} className={`scroll-mt-(--header-h) ${rule ? "border-t border-line" : ""}`}>
       <Container className={`py-20 md:py-28 ${className ?? ""}`}>{children}</Container>
     </section>
   );

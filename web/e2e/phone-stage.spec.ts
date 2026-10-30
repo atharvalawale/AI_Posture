@@ -317,6 +317,45 @@ test.describe("stage layout", () => {
     });
   }
 
+  // Landscape phones and the smallest phones: the pinned stack cannot fit under the header, so the
+  // stage does not pin and the summary and the plan follow as still sections.
+  for (const [width, height] of [
+    [320, 568],
+    [844, 390],
+    [740, 360],
+  ] as const) {
+    test(`too short to pin at ${width} x ${height}: nothing is hidden under the header or out of reach`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      // The server renders the rail; once hydrated, a stage that does not pin drops it.
+      await expect(page.getByRole("navigation", { name: "App screens" })).toHaveCount(0);
+      await expect(page.locator(".pin-spacer")).toHaveCount(0);
+      const header = await headerHeight(page);
+      const parts = {
+        phone: page.locator("[data-phone-handle]"),
+        readout: page.locator("[data-stage-readout]"),
+        hint: page.locator("[data-stage-hint]"),
+        "summary note": page.locator("[data-still-chapter=summary] > div > *").nth(0),
+        "summary phone": page.locator("[data-still-chapter=summary] > div > *").nth(1),
+        "summary details": page.locator("[data-still-chapter=summary] > div > *").nth(2),
+        "plan note": page.locator("[data-still-chapter=plan] > div > *").nth(0),
+        "plan phone": page.locator("[data-still-chapter=plan] > div > *").nth(1),
+        "plan details": page.locator("[data-still-chapter=plan] > div > *").nth(2),
+      };
+      for (const [name, part] of Object.entries(parts)) {
+        await expect(part, name).toBeVisible();
+        // Scroll it to just under the header: all of it shows there (or its top, if it is taller than the view).
+        const box = await part.evaluate((el, header) => {
+          window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - header);
+          const r = el.getBoundingClientRect();
+          return { top: r.top, bottom: r.bottom, height: r.height };
+        }, header);
+        expect(box.top, `${name} top`).toBeGreaterThanOrEqual(header - 1);
+        if (box.height <= height - header) expect(box.bottom, `${name} bottom`).toBeLessThanOrEqual(height + 1);
+      }
+    });
+  }
+
   test("resize across the desktop breakpoint keeps the pin spacing", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/");

@@ -45,7 +45,8 @@ export function ChapterRail({
           type="button"
           onClick={() => onSelect(id)}
           aria-current={id === screen ? "step" : undefined}
-          className="group cursor-pointer rounded-sm pt-1.5 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          // The ::after reaches 4 px past the top and bottom, so the touch target is 44 px tall without moving anything.
+          className="group relative cursor-pointer rounded-sm pt-1.5 text-left after:absolute after:inset-x-0 after:-inset-y-1 after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
           <span className="relative block h-[3px] overflow-hidden rounded-full bg-line">
             <span

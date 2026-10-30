@@ -131,9 +131,17 @@ export class LiveSession {
   attach(video: VideoLike): () => void {
     this.video = video;
     if (this.state.t > 0) video.currentTime = this.state.t;
+    // A scrub or a step holds the clip still. A video that takes over mid-way (the 3D phone
+    // replacing the 2D one) holds still too, until the pending resume plays it.
+    if (this.holding()) video.pause();
     return () => {
       if (this.video === video) this.video = null;
     };
+  }
+
+  /** A scrub or a step holds the clip still until it resumes on its own. */
+  holding(): boolean {
+    return this.state.scrubbing || this.resume !== null;
   }
 
   setJoint(joint: JointId): void {

@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCallback, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import type { ScreenId } from "@/components/phone/PhoneFrame";
+import { PIN_QUERY } from "./pin";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -39,7 +40,8 @@ function frameOffset(section: HTMLElement) {
  * scrolls away first and then the phone and the readout pin.
  * `progress.current` runs from 0 (pin starts) to 1 (pin ends). It is a ref so the phone can read it
  * every frame without re-rendering. `screen` changes at 0.33 and 0.66.
- * With reduced motion nothing pins and progress stays at 0.
+ * With reduced motion, or when the viewport is too short for the pinned stack (`PIN_QUERY`),
+ * nothing pins and progress stays at 0.
  * `goTo` scrolls smoothly to the middle of a screen's part of the story. `onProgress` calls a
  * listener after every progress change and returns the unsubscribe function.
  */
@@ -61,7 +63,7 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): {
       ScrollTrigger.config({ ignoreMobileResize: true });
       const mm = gsap.matchMedia();
 
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
+      mm.add(PIN_QUERY, () => {
         // The pin holds the section at the height its content had at the last refresh.
         const content = el.firstElementChild;
         let measured: number | null = null;
@@ -94,21 +96,25 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): {
         // Some layout changes land after a refresh (on a resize across 640 px the readout switches
         // variant once React sees the new breakpoint), so refresh again whenever the content's
         // height no longer matches what the pin measured.
+        // At most once a frame, so a live window resize does not re-measure every pin on every change.
+        let raf = 0;
         const ro = new ResizeObserver(([entry]) => {
-          if (measured !== null && Math.round(entry.borderBoxSize[0].blockSize) !== measured) ScrollTrigger.refresh();
+          if (measured === null || Math.round(entry.borderBoxSize[0].blockSize) === measured) return;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => ScrollTrigger.refresh());
         });
         if (content) ro.observe(content);
         return () => {
           ro.disconnect();
+          cancelAnimationFrame(raf);
           story.current = null;
           delete el.dataset.storyStart;
           delete el.dataset.storyEnd;
+          // Unpinned (reduced motion, or a viewport too short for the stack): back to the live screen.
+          progress.current = 0;
+          setScreen("live");
+          listeners.current.forEach((fn) => fn());
         };
-      });
-
-      mm.add("(prefers-reduced-motion: reduce)", () => {
-        progress.current = 0;
-        setScreen("live");
       });
 
       return () => mm.revert();

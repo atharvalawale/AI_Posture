@@ -195,6 +195,34 @@ describe("LiveSession", () => {
     expect(b.currentTime).toBe(4);
   });
 
+  it("keeps a newly attached video paused while a scrub or a step is in progress", () => {
+    const s = new LiveSession(clip);
+    const a = fakeVideo(), b = fakeVideo(), c = fakeVideo();
+    s.attach(a);
+    s.frame(4, a);
+    s.beginScrub();
+    expect(s.holding()).toBe(true);
+    s.attach(b);
+    expect(b.pause).toHaveBeenCalled();
+    s.endScrub();
+    s.step(1);
+    s.attach(c);
+    expect(c.pause).toHaveBeenCalled();
+    // The pending resume plays the video that is attached by then.
+    vi.advanceTimersByTime(RESUME_MS);
+    expect(c.play).toHaveBeenCalled();
+  });
+
+  it("leaves a newly attached video alone when nothing holds the clip", () => {
+    const s = new LiveSession(clip);
+    const a = fakeVideo(), b = fakeVideo();
+    s.attach(a);
+    s.frame(4, a);
+    s.attach(b);
+    expect(s.holding()).toBe(false);
+    expect(b.pause).not.toHaveBeenCalled();
+  });
+
   it("detach stops the video driving", () => {
     const s = new LiveSession(clip);
     const a = fakeVideo();
