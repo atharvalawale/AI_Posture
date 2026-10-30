@@ -48,4 +48,18 @@ describe("ClipClock", () => {
     now += 500;
     expect(clock.currentTime).toBeCloseTo(1.5, 5);
   });
+
+  it("loops inside a range, playing into it from an earlier seek", async () => {
+    let now = 0;
+    const clock = new ClipClock(() => now);
+    clock.duration = 30;
+    clock.setRange([2, 10]);
+    clock.seek(1);
+    await clock.play();
+    now += 3_000;
+    expect(clock.currentTime).toBeCloseTo(4, 5);
+    now += 7_000;
+    // 11 s is 1 s past the end, so 1 s after the start of the range.
+    expect(clock.currentTime).toBeCloseTo(3, 5);
+  });
 });

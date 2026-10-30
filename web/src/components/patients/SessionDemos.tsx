@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
-import { holdTime, useClipClock } from "@/components/pose/clipClock";
+import { holdTime, repLoop, useClipClock } from "@/components/pose/clipClock";
 import { PoseFigure, figureBounds, type FigureBounds } from "@/components/pose/PoseFigure";
 import { usePoseClip } from "@/components/pose/usePoseClip";
 import { useReducedMotion } from "@/components/showcase/useShowcase";
-import { LiveSession, MEASURES, deepestPose, poseAt, repScore, standingPose, type LiveState, type Pose, type PoseClip } from "@/lib/pose";
+import { LiveSession, MEASURES, deepestPose, findReps, poseAt, repScore, standingPose, type Pose, type PoseClip } from "@/lib/pose";
+import { DemoFeed } from "./demoFeed";
 
 const TARGET = MEASURES.knee.target;
-/** Frames per second when walking the clip up to the held frame under reduced motion. */
-const WALK_FPS = 30;
+/** The demos open just after the first rep has counted, so every card shows something before anyone scrolls. */
+const PRIME_AFTER_REP = 0.2;
 
 /** True while `ref` is on screen. */
 function useOnScreen(ref: RefObject<HTMLElement | null>) {
@@ -43,11 +44,12 @@ function Card({
 }) {
   return (
     <li className="grid content-start gap-5 rounded-xl border border-line bg-surface p-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-6 lg:grid-cols-1 lg:items-start lg:gap-5">
-      <div role="img" aria-label={label} data-demo={name} className="flex h-56 items-center gap-5 rounded-lg bg-bg px-5 py-4">
-        <div className="h-full w-20 shrink-0" data-demo-figure>
+      <div role="img" aria-label={label} data-demo={name} className="grid h-56 grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] items-center gap-6 rounded-lg bg-bg px-6 py-5">
+        {/* Sized by height, so the figure fills the stage and the readout gets the rest. */}
+        <div className="h-full" style={figure ? { aspectRatio: `${figure.bounds.w} / ${figure.bounds.h}` } : { width: 80 }} data-demo-figure>
           {figure && <PoseFigure pose={figure.pose} aspect={figure.aspect} bounds={figure.bounds} highlight={[25]} className="h-full w-full" />}
         </div>
-        <div className="min-w-0 flex-1">{readout}</div>
+        <div className="min-w-0">{readout}</div>
       </div>
       <div>
         <h4 className="text-[17px] font-semibold leading-snug">{title}</h4>
@@ -57,16 +59,22 @@ function Card({
   );
 }
 
-function ScoreBars({ depths }: { depths: number[] }) {
-  if (depths.length === 0) return <p className="text-[15px] text-balance text-muted">Scores appear after each rep</p>;
+/** One slot per rep in the clip: a faint stub that fills with the rep's score once it counts. */
+function ScoreBars({ depths, slots }: { depths: number[]; slots: number }) {
   return (
     <div className="flex h-36 items-end gap-2" data-demo-scores>
-      {depths.map((d, i) => {
-        const score = Math.round(repScore(d, TARGET));
+      {Array.from({ length: slots }, (_, i) => {
+        const depth = depths[i];
+        const score = depth === undefined ? null : Math.round(repScore(depth, TARGET));
         return (
-          <div key={i} className="flex h-full w-8 flex-col items-center justify-end">
-            <span className="text-[13px] font-semibold tabular-nums text-text">{score}</span>
-            <span className="mt-1 block w-full rounded-t-md bg-accent" style={{ height: `${Math.max(4, score) * 0.8}%` }} />
+          <div key={i} className="flex h-full w-8 flex-col items-center" data-demo-score={score ?? undefined}>
+            <span className={`text-[13px] font-semibold tabular-nums text-text ${score === null ? "invisible" : ""}`}>{score ?? 0}</span>
+            <span className="relative mt-1 block w-full flex-1 overflow-hidden rounded-t-md bg-line/60">
+              <span
+                className="absolute inset-x-0 bottom-0 block bg-accent transition-[height] duration-500 ease-out"
+                style={{ height: `${score ?? 0}%` }}
+              />
+            </span>
           </div>
         );
       })}
@@ -78,50 +86,57 @@ function useDemoFigure(clip: PoseClip | null, t: number): Figure | null {
   const frame = useMemo(() => {
     if (!clip) return null;
     const aspect = clip.h / clip.w;
-    return { aspect, bounds: figureBounds([standingPose(clip), deepestPose(clip).pose], aspect) };
+    return { aspect, bounds: figureBounds([standingPose(clip), deepestPose(clip).pose], aspect, 20) };
   }, [clip]);
   return frame && clip ? { ...frame, pose: poseAt(clip, t) } : null;
 }
 
 /**
  * Three live demos of what FiixBE does in every session, all fed by one session playing the tracked squat:
- * the spoken cue, the rep counter and a score per rep. Plays only while on screen.
+ * the spoken cue, the rep counter and a score per rep. The session is primed through the first rep so the
+ * cards open alive, loops over the reps only, and counts on across loops. Plays only while on screen.
  */
 export function SessionDemos() {
   const clip = usePoseClip();
   const rootRef = useRef<HTMLUListElement>(null);
   const onScreen = useOnScreen(rootRef);
   const reduced = useReducedMotion();
-  const clock = useClipClock(clip, onScreen);
+  const loop = useMemo(() => (clip ? repLoop(clip) : null), [clip]);
+  const slots = useMemo(() => (clip ? findReps(clip).length : 0), [clip]);
+  const clock = useClipClock(clip, onScreen, loop);
   const [session] = useState(() => new LiveSession());
-  const state: LiveState = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const feed = useMemo(() => new DemoFeed(session, slots), [session, slots]);
+  const demo = useSyncExternalStore(feed.subscribe, feed.getSnapshot, feed.getSnapshot);
 
   useEffect(() => {
     if (clip) session.setClip(clip);
   }, [clip, session]);
 
+  // Before anything plays: step the session through the first rep, or under reduced motion to the held frame.
   useEffect(() => {
     if (!clip) return;
     const detach = session.attach(clock);
     if (reduced) {
-      // No motion: walk the clip up to the held frame at once, so its reps are counted and scored.
-      const hold = holdTime(clip);
-      for (let t = 0; t < hold; t += 1 / WALK_FPS) session.frame(t, clock);
-      session.frame(hold, clock);
-      return detach;
+      feed.walk(0, holdTime(clip), clock);
+    } else {
+      const first = findReps(clip)[0];
+      const prime = first ? first.end + PRIME_AFTER_REP : 0;
+      feed.walk(loop ? loop[0] : 0, prime, clock);
+      clock.currentTime = prime;
     }
-    if (!onScreen) return detach;
+    return detach;
+  }, [clip, clock, session, feed, loop, reduced]);
+
+  useEffect(() => {
+    if (!clip || reduced || !onScreen) return;
     let raf = requestAnimationFrame(function tick() {
-      session.frame(clock.currentTime, clock);
+      feed.frame(clock.currentTime, clock);
       raf = requestAnimationFrame(tick);
     });
-    return () => {
-      cancelAnimationFrame(raf);
-      detach();
-    };
-  }, [clip, clock, session, onScreen, reduced]);
+    return () => cancelAnimationFrame(raf);
+  }, [clip, clock, feed, onScreen, reduced]);
 
-  const figure = useDemoFigure(clip, state.t);
+  const figure = useDemoFigure(clip, demo.live.t);
   const ready = clip !== null;
 
   return (
@@ -134,7 +149,7 @@ export function SessionDemos() {
         figure={figure}
         readout={
           <p className="min-h-[2.6em] text-[19px] font-semibold leading-snug text-balance" data-demo-cue>
-            {ready ? state.cue : ""}
+            {ready ? demo.cue : ""}
           </p>
         }
       />
@@ -147,9 +162,9 @@ export function SessionDemos() {
         readout={
           <div>
             <p className="font-serif text-[72px] leading-[0.9] tracking-[-0.03em] tabular-nums" data-demo-reps>
-              {state.reps}
+              {demo.reps}
             </p>
-            <p className="mt-2 text-[15px] text-muted">{state.reps === 1 ? "rep" : "reps"}</p>
+            <p className="mt-2 text-[15px] text-muted">{demo.reps === 1 ? "rep" : "reps"}</p>
           </div>
         }
       />
@@ -159,7 +174,7 @@ export function SessionDemos() {
         body="Each rep gets a score from 0 to 100, based on range of motion, hold time and smoothness."
         label="A figure squatting, with a score bar for each rep"
         figure={figure}
-        readout={<ScoreBars depths={state.depths} />}
+        readout={<ScoreBars depths={demo.depths} slots={slots} />}
       />
     </ul>
   );

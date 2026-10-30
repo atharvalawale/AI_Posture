@@ -4,10 +4,11 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { PhoneFrame } from "@/components/phone/PhoneFrame";
 import { PlanScreen } from "@/components/phone/screens/PlanScreen";
+import { AngleValue } from "@/components/pose/AngleValue";
 import { PoseFigure, figureBounds } from "@/components/pose/PoseFigure";
 import { usePoseClip } from "@/components/pose/usePoseClip";
 import { useShowcasePanelActive } from "@/components/showcase/Showcase";
-import { WEEKS, standingPose, weekDepths } from "@/lib/pose";
+import { standingPose, weekDepths } from "@/lib/pose";
 import { WeekChart } from "./WeekChart";
 
 const panel = "flex h-full rounded-xl border border-line bg-surface p-5 sm:p-6";
@@ -58,11 +59,17 @@ export function GuidePanel() {
   );
 }
 
-/** Step 3: the deepest knee bend per week, from the same tracked squat as the hero. Sample data. */
+/**
+ * Maya's week in her knee plan. PlanScreen (step 1) and the rest of the site show her in week 3,
+ * squatting to the clip's full depth, so her chart runs weeks 1 to 3 and ends there.
+ */
+const MAYA_WEEK = 3;
+
+/** Step 3: Maya's deepest knee bend per week so far, from the same tracked squat as the hero. Sample data. */
 export function ProgressPanel() {
   const clip = usePoseClip();
-  const depths = useMemo(() => (clip ? weekDepths(clip) : null), [clip]);
-  const [week, setWeek] = useState(WEEKS);
+  const depths = useMemo(() => (clip ? weekDepths(clip, MAYA_WEEK) : null), [clip]);
+  const [week, setWeek] = useState(MAYA_WEEK);
   const depth = depths ? Math.round(depths[week - 1]) : null;
 
   return (
@@ -71,22 +78,21 @@ export function ProgressPanel() {
         <Image src="/images/avatars/maya.webp" alt="" width={44} height={44} unoptimized className="size-11 rounded-full object-cover" />
         <div className="min-w-0">
           <p className="text-[17px] font-semibold leading-snug text-text">Maya&apos;s progress</p>
-          <p className="text-[15px] text-muted">Knee recovery plan, week {WEEKS}</p>
+          <p className="text-[15px] text-muted">Knee recovery plan, week {MAYA_WEEK}</p>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-1 flex-col border-t border-line pt-5">
+      <div className="mt-5 flex flex-1 flex-col justify-center border-t border-line py-5">
         <p className="text-[15px] text-muted">Deepest knee bend, week {week}</p>
-        <p className="mt-1 font-serif text-[56px] leading-none tracking-[-0.02em] tabular-nums">
-          <span className={depth === null ? "text-line" : undefined}>{depth === null ? "--" : depth}</span>
-          <span className={`ml-0.5 align-top font-sans text-[0.4em] text-muted ${depth === null ? "invisible" : ""}`}>°</span>
+        <p className="mt-1 font-serif text-[56px] leading-none tracking-[-0.02em]">
+          <AngleValue value={depth} />
         </p>
-        <div className="mt-auto pt-6">
+        <div className="mt-6">
           {depths ? <WeekChart depths={depths} week={week} onWeek={setWeek} target={100} /> : <div className="h-[172px]" />}
         </div>
       </div>
 
-      <p className="mt-5 flex items-center gap-2 border-t border-line pt-4 text-[15px] text-muted">
+      <p className="flex items-center gap-2 border-t border-line pt-4 text-[15px] text-muted">
         <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 12.5l4 4 8-9" />
         </svg>

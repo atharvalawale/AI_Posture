@@ -17,7 +17,7 @@ test.describe("/for-patients recovery slider", () => {
 
     await page.getByRole("button", { name: /^Week 3, \d+°$/ }).first().click();
     await expect(slider).toHaveValue("3");
-    await expect(page.getByText("Deepest knee bend, week 3")).toBeVisible();
+    await expect(page.locator('section[aria-labelledby="patients-title"]').getByText("Deepest knee bend, week 3")).toBeVisible();
   });
 
   test("no horizontal scroll at 360 px", async ({ page }) => {
@@ -48,9 +48,15 @@ test.describe("/for-patients steps and live demos", () => {
     const reps = page.locator("[data-demo-reps]");
     await reps.scrollIntoViewIfNeeded();
     await expect(page.locator("[data-demo-figure] svg")).toHaveCount(3);
-    // The first squat bottoms at 3 s and counts once she stands back up.
-    await expect.poll(async () => Number(await reps.textContent()), { timeout: 8_000 }).toBeGreaterThanOrEqual(1);
-    await expect(page.locator("[data-demo-scores] > div").first()).toBeVisible();
+    // The demos open primed through the first rep, so every card shows something at first glance.
+    await expect.poll(async () => Number(await reps.textContent()), { timeout: 2_000 }).toBeGreaterThanOrEqual(1);
+    await expect(page.locator("[data-demo-scores] > div")).toHaveCount(3);
+    await expect(page.locator("[data-demo-score]").first()).toBeVisible();
+    await expect(page.locator("[data-demo-cue]")).not.toHaveText("Stand tall to begin");
+    // The clip plays on: the figure moves.
+    const figure = page.locator("[data-demo-figure] svg").first();
+    const before = await figure.innerHTML();
+    await expect.poll(() => figure.innerHTML(), { timeout: 5_000 }).not.toBe(before);
   });
 
   test("under reduced motion the demos hold still with reps counted", async ({ browser }) => {
@@ -61,20 +67,21 @@ test.describe("/for-patients steps and live demos", () => {
     await reps.scrollIntoViewIfNeeded();
     await expect(reps).toHaveText("2");
     await expect(page.locator("[data-demo-cue]")).toHaveText("Good depth, hold");
-    await expect(page.locator("[data-demo-scores] > div")).toHaveCount(2);
+    await expect(page.locator("[data-demo-score]")).toHaveCount(2);
     await context.close();
   });
 });
 
 test.describe("/for-patients body map", () => {
-  const panel = (page: Page) => page.locator("[data-body-map]").getByRole("tabpanel");
+  // The selected panel. The one fading out is still on screen for 300 ms, but already marked invisible.
+  const panel = (page: Page) => page.locator('[data-body-map] [role="tabpanel"].visible');
 
   test("buttons, keys and hotspots change the panel", async ({ page }) => {
     await page.goto("/for-patients");
     const tabs = page.getByRole("tablist", { name: "Areas of the body" });
     await tabs.scrollIntoViewIfNeeded();
     await expect(panel(page)).toContainText("Knee rehabilitation");
-    await expect(panel(page)).toContainText("FiixBE measures the Knee angle.");
+    await expect(panel(page)).toContainText("FiixBE measures the knee angle.");
 
     await tabs.getByRole("tab", { name: "Shoulder" }).click();
     await expect(panel(page)).toContainText("Shoulder raises");

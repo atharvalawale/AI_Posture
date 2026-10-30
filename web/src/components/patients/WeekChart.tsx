@@ -55,8 +55,10 @@ export function WeekChart({ depths, week, onWeek, target }: Props) {
                 y1={from.y}
                 x2={p.x}
                 y2={p.y}
-                className={reached ? "stroke-accent" : "stroke-line"}
+                className={reached ? "stroke-accent" : "stroke-muted"}
                 strokeWidth={2}
+                // Weeks still to come stay visible as a dashed curve, so the whole recovery reads at week 1.
+                strokeDasharray={reached ? undefined : "3 4"}
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
               />

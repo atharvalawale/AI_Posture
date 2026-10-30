@@ -29,6 +29,15 @@ async function shownAngle(container: HTMLElement) {
 }
 
 describe("RecoverySlider", () => {
+  // First, before a good load is cached: a failed load is not cached, so later tests load the clip.
+  it("keeps only the caption when the tracking data cannot load", async () => {
+    vi.mocked(fetch).mockImplementationOnce(async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response);
+    const { container } = render(<RecoverySlider />);
+    await waitFor(() => expect(screen.queryByRole("slider")).toBeNull());
+    expect(container.querySelector("[data-recovery-angle]")).toBeNull();
+    expect(screen.getByText(/An illustration built from real pose tracking/)).toBeTruthy();
+  });
+
   it("opens on week 1 with a shallow bend", async () => {
     const { container } = render(<RecoverySlider />);
     const angle = await shownAngle(container);

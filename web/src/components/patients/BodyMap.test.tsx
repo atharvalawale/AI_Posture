@@ -21,9 +21,10 @@ beforeAll(() => {
 afterAll(() => vi.unstubAllGlobals());
 afterEach(cleanup);
 
-/** The panel that shows. The others are hidden. */
+/** The panel that shows: the one the selected tab controls. The others are hidden. */
 function shownPanel() {
-  return screen.getByRole("tabpanel");
+  const tab = screen.getAllByRole("tab").find((t) => t.getAttribute("aria-selected") === "true")!;
+  return document.getElementById(tab.getAttribute("aria-controls")!)!;
 }
 
 /** Hotspots, once the clip has loaded and the figure is drawn. */
@@ -38,7 +39,7 @@ describe("BodyMap", () => {
     const panel = shownPanel();
     expect(panel).toHaveTextContent("Knee rehabilitation");
     expect(panel).toHaveTextContent("Knee extension");
-    expect(panel).toHaveTextContent("FiixBE measures the Knee angle.");
+    expect(panel).toHaveTextContent("FiixBE measures the knee angle.");
     expect(screen.getByRole("tab", { name: "Knee" })).toHaveAttribute("aria-selected", "true");
   });
 
@@ -48,7 +49,7 @@ describe("BodyMap", () => {
     const panel = shownPanel();
     expect(panel).toHaveTextContent("Shoulder recovery");
     expect(panel).toHaveTextContent("Shoulder raises");
-    expect(panel).toHaveTextContent("FiixBE measures the Shoulder angle.");
+    expect(panel).toHaveTextContent("FiixBE measures the shoulder angle.");
   });
 
   it("sports injuries lights every hotspot and claims no measure", async () => {

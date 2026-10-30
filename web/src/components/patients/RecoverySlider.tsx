@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { AngleValue } from "@/components/pose/AngleValue";
 import { PoseFigure, figureBounds } from "@/components/pose/PoseFigure";
-import { usePoseClip } from "@/components/pose/usePoseClip";
+import { usePoseClipStatus } from "@/components/pose/usePoseClip";
 import { useReducedMotion } from "@/components/showcase/useShowcase";
 import {
   WEEKS,
@@ -21,6 +22,7 @@ import { WeekChart } from "./WeekChart";
 const TARGET = 100;
 const KNEE = 25;
 const TWEEN_MS = 320;
+const CAPTION = "An illustration built from real pose tracking of one squat. Your own numbers depend on your recovery.";
 
 /** Everything the slider draws that depends only on the clip. */
 function useFigure(clip: PoseClip | null) {
@@ -66,7 +68,7 @@ function useEasedBlend(target: number, reduced: boolean) {
  * Every pose and angle is computed from the tracked squat, none is typed in.
  */
 export function RecoverySlider() {
-  const clip = usePoseClip();
+  const { clip, failed } = usePoseClipStatus();
   const figure = useFigure(clip);
   const reduced = useReducedMotion();
   const [week, setWeek] = useState(1);
@@ -75,6 +77,9 @@ export function RecoverySlider() {
 
   const depth = figure ? Math.round(figure.depths[week - 1]) : null;
   const pose = figure ? blendPose(figure.standing, figure.deepest, blend) : null;
+
+  // Without the tracking data there is nothing true to draw, so only the caption stays rather than an empty frame.
+  if (failed) return <p className="text-[13px] leading-relaxed text-pretty text-muted">{CAPTION}</p>;
 
   return (
     <div className="grid items-center gap-x-10 gap-y-8 sm:grid-cols-2 lg:gap-x-8">
@@ -106,13 +111,8 @@ export function RecoverySlider() {
 
       <div className="min-w-0">
         <p className="text-[15px] text-muted">Deepest knee bend, week {week}</p>
-        <p className="mt-1 font-serif text-[96px] leading-[0.9] tracking-[-0.03em] tabular-nums sm:text-[112px] lg:text-[120px]">
-          <span data-recovery-angle className={depth === null ? "text-line" : undefined}>
-            {depth === null ? "--" : depth}
-          </span>
-          <span className={`ml-1 align-top font-sans text-[0.32em] text-muted ${depth === null ? "invisible" : ""}`} style={{ position: "relative", top: "0.2em" }}>
-            °
-          </span>
+        <p className="mt-1 font-serif text-[96px] leading-[0.9] tracking-[-0.03em] sm:text-[112px] lg:text-[120px]">
+          <AngleValue value={depth} data-recovery-angle />
         </p>
 
         <div className="mt-6">
@@ -147,7 +147,7 @@ export function RecoverySlider() {
       </div>
 
       <p className="text-[13px] leading-relaxed text-pretty text-muted sm:col-span-2">
-        An illustration built from real pose tracking of one squat. Your own numbers depend on your recovery.
+        {CAPTION}
       </p>
     </div>
   );

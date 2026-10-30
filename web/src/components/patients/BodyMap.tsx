@@ -63,7 +63,7 @@ export function BodyMap() {
   const scale = usePixelsPerUnit(figureRef, figure?.bounds ?? null) ?? (figure ? 420 / figure.bounds.h : 1);
 
   return (
-    <div data-body-map className="grid gap-8 sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] sm:items-center sm:gap-10 lg:gap-16">
+    <div data-body-map className="grid gap-8 sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] sm:items-start sm:gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
       <div className="grid justify-items-center gap-8">
         <div ref={figureRef} className="h-[380px] w-full sm:h-[440px]">
           {figure && (
@@ -100,13 +100,13 @@ export function BodyMap() {
           )}
         </div>
 
-        <div role="tablist" aria-label="Areas of the body" className="grid w-full max-w-[340px] grid-cols-2 gap-2 lg:flex lg:w-auto lg:max-w-none lg:justify-center">
+        <div role="tablist" aria-label="Areas of the body" className="grid w-full max-w-[340px] grid-cols-2 gap-2">
           {AREAS.map((a, i) => (
             <button
               key={a.id}
               type="button"
               {...tabProps(i)}
-              className={`min-h-11 cursor-pointer rounded-lg border px-4 text-[15px] transition-colors ${focus} ${
+              className={`min-h-11 cursor-pointer rounded-lg border px-4 text-[15px] whitespace-nowrap transition-colors ${focus} ${
                 active === i ? "border-text text-text" : "border-line text-muted hover:text-text"
               }`}
             >
@@ -116,7 +116,8 @@ export function BodyMap() {
         </div>
       </div>
 
-      <div className="grid">
+      {/* Starts level with the figure's shoulders, so every area's title sits at the same height. */}
+      <div className="grid sm:pt-[72px]">
         {AREAS.map((a, i) => {
           const on = active === i;
           const exercise = a.exercise ? EXERCISES.find((e) => e.key === a.exercise) : undefined;
@@ -128,8 +129,8 @@ export function BodyMap() {
               aria-labelledby={tabId(i)}
               inert={!on}
               // Stacked in one cell from 640 px so the layout keeps the tallest panel's height. On phones a hidden panel takes no space.
-              style={on ? undefined : { visibility: "hidden" }}
-              className={`col-start-1 row-start-1 transition-opacity duration-300 ${on ? "opacity-100" : "opacity-0 max-sm:hidden"}`}
+              // Visibility flips only after the fade, so the outgoing panel fades out too.
+              className={`col-start-1 row-start-1 transition-[opacity,visibility] duration-300 ${on ? "visible opacity-100" : "invisible opacity-0 max-sm:hidden"}`}
             >
               <h3 className="font-serif text-[28px] leading-[1.15] tracking-[-0.01em] text-balance">{a.condition}</h3>
               <p className="mt-3 text-[16px] leading-relaxed text-pretty text-muted">{a.body}</p>
@@ -148,7 +149,7 @@ export function BodyMap() {
                       <p className="mt-1 text-[15px] leading-snug text-pretty text-muted">{exercise.description}</p>
                     </div>
                   </div>
-                  <p className="mt-6 text-[15px] text-muted">FiixBE measures the {exercise.angleLabel} angle.</p>
+                  <p className="mt-6 text-[15px] text-muted">FiixBE measures the {exercise.angleLabel.toLowerCase()} angle.</p>
                 </>
               )}
             </div>
