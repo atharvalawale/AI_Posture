@@ -1,17 +1,18 @@
 import { keypoint, type PoseClip } from "./clip";
 
-/** Angle at landmark `b` between `a` and `c`, in degrees. Corrects for the video's aspect ratio. */
-export function jointAngle(clip: PoseClip, t: number, a: number, b: number, c: number): number {
-  const r = clip.h / clip.w;
-  const pa = keypoint(clip, t, a);
-  const pb = keypoint(clip, t, b);
-  const pc = keypoint(clip, t, c);
-  const u = [pa[0] - pb[0], (pa[1] - pb[1]) * r];
-  const v = [pc[0] - pb[0], (pc[1] - pb[1]) * r];
+/** Angle at `pb` between `pa` and `pc`, in degrees. `aspect` is clip.h / clip.w and scales the y axis. */
+export function angleAt(pa: [number, number], pb: [number, number], pc: [number, number], aspect: number): number {
+  const u = [pa[0] - pb[0], (pa[1] - pb[1]) * aspect];
+  const v = [pc[0] - pb[0], (pc[1] - pb[1]) * aspect];
   const len = Math.hypot(u[0], u[1]) * Math.hypot(v[0], v[1]);
   if (len === 0) return 180;
   const cos = Math.max(-1, Math.min(1, (u[0] * v[0] + u[1] * v[1]) / len));
   return (Math.acos(cos) * 180) / Math.PI;
+}
+
+/** Angle at landmark `b` between `a` and `c`, in degrees. Corrects for the video's aspect ratio. */
+export function jointAngle(clip: PoseClip, t: number, a: number, b: number, c: number): number {
+  return angleAt(keypoint(clip, t, a), keypoint(clip, t, b), keypoint(clip, t, c), clip.h / clip.w);
 }
 
 /** Left knee angle: hip (23), knee (25), ankle (27). */
