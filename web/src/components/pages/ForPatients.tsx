@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RecoverySlider } from "@/components/patients/RecoverySlider";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { site } from "@/lib/site";
@@ -65,7 +66,7 @@ export function ForPatients() {
   return (
     <>
       <section aria-labelledby="patients-title">
-        <Container className="grid items-center gap-12 pt-12 pb-20 md:pt-20 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pb-28">
+        <Container className="grid items-center gap-12 pt-12 pb-20 md:pt-20 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14 lg:pb-28">
           <div>
             <h1 id="patients-title" className={h1Class}>
               Recover at home, at your own pace.
@@ -82,14 +83,7 @@ export function ForPatients() {
             </div>
             <p className="mt-6 text-sm text-muted">{site.appsComingSoon}</p>
           </div>
-          <Photo
-            src="/images/pages/patient-home-mat.webp"
-            alt="A woman sitting cross-legged on an exercise mat on her balcony"
-            className="aspect-[4/3] lg:aspect-[4/5]"
-            sizes="(min-width: 1024px) 1000px, 115vw"
-            position="50% 40%"
-            preload
-          />
+          <RecoverySlider />
         </Container>
       </section>
 
