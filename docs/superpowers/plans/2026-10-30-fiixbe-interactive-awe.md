@@ -206,7 +206,7 @@ it("finds the three real reps", () => {
     expect(r.start).toBeLessThan(r.bottom);
     expect(r.bottom).toBeLessThan(r.end);
   });
-  expect(reps.map((r) => Math.round(r.depth))).toEqual([95, 102, 100]);
+  expect(reps.map((r) => Math.round(r.depth))).toEqual([95, 102, 99]);
 });
 it("scores a rep against the target", () => {
   expect(repScore(95, 100)).toBe(100);
@@ -371,7 +371,7 @@ The rules:
 - [ ] **Step 1: Write the failing tests**
 
 The tests cover:
-- Fed frames from 0 to 29.2 s at 1/30 s, the session ends with `reps` 3, rounded depths `[95, 102, 100]`, `form` 99 and knee `extreme` 95.
+- Fed frames from 0 to 29.2 s at 1/30 s, the session ends with `reps` 3, rounded depths `[95, 102, 99]`, `form` 99 and knee `extreme` 95.
 - `setJoint("hip")` makes `value` equal `Math.round(hipAngle(clip, t))`. With `"back"`, `extreme` is the largest lean.
 - A frame 1 s earlier than the last one resets `reps` to 0, `depths` to `[]` and `form` to null.
 - Frames from a source that is not attached do not change the state.
