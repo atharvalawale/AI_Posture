@@ -24,7 +24,8 @@ export function Phone2DStage({
 }: {
   progress: MutableRefObject<number>;
   screen: ScreenId;
-  session: LiveSession;
+  /** Drives the live screen. Leave it out while this phone is not the one on show. */
+  session?: LiveSession;
   story?: StoryProgress;
   width: number;
   /** The visitor's own lean of the phone, added on top of the intro and the sway. */

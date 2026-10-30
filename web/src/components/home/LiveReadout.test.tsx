@@ -70,4 +70,11 @@ describe("LiveReadout", () => {
     render(<LiveReadout state={base} onJoint={() => {}} variant="full" />);
     expect(screen.getByText("Stand tall to begin").closest("[aria-live]")!.getAttribute("aria-live")).toBe("polite");
   });
+
+  it("still announces the cue in the compact variant, where the phone screen shows it", () => {
+    render(<LiveReadout state={base} onJoint={() => {}} variant="compact" />);
+    const cue = screen.getByText("Stand tall to begin");
+    expect(cue.getAttribute("aria-live")).toBe("polite");
+    expect(cue.className).toContain("sr-only");
+  });
 });

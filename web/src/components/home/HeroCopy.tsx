@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/Button";
 import { site } from "@/lib/site";
 
-/** The homepage headline, lead and calls to action. Centered on phones and tablets, left-aligned in the desktop stage. */
+/**
+ * The homepage headline, lead and calls to action. Centered on phones and tablets, left-aligned in
+ * the desktop stage, where the headline is sized from the column (a size container) so it stays on two lines.
+ */
 export function HeroCopy({ className = "" }: { className?: string }) {
   return (
     <div className={`text-center lg:text-left ${className}`}>
       <h1
         id="hero-title"
-        className="mx-auto max-w-[14ch] font-serif text-[40px] leading-[1.06] tracking-[-0.02em] text-balance sm:text-[56px] lg:mx-0 lg:text-[clamp(42px,3.9vw,56px)] lg:leading-[1.04]"
+        className="mx-auto max-w-[14ch] font-serif text-[40px] leading-[1.06] tracking-[-0.02em] text-balance sm:text-[56px] lg:mx-0 lg:max-w-none lg:text-[clamp(36px,13cqw,56px)] lg:leading-[1.04]"
       >
         See every degree of your recovery.
       </h1>

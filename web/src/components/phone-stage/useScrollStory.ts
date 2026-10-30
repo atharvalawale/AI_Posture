@@ -26,12 +26,19 @@ function headerHeight() {
   return document.querySelector("header")?.getBoundingClientRect().height ?? 0;
 }
 
+/** How far the stage frame sits below the top of the section: 0 on desktop, the copy's height below 1024 px. */
+function frameOffset(section: HTMLElement) {
+  return section.querySelector<HTMLElement>("[data-stage-frame]")?.offsetTop ?? 0;
+}
+
 /**
- * Pins `sectionRef` below the site header and tracks how far the visitor has scrolled.
+ * Pins `sectionRef` and tracks how far the visitor has scrolled through the story.
  *
- * `progress.current` runs from -1 (section top at the bottom of the viewport) to 0 (section
- * pinned) while the section scrolls in, then from 0 to 1 while it stays pinned. It is a ref so
- * the phone can read it every frame without re-rendering. `screen` changes at 0.33 and 0.66.
+ * The pin starts when the section's `[data-stage-frame]` reaches the bottom of the site header.
+ * On desktop the frame starts at the top of the stage. Below 1024 px the copy sits above the frame, so the copy
+ * scrolls away first and then the phone and the readout pin.
+ * `progress.current` runs from 0 (pin starts) to 1 (pin ends). It is a ref so the phone can read it
+ * every frame without re-rendering. `screen` changes at 0.33 and 0.66.
  * With reduced motion nothing pins and progress stays at 0.
  * `goTo` scrolls smoothly to the middle of a screen's part of the story. `onProgress` calls a
  * listener after every progress change and returns the unsubscribe function.
@@ -55,26 +62,17 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): {
       const mm = gsap.matchMedia();
 
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // The enter trigger can report before the story trigger exists, so hold it in a box.
-        const box: { story?: ScrollTrigger } = {};
-        const sync = (enter: ScrollTrigger) => {
-          const story = box.story;
-          const p = story && story.progress > 0 ? story.progress : enter.progress - 1;
-          progress.current = p;
-          setScreen(screenAt(Math.max(0, p)));
+        // The pin holds the section at the height its content had at the last refresh.
+        const content = el.firstElementChild;
+        let measured: number | null = null;
+        const sync = (self: ScrollTrigger) => {
+          progress.current = self.progress;
+          setScreen(screenAt(self.progress));
           listeners.current.forEach((fn) => fn());
         };
-        const enter = ScrollTrigger.create({
+        story.current = ScrollTrigger.create({
           trigger: el,
-          start: "top bottom",
-          end: () => `top ${headerHeight()}px`,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => sync(self),
-          onRefresh: (self) => sync(self),
-        });
-        box.story = ScrollTrigger.create({
-          trigger: el,
-          start: () => `top ${headerHeight()}px`,
+          start: () => `top+=${frameOffset(el)} top+=${headerHeight()}`,
           end: () => `+=${Math.round(window.innerHeight * STORY_LENGTH)}`,
           pin: true,
           // GSAP turns pin spacing off when the pinned element's parent is a flex container,
@@ -82,18 +80,26 @@ export function useScrollStory(sectionRef: RefObject<HTMLElement | null>): {
           pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          onUpdate: () => sync(enter),
+          onUpdate: sync,
           onRefresh: (self) => {
+            measured = content ? Math.round(content.getBoundingClientRect().height) : null;
             // Published for tests and debugging: the scroll range of the pinned story.
             el.dataset.storyStart = String(Math.round(self.start));
             el.dataset.storyEnd = String(Math.round(self.end));
-            sync(enter);
+            sync(self);
           },
         });
-        story.current = box.story;
         // Fonts and the 3D phone can change layout after first paint.
         document.fonts?.ready.then(() => ScrollTrigger.refresh());
+        // Some layout changes land after a refresh (on a resize across 640 px the readout switches
+        // variant once React sees the new breakpoint), so refresh again whenever the content's
+        // height no longer matches what the pin measured.
+        const ro = new ResizeObserver(([entry]) => {
+          if (measured !== null && Math.round(entry.borderBoxSize[0].blockSize) !== measured) ScrollTrigger.refresh();
+        });
+        if (content) ro.observe(content);
         return () => {
+          ro.disconnect();
           story.current = null;
           delete el.dataset.storyStart;
           delete el.dataset.storyEnd;

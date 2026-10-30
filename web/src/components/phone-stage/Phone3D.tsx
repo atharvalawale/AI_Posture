@@ -26,7 +26,8 @@ const ELEVATION = 9;
 type Props = {
   progress: MutableRefObject<number>;
   screen: ScreenId;
-  session: LiveSession;
+  /** Drives the live screen. Leave it out while this phone is not the one on show. */
+  session?: LiveSession;
   story?: StoryProgress;
   /** On-screen phone width in CSS pixels. The canvas is larger so the phone can tilt. */
   phoneWidth: number;

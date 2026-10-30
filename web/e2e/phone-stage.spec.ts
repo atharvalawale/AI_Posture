@@ -3,15 +3,29 @@ import { expect, test, type Page } from "@playwright/test";
 // Headless Chromium only has WebGL through SwiftShader, which it hides behind a flag.
 test.use({ launchOptions: { args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] } });
 
-/** Scrolls so the pinned story sits at `p` (0..1), using the trigger range the stage publishes. */
-async function scrollStory(page: Page, p: number) {
+/**
+ * Scrolls so the pinned story sits at `p` (0..1), plus `px`, using the trigger range the stage
+ * publishes. Fonts and hydration can still move the range just after load, so it scrolls again
+ * until the range holds still.
+ */
+async function scrollStory(page: Page, p: number, px = 0) {
   const stage = page.locator("[data-phone-stage]");
   await expect(stage).toHaveAttribute("data-story-end", /\d+/);
-  await stage.evaluate((el, p) => {
-    const start = Number((el as HTMLElement).dataset.storyStart);
-    const end = Number((el as HTMLElement).dataset.storyEnd);
-    window.scrollTo(0, start + (end - start) * p);
-  }, p);
+  await stage.evaluate(
+    async (el, [p, px]) => {
+      const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const range = () => `${(el as HTMLElement).dataset.storyStart} ${(el as HTMLElement).dataset.storyEnd}`;
+      await document.fonts.ready;
+      for (let i = 0; i < 10; i++) {
+        const before = range();
+        const [start, end] = before.split(" ").map(Number);
+        window.scrollTo(0, start + (end - start) * p + px);
+        await frames();
+        if (range() === before) return;
+      }
+    },
+    [p, px],
+  );
 }
 
 test("reduced motion: no 3D, the 2D phone is face-on and not pinned", async ({ browser }) => {
@@ -103,6 +117,8 @@ async function readoutLive(page: Page) {
   await expect(page.locator("[data-readout-value]")).toHaveText(/^\d+$/, { timeout: 30_000 });
 }
 
+const currentTime = (page: Page) => liveVideo(page).evaluate((v) => (v as HTMLVideoElement).currentTime);
+
 test("scrubbing the phone changes the angle readout", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
@@ -117,10 +133,18 @@ test("scrubbing the phone changes the angle readout", async ({ page }) => {
   const y = box.y + box.height * 0.5;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + 120, y, { steps: 12 });
+  // Past the tap slop: the scrub starts and pauses the clip, so its time is ours from here.
+  await page.mouse.move(x + 10, y);
+  expect(await paused(page)).toBe(true);
+  const t0 = await currentTime(page);
+  // Drag 120 px more, toward whichever end of the 29 s clip has room.
+  const dx = t0 < 15 ? 120 : -120;
+  await page.mouse.move(x + 10 + dx, y, { steps: 12 });
   // Still holding the button: the clip follows the drag and stays paused.
   await expect(readout).not.toHaveText(before!);
   expect(await paused(page)).toBe(true);
+  // One phone width of drag is 8 s of clip.
+  expect(Math.abs((await currentTime(page)) - t0 - (dx / box.width) * 8)).toBeLessThan(0.15);
   await page.waitForTimeout(400);
   expect(await paused(page)).toBe(true);
 
@@ -205,4 +229,158 @@ test("the chapter rail scrolls the story to the plan", async ({ page }) => {
   await plan.click();
   await expect(page.getByText(/^Good morning, /).filter({ visible: true })).toBeVisible();
   await expect(plan).toHaveAttribute("aria-current", "step");
+});
+
+// The layout tests need no 3D. Without WebGL 2 the stage uses the 2D phone (as on a device that
+// fails the 3D check), which is far lighter, so these tests do not slow the software WebGL of the
+// 3D tests running beside them.
+test.describe("stage layout", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.addInitScript(() => {
+      const getContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: unknown[]) {
+        return type === "webgl2" ? null : getContext.call(this, type as "2d", ...(rest as []));
+      } as typeof getContext;
+    });
+  });
+
+  test("desktop columns crossfade with the chapters", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const stage = page.locator("[data-phone-stage]");
+    const note = page.getByRole("heading", { name: "Corrects you out loud" });
+
+    await scrollStory(page, 0.5);
+    await expect(note).toBeVisible();
+    await expect(page.locator("h1")).toBeHidden();
+    await expect(stage.locator("[data-readout-value]")).toBeHidden();
+    await expect(stage.locator('[data-chapter-details="summary"]')).toBeVisible();
+
+    await scrollStory(page, 0.9);
+    await expect(stage.locator('[data-chapter-details="plan"]')).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Keeps your physio close" })).toBeVisible();
+    await expect(note).toBeHidden();
+    await expect(page.locator("h1")).toHaveCount(1);
+  });
+
+  const headerHeight = (page: Page) => page.locator("header").first().evaluate((el) => el.getBoundingClientRect().height);
+
+  test("phone width: copy scrolls away, then the phone and the compact readout pin", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await scrollStory(page, 0, 10);
+
+    const header = await headerHeight(page);
+    await expect
+      .poll(() => page.locator("[data-stage-frame]").evaluate((el) => el.getBoundingClientRect().top))
+      .toBeGreaterThan(header - 2);
+    const top = await page.locator("[data-stage-frame]").evaluate((el) => el.getBoundingClientRect().top);
+    expect(Math.abs(top - header)).toBeLessThanOrEqual(2);
+    await expect(page.locator("h1")).not.toBeInViewport();
+    await expect(page.locator("[data-readout-value]")).toBeVisible();
+  });
+
+  for (const [width, height] of [
+    [360, 640],
+    [390, 844],
+    [430, 932],
+  ] as const) {
+    test(`pinned at ${width} x ${height}, the phone, readout, rail and hint fit under the header`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      const stage = page.locator("[data-phone-stage]");
+      await expect(stage).toHaveAttribute("data-story-end", /\d+/);
+      const header = await headerHeight(page);
+      for (const p of [0.1, 0.5, 0.9]) {
+        await scrollStory(page, p);
+        // Let the chapter crossfade finish, so the measured layer is the one on show.
+        await page.waitForTimeout(400);
+        const boxes = await stage.evaluate((el) => {
+          const parts = {
+            phone: "[data-phone-handle]",
+            readout: "[data-stage-readout] > :not([aria-hidden])",
+            rail: "nav",
+            hint: "[data-stage-hint]",
+          };
+          const frame = el.querySelector("[data-stage-frame]")!;
+          return Object.entries(parts).map(([name, selector]) => {
+            const found = frame.querySelectorAll(selector);
+            const r = found.length === 1 ? found[0].getBoundingClientRect() : { top: NaN, bottom: NaN };
+            return { name, top: r.top, bottom: r.bottom };
+          });
+        });
+        for (const b of boxes) {
+          expect(b.top, `${b.name} at ${p}`).toBeGreaterThanOrEqual(header - 1);
+          expect(b.bottom, `${b.name} at ${p}`).toBeLessThanOrEqual(height + 1);
+        }
+      }
+    });
+  }
+
+  test("resize across the desktop breakpoint keeps the pin spacing", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/");
+    const stage = page.locator("[data-phone-stage]");
+    await expect(stage).toHaveAttribute("data-story-end", /\d+/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(500);
+
+    // The pin re-measures once the resize settles: ScrollTrigger debounces it, and the readout
+    // switches to its compact variant on the next render. On a busy machine that can take longer.
+    const heading = page.locator("#problem-title");
+    await expect
+      .poll(async () => {
+        const end = Number(await stage.getAttribute("data-story-end"));
+        await page.evaluate((y) => window.scrollTo(0, y), end + 200);
+        return heading.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          const inView = r.top >= 0 && r.bottom <= window.innerHeight;
+          return inView && el.contains(document.elementFromPoint(r.left + 8, r.top + r.height / 2));
+        });
+      })
+      .toBe(true);
+    await expect(heading).toBeInViewport();
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+  });
+
+  test("reduced motion: the summary and the plan follow the hero as still sections", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    try {
+      await page.goto("/");
+      const summary = page.getByText("Session complete", { exact: true }).filter({ visible: true });
+      const plan = page.getByText(/^Good morning, /).filter({ visible: true });
+      await expect(summary).toHaveCount(1);
+      await summary.scrollIntoViewIfNeeded();
+      await expect(summary).toBeInViewport();
+      await plan.scrollIntoViewIfNeeded();
+      await expect(plan).toBeInViewport();
+      await expect(page.getByRole("heading", { name: "Corrects you out loud" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Keeps your physio close" })).toBeVisible();
+      await expect(page.locator(".pin-spacer")).toHaveCount(0);
+      await expect(page.locator("h1")).toHaveCount(1);
+    } finally {
+      await context.close();
+    }
+  });
+
+  for (const [width, height] of [
+    [1280, 720],
+    [1440, 900],
+    [1920, 1080],
+  ] as const) {
+    test(`the headline stays on two lines at ${width} x ${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/");
+      const lines = await page.locator("h1").evaluate((el) => {
+        const lineHeight = parseFloat(getComputedStyle(el).lineHeight);
+        return Math.round(el.getBoundingClientRect().height / lineHeight);
+      });
+      expect(lines).toBe(2);
+    });
+  }
 });

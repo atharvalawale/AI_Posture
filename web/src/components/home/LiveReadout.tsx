@@ -13,13 +13,13 @@ function place(v: number, [lo, hi]: [number, number], extreme: "min" | "max") {
   return clamp01(extreme === "min" ? (hi - v) / (hi - lo) : (v - lo) / (hi - lo));
 }
 
-function Track({ state }: { state: LiveState }) {
+function Track({ state, className }: { state: LiveState; className: string }) {
   const m = MEASURES[state.joint];
   const goalAt = place(m.target, m.range, m.extreme) * 100;
   const dotAt = state.value === null ? null : place(state.value, m.range, m.extreme) * 100;
   // A drawn graphic, so assistive tech gets it as one image named by the goal.
   return (
-    <div role="img" aria-label={m.goal} className="relative mt-5 h-[42px] max-w-[320px]">
+    <div role="img" aria-label={m.goal} className={`relative h-[42px] max-w-[320px] ${className}`}>
       <div className="absolute inset-x-0 top-4 h-0.5 bg-line" />
       <div className="absolute top-2 h-[18px] border-l-2 border-accent" style={{ left: `${goalAt}%` }}>
         <span className="absolute right-[-2px] top-[22px] whitespace-nowrap text-[13px] text-accent">{m.goal}</span>
@@ -63,17 +63,18 @@ export function LiveReadout({ state, onJoint, variant }: Props) {
           °
         </span>
       </div>
-      <Track state={state} />
-      <p aria-live="polite" className={`${full ? "mt-6 text-[17px]" : "mt-5 text-[15px]"} min-h-[1.4em]`}>
+      <Track state={state} className={full ? "mt-5" : "mt-3"} />
+      {/* Under the phone the phone screen already shows the cue, so the compact readout only announces it. */}
+      <p aria-live="polite" className={full ? "mt-6 min-h-[1.4em] text-[17px]" : "sr-only"}>
         {state.cue}
       </p>
       <dl
-        className={`${full ? "mt-8 max-w-[360px] gap-7 pt-[18px]" : "mt-5 gap-6 pt-3.5"} grid grid-cols-[repeat(3,auto)] justify-start border-t border-line`}
+        className={`${full ? "mt-8 max-w-[360px] gap-7 pt-[18px]" : "mt-4 gap-6 pt-3"} grid grid-cols-[repeat(3,auto)] justify-start border-t border-line`}
       >
         {stats.map(([label, value]) => (
           <div key={label}>
             <dt className="text-[13px] text-muted">{label}</dt>
-            <dd className={`${full ? "text-[26px]" : "text-[22px]"} mt-0.5 font-medium tabular-nums`}>{value}</dd>
+            <dd className={`${full ? "text-[26px]" : "text-[22px] leading-7"} mt-0.5 font-medium tabular-nums`}>{value}</dd>
           </div>
         ))}
       </dl>

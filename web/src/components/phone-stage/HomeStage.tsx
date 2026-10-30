@@ -19,9 +19,12 @@ import {
 } from "react";
 import { HeroCopy } from "@/components/home/HeroCopy";
 import { LiveReadout } from "@/components/home/LiveReadout";
-import { PHONE_H, PHONE_W, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
+import { PHONE_H, PHONE_W, PhoneFrame, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
+import { PlanScreen } from "@/components/phone/screens/PlanScreen";
+import { SummaryScreen } from "@/components/phone/screens/SummaryScreen";
 import { canUse3D, readDeviceEnv } from "@/lib/device";
 import { LiveSession, coverBox, loadPoseClip, nearestJoint, type PoseClip } from "@/lib/pose";
+import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
 import { ChapterRail } from "./ChapterRail";
 import { phonePointToScreen } from "./gestures";
 import { Phone2DStage } from "./Phone2DStage";
@@ -32,6 +35,7 @@ const Phone3D = dynamic(() => import("./Phone3D"), { ssr: false, loading: () => 
 
 const noop = () => () => {};
 const WIDE = "(min-width: 640px)";
+const DESKTOP = "(min-width: 1024px)";
 const REDUCED = "(prefers-reduced-motion: reduce)";
 /** How close a tap must land to a joint to pick it, in CSS pixels on screen. */
 const TAP_REACH = 48;
@@ -64,13 +68,12 @@ class Fallback extends Component<{ children: ReactNode; onError: () => void }, {
 
 /**
  * The stage is sized in CSS, so the server renders it at its final size and nothing shifts on load.
- * `--frame-h`: the viewport below the 64 px header, at least 600 px. `--phone-w`: the phone width
- * that leaves `--below-phone` of the frame free under it (the chapter rail and the hint, and on
- * phones the compact readout too), between 160 px and the design width.
+ * `--frame-h` (set on the section): the viewport below the 64 px header, and on desktop at least
+ * 600 px. `--phone-w`: the phone width that leaves `--below-phone` of the frame free (the chapter
+ * rail and the hint, and on phones the compact readout too), up to the design width.
  */
 const STAGE_VARS = {
-  "--frame-h": "max(600px, calc(100svh - 64px))",
-  "--phone-w": `clamp(160px, calc((var(--frame-h) - var(--below-phone)) * ${PHONE_W} / ${PHONE_H}), ${PHONE_W}px)`,
+  "--phone-w": `clamp(110px, calc((var(--frame-h) - var(--below-phone)) * ${PHONE_W} / ${PHONE_H}), ${PHONE_W}px)`,
 } as CSSProperties;
 
 /** The phone's on-screen width in CSS pixels, read from its CSS-sized box. Null until measured. */
@@ -89,12 +92,15 @@ function usePhoneWidth(box: RefObject<HTMLDivElement | null>): number | null {
 
 /**
  * The homepage hero and the scroll story in one pinned stage: the headline on the left, the
- * phone in the center and the live readout on the right (stacked below 1024 px). One LiveSession
- * drives the phone screen and the readout. Drag the phone to scrub the squat, tap a joint to
- * measure it, or use the arrow keys and Enter. As the visitor scrolls, the phone walks through the
- * live session, the summary and today's plan. Uses the 3D phone when the device can take it, and
- * the 2D phone otherwise (and while the 3D code loads). With reduced motion: no pin, no tilt and no
- * chapter rail, but the same layout, and scrub, tap and keys still work.
+ * phone in the center and the live readout on the right. One LiveSession drives the phone screen
+ * and the readout. Drag the phone to scrub the squat, tap a joint to measure it, or use the arrow
+ * keys and Enter. As the visitor scrolls, the phone walks through the live session, the summary and
+ * today's plan, and both side columns cross-fade with it: the headline gives way to each chapter's
+ * note, and the readout to each screen's details. Below 1024 px the copy scrolls away first, then
+ * the phone and the readout pin together (side by side from 640 px, stacked below). Uses the 3D
+ * phone when the device can take it, and the 2D phone otherwise (and while the 3D code loads).
+ * With reduced motion: no pin, no tilt and no chapter rail; the summary and the plan follow as
+ * still sections, and scrub, tap and keys still work.
  */
 export function HomeStage() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -104,10 +110,11 @@ export function HomeStage() {
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
   const wide = useMedia(WIDE, true);
+  const desktop = useMedia(DESKTOP, true);
   const can3D = useSyncExternalStore(noop, () => canUse3D(readDeviceEnv()), () => false);
   const { resolvedTheme } = useTheme();
   const [ready3D, setReady3D] = useState(false);
-  // The 2D phone stays on top until the 3D one has faded in, so the hand-over never shows a gap.
+  // The 2D phone stays under the 3D one until that has faded in, so the hand-over never shows a gap.
   const [shown3D, setShown3D] = useState(false);
   useEffect(() => {
     if (!ready3D) return;
@@ -125,7 +132,6 @@ export function HomeStage() {
   const [introStart] = useState(() => performance.now());
 
   const [session] = useState(() => new LiveSession());
-  const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const [clip, setClip] = useState<PoseClip | null>(null);
   useEffect(() => {
     let current = true;
@@ -198,34 +204,49 @@ export function HomeStage() {
         ref={sectionRef}
         data-phone-stage
         aria-labelledby="hero-title"
-        className="relative bg-bg [--below-phone:430px] sm:[--below-phone:164px]"
+        className="relative bg-bg [--below-phone:318px] [--frame-h:calc(100svh-64px)] sm:[--below-phone:164px] lg:[--frame-h:max(600px,calc(100svh-64px))]"
         style={STAGE_VARS}
       >
-        {/* On desktop the whole grid is the stage frame. Below 1024 px the copy sits above the frame. */}
-        <div
-          className="mx-auto grid w-full max-w-[1200px] px-6 lg:h-(--frame-h) lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-8 lg:px-10"
-        >
-          <HeroCopy className="pt-12 sm:pt-16 lg:pt-0" />
+        <div className="mx-auto grid w-full max-w-[1200px] px-6 lg:h-(--frame-h) lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-8 lg:px-10">
+          {/* The left column on desktop: the copy, then each chapter's note. Below 1024 px only the copy, above the frame. Sizes its type from its own width. */}
+          <div className="@container grid">
+            <div
+              {...hiddenWhen(desktop && !live)}
+              className={`[grid-area:1/1] pt-12 pb-8 sm:pt-16 lg:self-center lg:py-0 ${FADE} ${live ? "" : "lg:invisible lg:opacity-0"}`}
+            >
+              <HeroCopy />
+            </div>
+            <Layer on={screen === "summary"} className="hidden self-center lg:block">
+              <ChapterNote screen="summary" />
+            </Layer>
+            <Layer on={screen === "plan"} className="hidden self-center lg:block">
+              <ChapterNote screen="plan" />
+            </Layer>
+          </div>
 
-          {/* Below 1024 px the phone and the readout share this frame, which grows if they need more room. On desktop it dissolves into the grid. */}
+          {/* What pins: the phone, the readout and the rail. On desktop it starts at the top of the stage and spans the center and right columns. */}
           <div
-            className="flex min-h-(--frame-h) flex-col items-center justify-center gap-7 py-10 sm:flex-row sm:gap-12 lg:contents"
+            data-stage-frame
+            className="grid h-[calc(100svh-64px)] min-h-fit grid-cols-[minmax(0,1fr)] content-center justify-items-center py-2 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 lg:col-span-2 lg:h-full lg:grid-cols-subgrid lg:gap-x-8 lg:self-stretch lg:py-0"
           >
             <div
-              className={`flex flex-col items-center transition-opacity duration-500 motion-reduce:transition-none ${fitted === null ? "opacity-0" : "opacity-100"}`}
+              className={`col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none ${fitted === null ? "opacity-0" : "opacity-100"}`}
             >
               <div ref={boxRef} className="relative w-(--phone-w)" style={{ aspectRatio: `${PHONE_W} / ${PHONE_H}` }}>
                 {use3D && (
                   <div
                     data-phone="3d"
                     data-ready={ready3D}
-                    className={`absolute inset-0 transition-opacity duration-300 ${ready3D ? "opacity-100" : "opacity-0"}`}
+                    // Over the 2D phone, so the hand-over is a plain fade in with the 2D phone still underneath.
+                    className={`absolute inset-0 z-10 transition-opacity duration-300 ${ready3D ? "opacity-100" : "opacity-0"}`}
                   >
                     <Fallback onError={() => setFailed3D(true)}>
                       <Phone3D
                         progress={progress}
                         screen={screen}
-                        session={session}
+                        // Only the phone the visitor sees drives the clip. Until it shows, the 3D
+                        // phone plays on its own; attaching then seeks it to where the session is.
+                        session={ready3D ? session : undefined}
                         story={story}
                         phoneWidth={width}
                         dark={resolvedTheme === "dark"}
@@ -263,21 +284,104 @@ export function HomeStage() {
                   {...gestures.handlers}
                 />
               </div>
-
-              {/* At least as wide as the rail's three labels need, even when the phone is small. */}
-              <div className="mt-7 w-[max(var(--phone-w),240px)]">
-                {!reduced && <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />}
-                <Hint id={hintId} shown={live && !(gestures.scrubbed && tapped)} />
-              </div>
             </div>
 
-            <div className="w-full max-w-[320px] sm:flex-1 lg:w-auto lg:max-w-none lg:justify-self-start">
-              <LiveReadout state={state} onJoint={(j) => session.setJoint(j)} variant={wide ? "full" : "compact"} />
+            {/* Beside the phone from 640 px, under it below. Changes with the chapter, like the right column on desktop. */}
+            <div
+              data-stage-readout
+              className="row-start-2 mt-3 grid w-full max-w-[320px] sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0 sm:self-center lg:justify-self-start"
+            >
+              <Layer on={live} className="self-start sm:self-center">
+                <SessionReadout session={session} variant={wide ? "full" : "compact"} />
+              </Layer>
+              <Layer on={screen === "summary"} className="self-start sm:self-center">
+                <ChapterNote screen="summary" className="mb-3 sm:mb-8 lg:hidden" />
+                <SummaryDetails variant={wide ? "full" : "compact"} />
+              </Layer>
+              <Layer on={screen === "plan"} className="self-start sm:self-center">
+                <ChapterNote screen="plan" className="mb-3 sm:mb-8 lg:hidden" />
+                <PlanDetails variant={wide ? "full" : "compact"} />
+              </Layer>
+            </div>
+
+            {/* Under the phone. At least as wide as the rail's three labels need, even when the phone is small. */}
+            <div className="row-start-3 mt-3 w-[max(var(--phone-w),240px)] sm:col-start-1 sm:row-start-2 sm:mt-7">
+              {!reduced && <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />}
+              <Hint id={hintId} shown={live && !(gestures.scrubbed && tapped)} />
             </div>
           </div>
         </div>
       </section>
+      <StillChapters />
     </div>
+  );
+}
+
+/**
+ * The readout, subscribed to the session on its own. The session changes on every video frame, and
+ * only the readout needs to follow it: the rest of the stage (the 3D phone above all) re-renders on
+ * chapter changes only.
+ */
+function SessionReadout({ session, variant }: { session: LiveSession; variant: "full" | "compact" }) {
+  const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  return <LiveReadout state={state} onJoint={(j) => session.setJoint(j)} variant={variant} />;
+}
+
+const FADE = "transition-[opacity,visibility] duration-300 motion-reduce:transition-none";
+
+/** Takes a layer out of the accessibility tree and the tab order while another one shows. */
+function hiddenWhen(hidden: boolean) {
+  return hidden ? { "aria-hidden": true, inert: true } : {};
+}
+
+/** One of the layers stacked in one grid cell that cross-fade as the chapter changes. */
+function Layer({ on, className = "", children }: { on: boolean; className?: string; children: ReactNode }) {
+  return (
+    <div {...hiddenWhen(!on)} className={`[grid-area:1/1] ${FADE} ${on ? "visible opacity-100" : "invisible opacity-0"} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * With reduced motion nothing pins, so the summary and the plan follow the hero as still sections:
+ * the screen on a flat phone, with its note and details beside it. Hidden otherwise.
+ */
+function StillChapters() {
+  return (
+    <div className="motion-safe:hidden">
+      <StillChapter screen="summary">
+        <SummaryScreen />
+      </StillChapter>
+      <StillChapter screen="plan">
+        <PlanScreen />
+      </StillChapter>
+    </div>
+  );
+}
+
+/**
+ * Laid out like the stage at each width: the note, phone and details in three columns on desktop,
+ * the note and details beside the phone on tablets, and both under the phone on phones.
+ */
+function StillChapter({ screen, children }: { screen: "summary" | "plan"; children: ReactNode }) {
+  const titleId = useId();
+  return (
+    <section data-still-chapter={screen} aria-labelledby={titleId} className="border-t border-line">
+      <div className="mx-auto grid w-full max-w-[1200px] justify-items-center gap-y-8 px-6 py-16 sm:grid-cols-[auto_minmax(0,320px)] sm:justify-center sm:gap-x-12 sm:gap-y-8 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-x-8 lg:px-10 lg:py-20">
+        <ChapterNote
+          screen={screen}
+          titleId={titleId}
+          className="@container row-start-2 w-full max-w-[320px] sm:col-start-2 sm:row-start-1 sm:self-end lg:col-start-1 lg:max-w-none lg:self-center"
+        />
+        <PhoneFrame width={240} className="row-start-1 sm:col-start-1 sm:row-span-2 sm:self-center lg:col-start-2 lg:row-span-1">
+          {children}
+        </PhoneFrame>
+        <div className="row-start-3 w-full max-w-[320px] sm:col-start-2 sm:row-start-2 sm:self-start lg:col-start-3 lg:row-start-1 lg:self-center lg:justify-self-start">
+          {screen === "summary" ? <SummaryDetails variant="full" /> : <PlanDetails variant="full" />}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -289,8 +393,9 @@ function Hint({ id, shown }: { id: string; shown: boolean }) {
   return (
     <p
       id={id}
+      data-stage-hint
       aria-hidden="true"
-      className={`mt-3 text-center text-[13px] leading-[18px] text-muted transition-[opacity,visibility] duration-500 ${shown ? "visible opacity-100" : "invisible opacity-0"}`}
+      className={`mt-2 text-center text-[13px] leading-[18px] text-muted sm:mt-3 transition-[opacity,visibility] duration-500 ${shown ? "visible opacity-100" : "invisible opacity-0"}`}
     >
       <span className="block">Drag to move through the squat.</span> <span className="block">Tap a joint to measure it.</span>
       <span className="sr-only"> Arrow keys step through it, and Enter changes the joint.</span>
