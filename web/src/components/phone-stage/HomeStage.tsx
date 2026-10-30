@@ -26,7 +26,6 @@ import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
 import { ChapterRail } from "./ChapterRail";
 import { phonePointToScreen } from "./gestures";
 import { Phone2DStage } from "./Phone2DStage";
-import { PIN_QUERY } from "./pin";
 import { StillChapters } from "./StillChapters";
 import { useScrollStory } from "./useScrollStory";
 import { usePhoneGestures } from "./usePhoneGestures";
@@ -100,20 +99,20 @@ function usePhoneWidth(box: RefObject<HTMLDivElement | null>): number | null {
  * note, and the readout to each screen's details. Below 1024 px the copy scrolls away first, then
  * the phone and the readout pin together (side by side from 640 px, stacked below). Uses the 3D
  * phone when the device can take it, and the 2D phone otherwise (and while the 3D code loads).
- * With reduced motion, or a viewport too short for the pinned stack (`PIN_QUERY`): no pin and no
- * chapter rail (and with reduced motion no tilt); the summary and the plan follow as still
- * sections, and scrub, tap and keys still work.
+ * With reduced motion, or a viewport too short for the stack that pins (see `useScrollStory`): no
+ * pin and no chapter rail (and with reduced motion no tilt); the summary and the plan follow as
+ * still sections, and scrub, tap and keys still work. `data-pinned` on the wrapper carries that
+ * decision to the CSS.
  */
 export function HomeStage() {
   const sectionRef = useRef<HTMLElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const hintId = useId();
-  const { progress, screen, goTo, onProgress } = useScrollStory(sectionRef);
+  const { progress, screen, pinned, goTo, onProgress } = useScrollStory(sectionRef);
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
   const wide = useMedia(WIDE, true);
   const desktop = useMedia(DESKTOP, true);
-  const pinned = useMedia(PIN_QUERY, true);
   const can3D = useSyncExternalStore(noop, () => canUse3D(readDeviceEnv()), () => false);
   const { resolvedTheme } = useTheme();
   const [ready3D, setReady3D] = useState(false);
@@ -202,7 +201,8 @@ export function HomeStage() {
   return (
     // GSAP wraps the pinned section in a pin spacer. This wrapper stays a child of <main>, so React
     // can still insert sibling nodes before it (as it does on client navigation between routes).
-    <div>
+    // `data-pinned`: whether the stage pins. True on the server, since most viewports fit.
+    <div className="group/stage" data-pinned={pinned}>
       <section
         ref={sectionRef}
         data-phone-stage
@@ -309,7 +309,14 @@ export function HomeStage() {
 
             {/* Under the phone. At least as wide as the rail's three labels need, even when the phone is small. */}
             <div className="row-start-3 mt-3 w-[max(var(--phone-w),240px)] sm:col-start-1 sm:row-start-2 sm:mt-7">
-              {pinned && <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />}
+              {/* Not with reduced motion. While unpinned: collapsed below 1024 px, where it sits below the first
+                  view; only hidden on desktop, where it may be in the first view, so nothing moves. */}
+              <div
+                data-stage-rail
+                className="motion-reduce:hidden group-data-[pinned=false]/stage:invisible max-lg:group-data-[pinned=false]/stage:h-0 max-lg:group-data-[pinned=false]/stage:overflow-hidden"
+              >
+                <ChapterRail progress={progress} onProgress={onProgress} screen={screen} onSelect={goTo} />
+              </div>
               <Hint id={hintId} shown={live && !(gestures.scrubbed && tapped)} />
             </div>
           </div>

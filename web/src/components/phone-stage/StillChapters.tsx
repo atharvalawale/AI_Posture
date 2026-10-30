@@ -11,7 +11,7 @@ import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
  */
 export function StillChapters() {
   return (
-    <div className="pin:hidden">
+    <div className="motion-safe:group-data-[pinned=true]/stage:hidden">
       <StillChapter screen="summary">
         <SummaryScreen />
       </StillChapter>

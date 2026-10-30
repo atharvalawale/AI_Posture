@@ -139,9 +139,22 @@ test("scrubbing the phone changes the angle readout", async ({ page }) => {
   const t0 = await currentTime(page);
   // Drag 120 px more, toward whichever end of the 29 s clip has room.
   const dx = t0 < 15 ? 120 : -120;
-  await page.mouse.move(x + 10 + dx, y, { steps: 12 });
-  // Still holding the button: the clip follows the drag and stays paused.
-  await expect(readout).not.toHaveText(before!);
+  // The angle along the way. 120 px is about one squat, so the end angle can match the start one.
+  const seen = new Set([before]);
+  for (let i = 1; i <= 12; i++) {
+    await page.mouse.move(x + 10 + (dx * i) / 12, y);
+    // The seek, its frame and the readout's render land a moment after the move.
+    await page.waitForTimeout(150);
+    seen.add(await readout.textContent());
+  }
+  // Still holding the button: the clip follows the drag and stays paused. On a busy machine each
+  // move restarts the pending seek, so the last one may only land after the drag.
+  await expect
+    .poll(async () => {
+      seen.add(await readout.textContent());
+      return seen.size;
+    })
+    .toBeGreaterThan(1);
   expect(await paused(page)).toBe(true);
   // One phone width of drag is 8 s of clip.
   expect(Math.abs((await currentTime(page)) - t0 - (dx / box.width) * 8)).toBeLessThan(0.15);
@@ -288,6 +301,7 @@ test.describe("stage layout", () => {
     test(`pinned at ${width} x ${height}, the phone, readout, rail and hint fit under the header`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto("/");
+      await expect(page.locator("[data-pinned]")).toHaveAttribute("data-pinned", "true");
       const stage = page.locator("[data-phone-stage]");
       await expect(stage).toHaveAttribute("data-story-end", /\d+/);
       const header = await headerHeight(page);
@@ -327,7 +341,8 @@ test.describe("stage layout", () => {
     test(`too short to pin at ${width} x ${height}: nothing is hidden under the header or out of reach`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto("/");
-      // The server renders the rail; once hydrated, a stage that does not pin drops it.
+      // The server renders the rail; once the stage finds it does not fit, it drops it.
+      await expect(page.locator("[data-pinned]")).toHaveAttribute("data-pinned", "false");
       await expect(page.getByRole("navigation", { name: "App screens" })).toHaveCount(0);
       await expect(page.locator(".pin-spacer")).toHaveCount(0);
       const header = await headerHeight(page);
@@ -355,6 +370,76 @@ test.describe("stage layout", () => {
       }
     });
   }
+
+  /** Expects the stage pinned (or not) and its phone, readout, rail and hint all inside the view under the header. */
+  async function expectPinnedStackFits(page: Page, height: number) {
+    const stage = page.locator("[data-phone-stage]");
+    await expect(page.locator("[data-pinned]")).toHaveAttribute("data-pinned", "true");
+    await expect(page.locator(".pin-spacer")).toHaveCount(1);
+    const header = await headerHeight(page);
+    for (const p of [0.1, 0.9]) {
+      await scrollStory(page, p);
+      await page.waitForTimeout(400);
+      const boxes = await stage.evaluate((el) => {
+        const frame = el.querySelector("[data-stage-frame]")!;
+        return ["[data-phone-handle]", "[data-stage-readout] > :not([aria-hidden])", "nav", "[data-stage-hint]"].map((sel) => {
+          const r = frame.querySelector(sel)!.getBoundingClientRect();
+          return { sel, top: r.top, bottom: r.bottom };
+        });
+      });
+      for (const b of boxes) {
+        expect(b.top, `${b.sel} at ${p}`).toBeGreaterThanOrEqual(header - 1);
+        expect(b.bottom, `${b.sel} at ${p}`).toBeLessThanOrEqual(height + 1);
+      }
+    }
+  }
+
+  /** Expects the stage unpinned, and its phone, readout and hint each fully reachable under the header by scrolling. */
+  async function expectUnpinnedStackReachable(page: Page, height: number) {
+    await expect(page.locator("[data-pinned]")).toHaveAttribute("data-pinned", "false");
+    await expect(page.locator(".pin-spacer")).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "App screens" })).toHaveCount(0);
+    const header = await headerHeight(page);
+    for (const sel of ["[data-phone-handle]", "[data-stage-readout]", "[data-stage-hint]"]) {
+      const box = await page.locator(sel).evaluate((el, header) => {
+        window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - header);
+        const r = el.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, height: r.height };
+      }, header);
+      expect(box.top, `${sel} top`).toBeGreaterThanOrEqual(header - 1);
+      if (box.height <= height - header) expect(box.bottom, `${sel} bottom`).toBeLessThanOrEqual(height + 1);
+    }
+  }
+
+  test("the pin follows the content: it lets go when the stack outgrows the view, and pins again when it fits", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await expectPinnedStackFits(page, 844);
+    // The readout grows taller than the room left under the phone (as with larger text or longer copy).
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.addStyleTag({ content: "[data-stage-readout] { padding-bottom: 360px }" });
+    await expectUnpinnedStackReachable(page, 844);
+    await page.evaluate(() => document.querySelectorAll("style").forEach((s) => s.textContent?.includes("padding-bottom: 360px") && s.remove()));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expectPinnedStackFits(page, 844);
+  });
+
+  test("a few pixels either side of where the stack fits, the pin state matches", async ({ page }) => {
+    // Short enough that the phone is at its smallest, so the stack's height no longer depends on the view.
+    await page.setViewportSize({ width: 390, height: 480 });
+    await page.goto("/");
+    await expect(page.locator("[data-pinned]")).toHaveAttribute("data-pinned", "false");
+    const need = Number(await page.locator("[data-phone-stage]").getAttribute("data-stage-need"));
+    const header = await headerHeight(page);
+    const fits = Math.ceil(header + need) + 2;
+
+    await page.setViewportSize({ width: 390, height: fits });
+    await expectPinnedStackFits(page, fits);
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.setViewportSize({ width: 390, height: fits - 5 });
+    await expectUnpinnedStackReachable(page, fits - 5);
+  });
 
   test("resize across the desktop breakpoint keeps the pin spacing", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
