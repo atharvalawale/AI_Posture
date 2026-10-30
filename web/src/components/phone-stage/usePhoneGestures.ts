@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type PointerEvent } from "react";
-import { isTap, TAP } from "./gestures";
+import { isScrub, isTap } from "./gestures";
 import { leanToward, NO_LEAN, REST, settle, step, type Lean, type SpinState } from "./spin";
 
 export type PhoneLean = {
@@ -121,8 +121,8 @@ export function usePhoneGestures({ enabled, onScrubStart, onScrub, onScrubEnd, o
         if (p.id !== e.pointerId) return;
         const dx = e.clientX - p.x0;
         p.moved = Math.max(p.moved, Math.hypot(dx, e.clientY - p.y0));
-        // Only sideways movement scrubs, so a tap, or a vertical swipe that scrolls the page, never pauses the video.
-        if (!p.scrubbing && Math.abs(dx) > TAP.px) {
+        // Only clearly sideways movement scrubs, so a tap, or a swipe that scrolls the page, never pauses the video.
+        if (!p.scrubbing && isScrub(dx, e.clientY - p.y0)) {
           p.scrubbing = true;
           setDragging(true);
           setScrubbed(true);
