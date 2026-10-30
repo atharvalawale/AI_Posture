@@ -10,6 +10,7 @@ const items = [
 const panels = [<p key="a">Panel A</p>, <p key="b">Panel B</p>, <p key="c">Panel C</p>];
 
 let intersecting = true;
+let disconnects = 0;
 let observerCallback: ((e: { isIntersecting: boolean }[]) => void) | null = null;
 
 function mockEnv(reduced = false) {
@@ -31,7 +32,9 @@ function mockEnv(reduced = false) {
       observe() {
         observerCallback?.([{ isIntersecting: intersecting }]);
       }
-      disconnect() {}
+      disconnect() {
+        disconnects += 1;
+      }
       unobserve() {}
     },
   );
@@ -46,6 +49,7 @@ const selected = () => screen.getAllByRole("tab").filter((t) => t.getAttribute("
 
 beforeEach(() => {
   intersecting = true;
+  disconnects = 0;
   mockEnv();
 });
 
@@ -137,9 +141,70 @@ describe("Showcase auto advance", () => {
     expect(selected()[0]).toBe(tab("First"));
   });
 
-  it("clears its timer on unmount", () => {
+  it("wraps from the last item to the first", () => {
+    setup(5000);
+    for (let n = 0; n < 3; n++) act(() => void vi.advanceTimersByTime(5000));
+    expect(selected()[0]).toBe(tab("First"));
+  });
+
+  it("pauses while the pointer is over the root and resumes after, without counting as a touch", () => {
+    const { container } = setup(5000);
+    const root = container.firstElementChild!;
+    fireEvent.pointerEnter(root, { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(20000));
+    expect(selected()[0]).toBe(tab("First"));
+    fireEvent.pointerLeave(root, { pointerType: "mouse" });
+    act(() => void vi.advanceTimersByTime(5000));
+    expect(selected()[0]).toBe(tab("Second"));
+  });
+
+  it("pauses while focus is inside the panel and resumes when it leaves", () => {
+    render(
+      <Showcase label="Steps" items={items} layout="steps" autoAdvanceMs={5000}
+        panels={[<button key="a">Inside</button>, <p key="b">B</p>, <p key="c">C</p>]} />,
+    );
+    const inside = screen.getByText("Inside");
+    fireEvent.focus(inside);
+    act(() => void vi.advanceTimersByTime(20000));
+    expect(selected()[0]).toBe(tab("First"));
+    fireEvent.blur(inside);
+    act(() => void vi.advanceTimersByTime(5000));
+    expect(selected()[0]).toBe(tab("Second"));
+  });
+
+  it("disconnects the observer and clears its timer on unmount", () => {
     const { unmount } = setup(5000);
     unmount();
     expect(vi.getTimerCount()).toBe(0);
+    expect(disconnects).toBeGreaterThan(0);
+  });
+});
+
+describe("Showcase structure", () => {
+  it("drops extras and warns when items and panels differ in length", () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { container } = render(<Showcase label="Steps" items={items} panels={panels.slice(0, 2)} layout="cards" />);
+    expect(screen.getAllByRole("tab")).toHaveLength(2);
+    expect(container.querySelectorAll('[role="tabpanel"]')).toHaveLength(2);
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
+  });
+
+  it("stays stacked, with no phone row, when steps are not three", () => {
+    const four = [...items, { id: "d", title: "Fourth", body: "Fourth line" }];
+    render(<Showcase label="Steps" items={four} panels={[...panels, <p key="d">D</p>]} layout="steps" />);
+    expect(screen.getByRole("tablist").className).not.toContain("grid-cols-3");
+    expect(screen.getAllByText("First line")).toHaveLength(1);
+  });
+
+  it("ignores arrows with a modifier held", () => {
+    setup();
+    fireEvent.keyDown(tab("First"), { key: "ArrowRight", altKey: true });
+    expect(selected()[0]).toBe(tab("First"));
+  });
+
+  it("makes a panel with nothing focusable reachable", () => {
+    const { container } = setup();
+    expect(container.querySelectorAll('[role="tabpanel"]')[0].getAttribute("tabindex")).toBe("0");
   });
 });

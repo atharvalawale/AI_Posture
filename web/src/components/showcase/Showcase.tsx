@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode, RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useShowcase } from "./useShowcase";
 
 export type ShowcaseItem = { id: string; title: string; body: string; icon?: ReactNode; note?: string };
@@ -14,24 +14,48 @@ type Props = {
   className?: string;
 };
 
+const FOCUSABLE = 'a[href], button, input, select, textarea, video[controls], [tabindex]:not([tabindex="-1"])';
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /** A list of items beside one panel. The active item is lifted and its panel shows; hover, tap, focus and arrow keys all change it. */
-export function Showcase({ label, items, panels, layout, autoAdvanceMs, className = "" }: Props) {
-  const { active, tabProps, tabId, panelId, rootRef } = useShowcase(items.length, { autoAdvanceMs });
+export function Showcase({ label, items: allItems, panels: allPanels, layout, autoAdvanceMs, className = "" }: Props) {
+  // Tabs and panels come from one count, so a mismatch can never leave a dangling aria-controls.
+  const count = Math.min(allItems.length, allPanels.length);
+  const items = allItems.slice(0, count);
+  const panels = allPanels.slice(0, count);
+  if (process.env.NODE_ENV !== "production" && allItems.length !== allPanels.length) {
+    console.error(`Showcase "${label}": ${allItems.length} items but ${allPanels.length} panels. Extra entries are dropped.`);
+  }
+  const { active, holdProps, tabProps, tabId, panelId, rootRef } = useShowcase(count, { autoAdvanceMs });
+  const activePanel = useRef<HTMLDivElement | null>(null);
+  // WAI-ARIA: a panel with nothing focusable inside takes tabindex 0 so keyboard users can reach its content.
+  const [panelNeedsStop, setPanelNeedsStop] = useState(false);
+  useEffect(() => {
+    setPanelNeedsStop(!activePanel.current?.querySelector(FOCUSABLE));
+  }, [active]);
+  // Phone row is horizontal. From 640 px the steps stack, so the keys that matter are vertical.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
   // Under 640 px the steps fold into one row of titles. That only fits three, so any other count stays a stacked list.
   const row = layout === "steps" && items.length === 3;
 
   return (
     <div
       ref={rootRef as RefObject<HTMLDivElement>}
+      {...holdProps}
       className={`grid items-start gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 ${className}`}
     >
       <div className="min-w-0">
         <div
           role="tablist"
           aria-label={label}
-          aria-orientation={row ? undefined : "vertical"}
+          aria-orientation={row && !wide ? "horizontal" : "vertical"}
           className={row ? "grid grid-cols-3 gap-2 sm:grid-cols-1 sm:gap-3" : "grid gap-3"}
         >
           {items.map((item, i) => {
@@ -41,8 +65,8 @@ export function Showcase({ label, items, panels, layout, autoAdvanceMs, classNam
                 key={item.id}
                 type="button"
                 {...tabProps(i)}
-                className={`flex min-h-11 w-full cursor-pointer items-start gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
-                  row ? "items-center justify-center px-3 py-2 sm:items-start sm:justify-start sm:px-5 sm:py-4" : "px-5 py-4"
+                className={`flex min-h-11 w-full cursor-pointer gap-4 rounded-xl border text-left transition-[background-color,border-color,box-shadow] duration-200 ${focus} ${
+                  row ? "items-center justify-center px-3 py-2 sm:items-start sm:justify-start sm:px-5 sm:py-4" : "items-start px-5 py-4"
                 } ${
                   on
                     ? "border-line bg-surface shadow-[0_8px_24px_-12px_rgb(0_0_0/0.25)]"
@@ -82,8 +106,10 @@ export function Showcase({ label, items, panels, layout, autoAdvanceMs, classNam
               role="tabpanel"
               id={panelId(i)}
               aria-labelledby={tabId(i)}
+              ref={on ? activePanel : undefined}
+              tabIndex={on && panelNeedsStop ? 0 : undefined}
               inert={!on}
-              className={`col-start-1 row-start-1 transition-opacity duration-300 ${on ? "opacity-100" : "invisible opacity-0"}`}
+              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-opacity duration-300 ${on ? "opacity-100" : "invisible opacity-0"}`}
             >
               {panel}
             </div>

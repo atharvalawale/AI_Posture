@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
 
 type Opts = { autoAdvanceMs?: number; initial?: number; idPrefix?: string };
 
@@ -22,12 +22,28 @@ export function useShowcase(count: number, opts: Opts = {}) {
   const { autoAdvanceMs, initial = 0, idPrefix } = opts;
   const generated = useId();
   const prefix = idPrefix ?? generated;
-  const [active, setActive] = useState(initial);
+  const [rawActive, setActive] = useState(initial);
+  // Held while the pointer or focus is inside the root. Pauses the timer without counting as a touch.
+  const [held, setHeld] = useState(false);
+  const active = Math.min(rawActive, Math.max(count - 1, 0));
   const [touched, setTouched] = useState(false);
   const [visible, setVisible] = useState(false);
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLElement | null>(null);
   const tabs = useRef<(HTMLElement | null)[]>([]);
+
+  const holdProps = {
+    onPointerEnter: (e: PointerEvent) => {
+      if (e.pointerType === "mouse") setHeld(true);
+    },
+    onPointerLeave: (e: PointerEvent) => {
+      if (e.pointerType === "mouse") setHeld(false);
+    },
+    onFocusCapture: () => setHeld(true),
+    onBlurCapture: (e: FocusEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHeld(false);
+    },
+  };
 
   const select = useCallback((i: number) => {
     setTouched(true);
@@ -43,10 +59,10 @@ export function useShowcase(count: number, opts: Opts = {}) {
   }, [autoAdvanceMs]);
 
   useEffect(() => {
-    if (autoAdvanceMs === undefined || reduced || touched || !visible || count < 2) return;
-    const id = window.setTimeout(() => setActive((a) => (a + 1) % count), autoAdvanceMs);
+    if (autoAdvanceMs === undefined || reduced || touched || held || !visible || count < 2) return;
+    const id = window.setTimeout(() => setActive((a) => (Math.min(a, count - 1) + 1) % count), autoAdvanceMs);
     return () => window.clearTimeout(id);
-  }, [autoAdvanceMs, reduced, touched, visible, count, active]);
+  }, [autoAdvanceMs, reduced, touched, held, visible, count, active]);
 
   const tabId = (i: number) => `${prefix}-tab-${i}`;
   const panelId = (i: number) => `${prefix}-panel-${i}`;
@@ -63,6 +79,7 @@ export function useShowcase(count: number, opts: Opts = {}) {
       if (e.pointerType === "mouse") select(i);
     },
     onKeyDown: (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
       const to =
         e.key === "ArrowRight" || e.key === "ArrowDown"
           ? (i + 1) % count
@@ -85,5 +102,5 @@ export function useShowcase(count: number, opts: Opts = {}) {
 
   const panelProps = { role: "tabpanel" as const, id: panelId(active), "aria-labelledby": tabId(active) };
 
-  return { active, select, touched, tabProps, panelProps, tabId, panelId, rootRef: rootRef as RefObject<HTMLElement | null> };
+  return { active, select, touched, holdProps, tabProps, panelProps, tabId, panelId, rootRef: rootRef as RefObject<HTMLElement | null> };
 }
