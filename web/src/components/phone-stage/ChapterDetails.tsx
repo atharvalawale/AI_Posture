@@ -34,7 +34,7 @@ type Line = { label: string; value: string };
 // What the summary and plan screens show, in words. Sample data, so it mirrors the phone exactly.
 const SUMMARY: Line[] = [
   { label: "Form score", value: "92, up 6 from Monday" },
-  { label: "Deepest knee bend", value: "96°" },
+  { label: "Deepest knee bend", value: "95°" },
   { label: "Report", value: "Sent to your physio" },
 ];
 

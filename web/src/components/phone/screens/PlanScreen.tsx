@@ -2,12 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
-const ITEMS = [
-  { name: "Squats", dose: "3 sets of 10", img: "/images/home/plan-squats.webp" },
-  { name: "Hamstring stretch", dose: "3 holds of 30 seconds", img: "/images/home/plan-hamstring-stretch.webp" },
-  { name: "Split squats", dose: "2 sets of 8 each leg", img: "/images/home/plan-split-squats.webp" },
-];
+import { PLAN_ITEMS } from "@/lib/sample";
 
 /** Today's plan: the exercises the physio set, with a note from them. Squats tick off when the screen shows. */
 export function PlanScreen({ active = true }: { active?: boolean }) {
@@ -26,13 +21,13 @@ export function PlanScreen({ active = true }: { active?: boolean }) {
     <div className="flex h-full flex-col bg-bg px-4 pb-4 pt-[44px] text-text">
       <div className="flex items-center justify-between">
         <p className="pl-1 text-[13px] text-muted">Tuesday</p>
-        <Image src="/images/avatars/riya.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
+        <Image src="/images/avatars/maya.webp" alt="" width={32} height={32} unoptimized className="h-8 w-8 rounded-full object-cover" />
       </div>
-      <p className="mt-2.5 px-1 text-[26px] font-semibold leading-[1.1] tracking-[-0.02em]">Good morning, Riya</p>
+      <p className="mt-2.5 px-1 text-[26px] font-semibold leading-[1.1] tracking-[-0.02em]">Good morning, Maya</p>
       <p className="mt-1.5 px-1 text-sm text-muted">Week 3 of your knee recovery plan</p>
 
       <ul className="mt-4 grid gap-2">
-        {ITEMS.map((item, i) => {
+        {PLAN_ITEMS.map((item, i) => {
           const checked = i === 0 && done;
           return (
             <li key={item.name} className="flex items-center gap-3 rounded-[14px] border border-line bg-surface p-2.5 pr-3">

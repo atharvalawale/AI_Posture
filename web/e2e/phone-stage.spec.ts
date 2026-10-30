@@ -60,10 +60,10 @@ test("3D phone loads and the scroll story walks through the three screens", asyn
 
   await scrollStory(page, 0.5);
   await expect(title("Session complete")).toBeVisible();
-  await expect(title("Good morning, Riya")).toHaveCount(0);
+  await expect(title("Good morning, Maya")).toHaveCount(0);
 
   await scrollStory(page, 0.9);
-  await expect(title("Good morning, Riya")).toBeVisible();
+  await expect(title("Good morning, Maya")).toBeVisible();
   await expect(title("Session complete")).toHaveCount(0);
 });
 

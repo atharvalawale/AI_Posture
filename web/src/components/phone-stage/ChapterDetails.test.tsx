@@ -9,7 +9,7 @@ afterEach(cleanup);
 const text = (el: Element) => (el.textContent ?? "").replace(/\s+/g, " ").toLowerCase();
 
 // The facts the details put in words. Each one must also be on the phone screen they describe.
-const SUMMARY_FACTS = ["92", "up 6 from monday", "deepest knee bend", "96°", "sent to your physio"];
+const SUMMARY_FACTS = ["92", "up 6 from monday", "deepest knee bend", "95°", "sent to your physio"];
 const PLAN_FACTS = ["week 3", "knee", "split squats", "go slow on the way down"];
 
 describe("ChapterNote", () => {

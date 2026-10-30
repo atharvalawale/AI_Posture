@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,6 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -104,11 +105,41 @@ describe("SummaryScreen", () => {
   });
 });
 
+describe("SummaryScreen scroll fill", () => {
+  it("counts the score and fills the bars as the story scrolls", () => {
+    const progress = { current: 0.33 };
+    const listeners = new Set<() => void>();
+    const story = {
+      progress,
+      onProgress: (fn: () => void) => {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      },
+    };
+    const { container } = render(<SummaryScreen story={story} />);
+    expect(screen.getByText("0")).toBeInTheDocument();
+    const bars = [...container.querySelectorAll<HTMLElement>("i")];
+    expect(bars.every((b) => b.style.transform === "scaleY(0)")).toBe(true);
+
+    progress.current = 0.495;
+    act(() => listeners.forEach((fn) => fn()));
+    const filled = bars.filter((b) => b.style.transform === "scaleY(1)").length;
+    expect(filled).toBeGreaterThan(0);
+    expect(filled).toBeLessThan(bars.length);
+
+    progress.current = 0.66;
+    act(() => listeners.forEach((fn) => fn()));
+    expect(screen.getByText("92")).toBeInTheDocument();
+    expect(bars.every((b) => b.style.transform === "scaleY(1)")).toBe(true);
+  });
+});
+
 describe("PlanScreen", () => {
   it("lists the exercises", () => {
     render(<PlanScreen />);
     for (const name of ["Squats", "Hamstring stretch", "Split squats"]) expect(screen.getByText(name)).toBeInTheDocument();
-    expect(screen.getByText("Good morning, Riya")).toBeInTheDocument();
+    expect(screen.getByText("Good morning, Maya")).toBeInTheDocument();
+    expect(document.querySelector('img[src*="maya.webp"]')).not.toBeNull();
   });
 });
 
