@@ -56,8 +56,8 @@ export function RepBars({ depths, target, activeRep = null, onRep, direction = "
             const bar = (
               <span
                 data-bar
-                className={`block w-full rounded-t-md transition-opacity ${reached ? "bg-accent" : "bg-line"} ${
-                  activeRep !== null && activeRep !== i ? "opacity-60" : ""
+                className={`block w-full rounded-t-md transition-opacity ${reached ? "bg-accent" : "bg-muted/35"} ${
+                  activeRep === null ? "" : activeRep === i ? "shadow-[inset_0_0_0_2px_var(--text)]" : "opacity-40"
                 }`}
                 style={{ height: `${heightOf(depth) * 100}%` }}
               />
@@ -86,7 +86,12 @@ export function RepBars({ depths, target, activeRep = null, onRep, direction = "
         {depths.map((depth, i) => {
           const reached = isReached(depth, target, direction);
           return (
-            <span key={i} className={`${COLUMN} text-center text-[15px] tabular-nums ${reached ? "text-text" : "text-muted"}`}>
+            <span
+              key={i}
+              className={`${COLUMN} text-center text-[15px] tabular-nums ${reached || activeRep === i ? "text-text" : "text-muted"} ${
+                activeRep === i ? "font-semibold" : ""
+              }`}
+            >
               {Math.round(depth)}°
             </span>
           );
