@@ -28,16 +28,18 @@ async function scrollStory(page: Page, p: number, px = 0) {
   );
 }
 
-test("reduced motion: no 3D, the 2D phone is face-on and not pinned", async ({ browser }) => {
+test("reduced motion: the 3D phone shows, holds still at its rest angle, and the stage does not pin", async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
   try {
     await page.goto("/");
-    const phone = page.locator('[data-phone="2d"]');
-    await expect(phone).toBeVisible();
-    await page.waitForTimeout(1500);
-    await expect(page.locator("canvas[data-engine]")).toHaveCount(0);
-    expect(await phone.evaluate((el) => getComputedStyle(el).transform)).toBe("none");
+    await expect(page.locator('[data-phone="3d"]')).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+    await expect(page.locator('[data-phone="2d"]')).toHaveCount(0);
+    // Held still: two frames a second apart draw the same phone.
+    const canvas = page.locator("[data-phone-stage] canvas[data-engine]");
+    const before = await canvas.screenshot();
+    await page.waitForTimeout(1000);
+    expect((await canvas.screenshot()).equals(before)).toBe(true);
     await expect(page.locator(".pin-spacer")).toHaveCount(0);
     await expect(page.locator("[data-readout-value]")).toBeVisible();
   } finally {
@@ -168,7 +170,7 @@ test("scrubbing the phone changes the angle readout", async ({ page }) => {
 });
 
 test("a tap near the hip switches the readout to Hip", async ({ browser }) => {
-  // The 2D phone is face-on under reduced motion, so the screen geometry is exact.
+  // Under reduced motion the phone holds still at its rest angle, so the screen does not move under the tap.
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();
   try {
@@ -257,8 +259,8 @@ test("the chapter rail lands on the summary with the score and every bar filled"
   expect(scales.every((t) => t === "scaleY(1)")).toBe(true);
 });
 
-// The layout tests need no 3D. Without WebGL 2 the stage uses the 2D phone (as on a device that
-// fails the 3D check), which is far lighter, so these tests do not slow the software WebGL of the
+// The layout tests need no 3D. Without WebGL 2 the stage uses the 2D phone (as on a browser that
+// has no WebGL 2), which is far lighter, so these tests do not slow the software WebGL of the
 // 3D tests running beside them.
 test.describe("stage layout", () => {
   test.beforeEach(async ({ context }) => {

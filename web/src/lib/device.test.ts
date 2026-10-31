@@ -1,29 +1,27 @@
-// @vitest-environment node
-import { describe, expect, it } from "vitest";
-import { canUse3D } from "./device";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { hasWebGL2, resetWebGL2Probe } from "./device";
 
-describe("canUse3D", () => {
-  const ok = { webgl2: true, reducedMotion: false };
+afterEach(() => {
+  vi.restoreAllMocks();
+  resetWebGL2Probe();
+});
 
-  it("accepts a capable device", () => {
-    expect(canUse3D(ok)).toBe(true);
-    expect(canUse3D({ ...ok, deviceMemory: 4, cores: 4 })).toBe(true);
-    expect(canUse3D({ ...ok, deviceMemory: 8, cores: 12 })).toBe(true);
+describe("hasWebGL2", () => {
+  it("is true when the browser gives a WebGL 2 context, and releases the probe", () => {
+    const loseContext = vi.fn();
+    const gl = { getExtension: () => ({ loseContext }) };
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => gl as never);
+    expect(hasWebGL2()).toBe(true);
+    expect(loseContext).toHaveBeenCalled();
   });
 
-  it("rejects devices without WebGL2", () => {
-    expect(canUse3D({ ...ok, webgl2: false })).toBe(false);
-  });
-
-  it("rejects low memory", () => {
-    expect(canUse3D({ ...ok, deviceMemory: 2 })).toBe(false);
-  });
-
-  it("rejects few cores", () => {
-    expect(canUse3D({ ...ok, cores: 2 })).toBe(false);
-  });
-
-  it("rejects reduced motion", () => {
-    expect(canUse3D({ ...ok, reducedMotion: true })).toBe(false);
+  it("is false without WebGL 2, or when asking for it throws", () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => null);
+    expect(hasWebGL2()).toBe(false);
+    resetWebGL2Probe();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    expect(hasWebGL2()).toBe(false);
   });
 });

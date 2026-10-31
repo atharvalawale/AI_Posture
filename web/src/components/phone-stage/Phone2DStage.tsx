@@ -4,13 +4,13 @@ import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { PhoneFrame, type ScreenId } from "@/components/phone/PhoneFrame";
 import { ScreenStack, type StoryProgress } from "@/components/phone/ScreenStack";
 import type { LiveSession } from "@/lib/pose";
-import { introRunning, introTilt, swayAt } from "./tilt";
+import { REST_TILT, introRunning, introTilt, swayAt } from "./tilt";
 import type { PhoneLean } from "./usePhoneGestures";
 
 /**
  * The 2D phone for devices without 3D (and while the 3D phone loads). Turns in as the page loads,
  * sways with the scroll story through a CSS perspective tilt, and leans toward the cursor.
- * `still` keeps it face-on (reduced motion).
+ * `still` holds it at the rest angle, with no turn-in, sway or lean (reduced motion).
  */
 export function Phone2DStage({
   progress,
@@ -40,7 +40,13 @@ export function Phone2DStage({
   // A layout effect, so the first paint already has the phone turned where the intro and the scroll put it.
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || still) return;
+    if (!el) return;
+    if (still) {
+      el.style.transform = tiltTransform(REST_TILT.x, REST_TILT.y);
+      return () => {
+        el.style.transform = "";
+      };
+    }
     let raf = 0;
     const apply = () => {
       raf = 0;
@@ -49,8 +55,7 @@ export function Phone2DStage({
       const sway = swayAt(progress.current);
       const x = intro.x + sway.x + lean.state.current.x;
       const y = intro.y + sway.y + lean.state.current.y;
-      // CSS rotateX runs the other way round from three.js, rotateY the same way.
-      el.style.transform = `perspective(1800px) rotateX(${(-x).toFixed(4)}rad) rotateY(${y.toFixed(4)}rad)`;
+      el.style.transform = tiltTransform(x, y);
       // Every frame until the intro ends. After that, only when scroll or lean changes.
       if (introRunning(elapsed)) schedule();
     };
@@ -77,4 +82,9 @@ export function Phone2DStage({
       </PhoneFrame>
     </div>
   );
+}
+
+/** A CSS tilt for a rotation in radians, three.js convention. CSS rotateX runs the other way round, rotateY the same way. */
+function tiltTransform(x: number, y: number) {
+  return `perspective(1800px) rotateX(${(-x).toFixed(4)}rad) rotateY(${y.toFixed(4)}rad)`;
 }

@@ -20,7 +20,7 @@ import {
 import { HeroCopy } from "@/components/home/HeroCopy";
 import { LiveReadout } from "@/components/home/LiveReadout";
 import { PHONE_H, PHONE_W, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
-import { canUse3D, readDeviceEnv } from "@/lib/device";
+import { hasWebGL2 } from "@/lib/device";
 import { LiveSession, coverBox, loadPoseClip, nearestJoint, type PoseClip } from "@/lib/pose";
 import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
 import { ChapterRail } from "./ChapterRail";
@@ -103,10 +103,11 @@ function usePhoneWidth(box: RefObject<HTMLDivElement | null>): number | null {
  * today's plan, and both side columns cross-fade with it: the headline gives way to each chapter's
  * note, and the readout to each screen's details. Below 1024 px the copy scrolls away first, then
  * the phone and the readout pin together (side by side from 640 px, stacked below). Uses the 3D
- * phone when the device can take it, and the 2D phone otherwise (and while the 3D code loads).
- * With reduced motion, or a viewport too short for the stack that pins (see `useScrollStory`): no
- * pin and no chapter rail (and with reduced motion no tilt); the summary and the plan follow as
- * still sections, and scrub, tap and keys still work. `data-pinned` on the wrapper carries that
+ * phone whenever the browser has WebGL 2, and the 2D phone only while the 3D code loads, without
+ * WebGL 2, or if the 3D phone fails. With reduced motion, or a viewport too short for the stack that
+ * pins (see `useScrollStory`): no pin and no chapter rail (and with reduced motion the phone holds
+ * still at its rest angle); the summary and the plan follow as still sections, and scrub, tap and
+ * keys still work. `data-pinned` on the wrapper carries that
  * decision to the CSS.
  */
 export function HomeStage() {
@@ -117,7 +118,7 @@ export function HomeStage() {
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
   const desktop = useMedia(DESKTOP, true);
-  const can3D = useSyncExternalStore(noop, () => canUse3D(readDeviceEnv()), () => false);
+  const can3D = useSyncExternalStore(noop, hasWebGL2, () => false);
   const { resolvedTheme } = useTheme();
   const [ready3D, setReady3D] = useState(false);
   // The 2D phone stays under the 3D one until that has faded in, so the hand-over never shows a gap.
@@ -133,7 +134,7 @@ export function HomeStage() {
   // measured, it scales in CSS, so the server already renders it visible at its final size.
   const fitted = usePhoneWidth(boxRef);
   const width = fitted ?? PHONE_W;
-  const use3D = can3D && !failed3D && !reduced;
+  const use3D = can3D && !failed3D;
   // One clock for the turn-in, so the 3D phone takes over from the 2D one mid-turn without restarting it.
   const [introStart] = useState(() => performance.now());
 
@@ -259,6 +260,7 @@ export function HomeStage() {
                         dark={resolvedTheme === "dark"}
                         lean={lean}
                         introStart={introStart}
+                        still={reduced}
                         onReady={() => setReady3D(true)}
                       />
                     </Fallback>
