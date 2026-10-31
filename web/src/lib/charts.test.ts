@@ -23,6 +23,7 @@ const block = (value: unknown) => "Intro paragraph.\n\n```chart\n" + json(value)
 describe("parseChartSpec", () => {
   it("accepts a valid spec and fills defaults", () => {
     const parsed = parseChartSpec(json({ ...spec, unit: undefined, max: undefined }));
+    if (parsed.type !== "bars") throw new Error("A spec without a type is a bar chart");
     expect(parsed.unit).toBe("");
     expect(parsed.bars).toHaveLength(2);
   });
@@ -144,5 +145,66 @@ describe("charts in Markdown", () => {
 
   it("fails when a chart cites a source the post does not list", async () => {
     await expect(renderMarkdown(block(spec), { ...options, sourceUrls: [] })).rejects.toThrow(/must also be listed in the post's sources/);
+  });
+});
+
+describe("figure types", () => {
+  const sources = [{ name: "Study", url: SOURCE }];
+  const render = (value: unknown) => renderChart(parseChartSpec(json(value)));
+
+  it("stats print each number with its unit and label, as text", () => {
+    const html = render({ type: "stats", title: "Physios", stats: [{ value: 0.36, label: "Physios for every 10,000 people in India" }, { value: 1, unit: "weeks", label: "A week" }], sources });
+    expect(html).toContain(">0.36</p>");
+    expect(html).toContain(">1 week</p>");
+    expect(html).toContain("Physios for every 10,000 people in India");
+    expect(html).toContain("sm:grid-cols-2");
+  });
+
+  it("meters draw a track and a share out of 100", () => {
+    const html = render({ type: "meters", title: "Returned", meters: [{ label: "Pre-injury sport", value: 40 }], sources });
+    expect(html).toContain('class="fill-accent/15"');
+    expect(html).toContain('width="40%"');
+    expect(html).toContain(">40%</text>");
+    expect(() => parseChartSpec(json({ type: "meters", title: "x", meters: [{ label: "a", value: 140 }], sources }))).toThrow();
+  });
+
+  it("ranges span from low to high on a 0 to 100% axis by default", () => {
+    const html = render({ type: "ranges", title: "Pain", unit: "%", decimals: 1, ranges: [{ label: "Neck pain", low: 20.3, high: 76.9 }], sources });
+    expect(html).toContain('x="20.3%"');
+    expect(html).toContain('width="56.6%"');
+    expect(html).toContain(">20.3% to 76.9%</text>");
+    expect(html).toContain(">100%</text>");
+    expect(() => parseChartSpec(json({ type: "ranges", title: "x", ranges: [{ label: "a", low: 5, high: 2 }], sources }))).toThrow(/low 5 is above high 2/);
+  });
+
+  it("timelines name the unit once and allow an open-ended last phase", () => {
+    const html = render({
+      type: "timeline",
+      title: "Recovery",
+      unit: "months",
+      max: 12,
+      phases: [
+        { label: "Early", from: 0, to: 3 },
+        { label: "Return to sport", from: 9 },
+      ],
+      sources,
+    });
+    expect(html).toContain(">0 to 3 months</text>");
+    expect(html).toContain(">From 9 months</text>");
+    expect(html).toContain('x="75%"');
+    expect(describeChart(parseChartSpec(json({ type: "timeline", title: "R", unit: "weeks", phases: [{ label: "A", from: 0, to: 1 }, { label: "B", from: 1, to: 2 }], sources })))).toBe(
+      "R. A: 0 to 1 week. B: 1 to 2 weeks.",
+    );
+    expect(() => parseChartSpec(json({ type: "timeline", title: "x", unit: "weeks", phases: [{ label: "a", from: 0, to: 2 }, { label: "b", from: 4 }], sources }))).toThrow(
+      /open-ended phase needs max/,
+    );
+  });
+
+  it("row labels stay short enough to sit beside their value on a phone", () => {
+    expect(() => parseChartSpec(json({ type: "meters", title: "x", meters: [{ label: "x".repeat(23), value: 1 }], sources }))).toThrow();
+  });
+
+  it("checks rounding on every type", () => {
+    expect(() => parseChartSpec(json({ type: "stats", title: "x", decimals: 0, stats: [{ value: 9.7, label: "a" }], sources }))).toThrow(/would be rounded/);
   });
 });
