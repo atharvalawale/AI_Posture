@@ -28,8 +28,9 @@ type PageSeo = {
 export function pageMetadata({ title, description, path, openGraph, image }: PageSeo): Metadata {
   const card = image ? { ...shareImage, ...image } : shareImage;
   return {
-    title,
-    description,
+    // Only when set: an explicit undefined would replace the layout's default title and description.
+    ...(title && { title }),
+    ...(description && { description }),
     alternates: { canonical: path },
     openGraph: { ...baseOpenGraph, url: path, images: [card], ...openGraph },
     twitter: { card: "summary_large_image", images: [card] },

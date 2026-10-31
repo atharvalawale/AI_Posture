@@ -20,7 +20,7 @@ export function LiveScreen({ active = true, session }: { active?: boolean; sessi
     // The poster is also the background, so the screen still shows the squat where the video is hidden (without JavaScript).
     <div
       className="absolute inset-0 bg-[#1c2224] bg-cover bg-center text-[#EEF2F1]"
-      style={{ backgroundImage: "url(/media/squat-poster.jpg)" }}
+      style={{ backgroundImage: "url(/media/squat-poster.webp)" }}
       data-playing={playing}
     >
       <video
@@ -28,7 +28,7 @@ export function LiveScreen({ active = true, session }: { active?: boolean; sessi
         data-pose-video
         className="absolute inset-0 h-full w-full object-cover"
         src="/media/squat-720.mp4"
-        poster="/media/squat-poster.jpg"
+        poster="/media/squat-poster.webp"
         muted
         loop
         playsInline

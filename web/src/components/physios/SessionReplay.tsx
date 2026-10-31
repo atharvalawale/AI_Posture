@@ -65,7 +65,7 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
     <div
       className={`relative overflow-hidden ${footage ? "bg-[#111] bg-cover" : "flex flex-col bg-surface-2"} ${className}`}
       // The poster is also the background, so the replay still shows Maya where the video is hidden (without JavaScript).
-      style={footage ? { backgroundImage: "url(/media/squat-poster.jpg)", backgroundPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` } : undefined}
+      style={footage ? { backgroundImage: "url(/media/squat-poster.webp)", backgroundPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` } : undefined}
     >
       {/* On phones the footage takes the same 4:3 as a photo, so the rep chart right under the replay stays put when the
           physio switches patients. From 640 px the replay stretches beside the details instead. */}
@@ -77,7 +77,7 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
         className={`absolute inset-0 h-full w-full object-cover ${footage ? "" : "invisible"}`}
         style={{ objectPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` }}
         src="/media/squat-720.mp4"
-        poster="/media/squat-poster.jpg"
+        poster="/media/squat-poster.webp"
         muted
         loop
         playsInline

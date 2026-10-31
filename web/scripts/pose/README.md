@@ -31,6 +31,6 @@ If you change the kept landmarks, update `LANDMARKS` in `src/lib/pose/clip.ts` t
 ## Replacing the clip
 
 1. Encode the new video: `ffmpeg -i in.mp4 -an -c:v libx264 -preset slow -crf 28 -pix_fmt yuv420p -movflags +faststart public/media/squat-720.mp4` (keep it under 3 MB).
-2. Extract the poster: `ffmpeg -ss 0.5 -i public/media/squat-720.mp4 -frames:v 1 poster.png`, then save it as `public/media/squat-poster.jpg` at quality 80.
+2. Extract the poster: `ffmpeg -ss 0.5 -i public/media/squat-720.mp4 -frames:v 1 poster.png`, then save it as `public/media/squat-poster.webp` at quality 78.
 3. Run the script above and `npx vitest run src/lib/pose` (the tests check the knee angle range and rep count, so update them for a different exercise).
 4. Record the source in `credits/media.md`.

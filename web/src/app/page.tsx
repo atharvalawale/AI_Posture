@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 import { BothSides } from "@/components/home/BothSides";
 import { ClosingCta } from "@/components/home/ClosingCta";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -26,6 +27,8 @@ const structuredData = {
 };
 
 export default function HomePage() {
+  // The squat poster on the hero phone is the largest paint on a phone, so fetch it first.
+  preload("/media/squat-poster.webp", { as: "image", fetchPriority: "high" });
   return (
     <>
       <JsonLd data={structuredData} />

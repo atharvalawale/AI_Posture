@@ -42,7 +42,7 @@ describe("LiveScreen", () => {
     await wait(150);
 
     const video = container.querySelector("video")!;
-    expect(video).toHaveAttribute("poster", "/media/squat-poster.jpg");
+    expect(video).toHaveAttribute("poster", "/media/squat-poster.webp");
     expect(video.muted).toBe(true);
     expect(container.querySelector("[data-playing]")).toHaveAttribute("data-playing", "false");
     expect(ctx.clearRect).toHaveBeenCalled();

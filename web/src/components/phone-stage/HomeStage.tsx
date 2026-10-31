@@ -24,6 +24,7 @@ import { hasWebGL2 } from "@/lib/device";
 import { LiveSession, coverBox, loadPoseClip, nearestJoint, type PoseClip } from "@/lib/pose";
 import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
 import { ChapterRail } from "./ChapterRail";
+import { engage, isEngaged, subscribeEngaged } from "./engagement";
 import { phonePointToScreen } from "./gestures";
 import { Phone2DStage } from "./Phone2DStage";
 import { StillChapters } from "./StillChapters";
@@ -118,7 +119,11 @@ export function HomeStage() {
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
   const desktop = useMedia(DESKTOP, true);
-  const can3D = useSyncExternalStore(noop, hasWebGL2, () => false);
+  // Below desktop the 3D phone waits for the first touch, scroll or key (see ./engagement). Until then the
+  // 2D phone shows, and the page skips the WebGL probe and the 3D download.
+  const engaged = useSyncExternalStore(subscribeEngaged, isEngaged, () => false);
+  const want3D = desktop || engaged;
+  const can3D = useSyncExternalStore(noop, want3D ? hasWebGL2 : () => false, () => false);
   const { resolvedTheme } = useTheme();
   const [ready3D, setReady3D] = useState(false);
   // The 2D phone stays under the 3D one until that has faded in, so the hand-over never shows a gap.
@@ -261,7 +266,11 @@ export function HomeStage() {
                         lean={lean}
                         introStart={introStart}
                         still={reduced}
-                        onReady={() => setReady3D(true)}
+                        onReady={() => {
+                          // Keeps the 3D phone if the window later narrows below desktop.
+                          engage();
+                          setReady3D(true);
+                        }}
                       />
                     </Fallback>
                   </div>
