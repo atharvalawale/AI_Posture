@@ -1,132 +1,49 @@
+# FiixBE
 
----
+FiixBE helps patients do physiotherapy exercises at home. The phone camera tracks each rep, measures joint angles and reports the session to the physiotherapist.
 
-## 🧠 AI Exercise Posture Detection — Local Setup (FastAPI + MediaPipe + WebSocket)
+This repository holds the website, the pose backend and the pose analysis engine.
 
-This app uses your webcam to capture video, sends each frame to a FastAPI backend using WebSocket, and analyzes posture in real-time using **MediaPipe Pose**.
+## Project structure
 
----
+| Path | Contents |
+|---|---|
+| `web/` | The website at [fiixbee.com](https://fiixbee.com): marketing pages, blog and the web exercise session. Next.js 16, React 19, TypeScript, Tailwind CSS v4. |
+| `pose_backend/` | The FastAPI backend. It receives camera frames over WebSocket and returns pose landmarks, rep counts and scores. It also handles sign-in and session logs. |
+| `ai_engine/` | The pose analysis engine that the backend uses: MediaPipe pose detection, exercise definitions and scoring. |
+| `frontend/` | A webcam test page for the pose backend. Use it to test the backend without the website. |
+| `docs/` | Design specs and implementation plans. |
+| `requirements.txt` | Python dependencies for `pose_backend/` and `ai_engine/`. |
 
-## 📁 Project Structure
+## Website
 
-```
-ai-exercise-app/
-├── main.py                      # FastAPI backend
-├── requirements.txt             # Python dependencies
-├── ai_engine/
-│   ├── __init__.py
-│   └── pose_analyzer.py         # Pose detection logic using MediaPipe
-├── static/
-│   └── index.html               # WebSocket + webcam test client
-└── uploads/ (optional)          # Store frames or logs if needed
-```
+The website needs Node.js 24.
 
----
+1. Go to the `web/` folder.
+2. Run `npm install`.
+3. Copy `.env.example` to `.env.local` and fill in the values.
+4. Run `npm run dev`.
+5. Open http://localhost:3000.
 
-## 🛠️ Requirements
+`NEXT_PUBLIC_POSE_WS_URL` sets the pose backend that the web session uses. To use a local backend, set it to `ws://localhost:8000/ws/pose`.
 
-* Python 3.10 or 3.11 (❗**Do NOT use Python 3.13** — `mediapipe` doesn't support it yet)
-* pip
+`web/README.md` has the test commands and a map of the code.
 
----
+## Pose backend
 
-## ✅ Setup Instructions
+The backend needs Python 3.10. MediaPipe does not support Python 3.13.
 
-### 🔹 Step 1: Clone or Download the Project
+1. Create a virtual environment with Python 3.10 and activate it.
+2. From the repository root, run `pip install -r requirements.txt`.
+3. Create `pose_backend/.env` with `SECRET_KEY` and `GOOGLE_CLIENT_ID`.
+4. Go to the `pose_backend/` folder.
+5. Run `uvicorn app.main:app --reload`.
 
-```bash
-cd path/to/your/projects
-mkdir ai-exercise-app && cd ai-exercise-app
-# Add files: main.py, requirements.txt, ai_engine/ and static/
-```
+The backend listens on http://localhost:8000. The pose WebSocket is at `ws://localhost:8000/ws/pose`.
 
----
+To test the backend without the website, open `frontend/index.html` in a browser and allow camera access.
 
-### 🔹 Step 2: Create and Activate a Virtual Environment
+## Deployment
 
-```bash
-# Windows
-py -3.10 -m venv ai_posture_env
-.\ai_posture_env\Scripts\activate
-```
-
----
-
-### 🔹 Step 3: Install Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-If you're missing the file, create `requirements.txt`:
-
-```txt
-fastapi
-uvicorn
-mediapipe
-opencv-python
-websockets
-aiofiles
-python-multipart
-```
-
----
-
-### 🔹 Step 4: Start the Backend Server
-
-```bash
-uvicorn main:app --reload
-```
-
-Expected output:
-
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
----
-
-### 🔹 Step 5: Open the Frontend WebCam Client
-
-In your browser, open:
-
-```
-http://localhost:8000/static/index.html
-```
-
-* Allow camera access
-* It will capture a frame every 300ms, send it to backend, and receive landmark data
-
----
-
-## 📡 How It Works
-
-1. `index.html` accesses your webcam and sends frames via WebSocket
-2. `main.py` receives base64 frames, decodes them, and uses `pose_analyzer.py` for pose detection
-3. FastAPI sends back whether pose landmarks were detected
-
----
-
-## 🧪 Debug Tips
-
-* If the WebSocket closes immediately, check console logs in FastAPI
-* Add `print()` in your WebSocket handler to inspect incoming data
-* Make sure image data is base64-only (`data:image/jpeg;base64,...` → strip header)
-
----
-
-## 🚀 Next Steps
-
-* Display landmarks on frontend (using Canvas)
-* Integrate pose score or feedback (e.g., “raise arm higher”)
-* Stream from Android camera to backend (instead of browser)
-
----
-
-## 📞 Contact
-
-Built by Shreyas Jadhav 💪
-For posture-based AI feedback apps using Python, FastAPI, and ML.
-
----
-
+- The website deploys to Vercel, project `fiixbee`, from the `web/` folder.
+- The pose backend runs on Render at `ai-posture-backend.onrender.com`.
