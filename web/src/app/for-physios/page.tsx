@@ -3,9 +3,9 @@ import { ForPhysios } from "@/components/pages/ForPhysios";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "For physiotherapists",
+  title: "Remote patient monitoring for physiotherapists",
   description:
-    "Follow your patients' home exercise remotely. FiixBE measures every rep, scores form and brings each session back to you.",
+    "Home exercise program software for physiotherapists in India. FiixBE measures every rep your patients do at home and brings each session back to you.",
   path: "/for-physios",
 });
 

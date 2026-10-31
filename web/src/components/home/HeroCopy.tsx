@@ -15,7 +15,7 @@ export function HeroCopy({ className = "" }: { className?: string }) {
         See every degree of your recovery.
       </h1>
       <p className="mx-auto mt-6 max-w-[34rem] text-lg leading-relaxed text-pretty text-muted md:text-xl md:leading-relaxed lg:mx-0 lg:mt-5 lg:max-w-[30ch] lg:text-lg lg:leading-relaxed">
-        Your physiotherapist sets the plan. FiixBE watches every rep through your phone camera and reports back to them.
+        AI physiotherapy for your exercises at home. Your physiotherapist sets the plan, and FiixBE checks every rep through your phone camera.
       </p>
       <div className="mx-auto mt-9 flex max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row lg:mt-7 lg:flex-wrap lg:justify-start">
         <Button href="/session">Start your recovery</Button>

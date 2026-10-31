@@ -8,7 +8,13 @@ import { HomeStage } from "@/components/phone-stage/HomeStage";
 import { absoluteUrl, JsonLd, organization, pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = pageMetadata({ path: "/" });
+export const metadata: Metadata = pageMetadata({
+  // The root layout's title template only applies to pages below it, so the homepage names the brand itself.
+  title: "AI physiotherapy app for exercises at home | FiixBE",
+  description:
+    "FiixBE is an AI physiotherapy app for India. Your physiotherapist prescribes your exercises, and your phone camera checks every rep you do at home.",
+  path: "/",
+});
 
 // Google reads the site name from WebSite and the logo from Organization, on the homepage only.
 const structuredData = {

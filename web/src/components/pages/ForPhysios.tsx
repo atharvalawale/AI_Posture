@@ -17,8 +17,8 @@ export function ForPhysios() {
             </h1>
             <div>
               <p className={leadClass}>
-                Follow your patients&apos; home exercise remotely, with data you have never had before. Spend clinic
-                time on the patients who need your hands.
+                Prescribe a home exercise program and monitor it remotely, with every rep measured and scored. Spend
+                clinic time on the patients who need your hands.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button href="/contact">Become a founding partner</Button>

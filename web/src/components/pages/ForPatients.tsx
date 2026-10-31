@@ -45,8 +45,8 @@ export function ForPatients() {
               Recover at home, at your own pace.
             </h1>
             <p className={`mt-6 max-w-xl ${leadClass}`}>
-              The exercises your physiotherapist prescribes, with live guidance on every rep, in your own home. Your
-              phone camera is all you need.
+              Do the physiotherapy exercises your physiotherapist prescribes at home, with live AI guidance on every
+              rep. Your phone camera is all you need.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button href="/session">Try it on the web</Button>

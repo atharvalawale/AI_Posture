@@ -8,9 +8,14 @@ import { getAllPosts, type PostMeta } from "@/lib/blog";
 import { pageMetadata } from "@/lib/seo";
 
 const description =
-  "Researched guides on physiotherapy and recovery at home, from the FiixBE Clinical Team. Every article lists its sources.";
+  "Physiotherapy guides for recovery at home, from knee and hip replacement to ACL and rotator cuff injuries. Reviewed by a physiotherapist, with sources.";
 
-export const metadata: Metadata = pageMetadata({ title: "Blog", description, path: "/blog", openGraph: { title: "FiixBE blog" } });
+export const metadata: Metadata = pageMetadata({
+  title: "Physiotherapy and rehab guides",
+  description,
+  path: "/blog",
+  openGraph: { title: "FiixBE blog: physiotherapy and rehab guides" },
+});
 
 export default async function BlogPage() {
   const posts = await getAllPosts();

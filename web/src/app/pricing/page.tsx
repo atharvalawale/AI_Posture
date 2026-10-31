@@ -3,9 +3,9 @@ import { Pricing } from "@/components/pages/Pricing";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Pricing",
+  title: "Physiotherapy app pricing for clinics and patients",
   description:
-    "Clinic plans priced per clinic, not per patient, with a free basic plan for patients. The first 50 clinics get 3 months free.",
+    "Physiotherapy software priced per clinic, not per patient, with a free basic plan for patients. The first 50 clinics get 3 months free.",
   path: "/pricing",
 });
 

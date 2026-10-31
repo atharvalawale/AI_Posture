@@ -149,7 +149,8 @@ export function Pricing() {
             Clear plans. No surprises.
           </h1>
           <p className={`mt-6 max-w-xl ${leadClass}`}>
-            Pay per clinic, not per patient, and grow your practice without worrying about per-user costs.
+            Physiotherapy software priced per clinic, not per patient, so you can grow your practice without
+            worrying about per-user costs.
           </p>
           <div className="mt-10 flex flex-col gap-3 border-y border-line py-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[16px] text-balance">

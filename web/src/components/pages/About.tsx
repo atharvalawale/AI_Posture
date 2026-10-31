@@ -75,8 +75,8 @@ export function About() {
             Built from a simple frustration.
           </h1>
           <p className={`mt-6 max-w-xl ${leadClass}`}>
-            We watched family members struggle with physiotherapy at home. They did exercises the wrong way, skipped
-            sessions and never knew if they were getting better. So we built the tool we wished they had.
+            We watched family members struggle with their physiotherapy exercises at home. They did them the wrong
+            way, skipped sessions and never knew if they were getting better. So we built the tool we wished they had.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button href="/session">Try it on the web</Button>

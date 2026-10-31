@@ -32,7 +32,8 @@ export function SelectStep({ exercise, side, repsTarget, onChoose, onStart }: Pr
       <div>
         <h1 className="font-serif text-[40px] font-normal leading-[1.08] tracking-[-0.02em] md:text-[56px]">Choose your exercise</h1>
         <p className="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
-          Pick an exercise and set up your camera. FiixBE counts your reps and checks your form as you move.
+          Pick an exercise and set up your camera. FiixBE&apos;s AI counts your reps and checks your form as you move,
+          free in your browser.
         </p>
       </div>
 
