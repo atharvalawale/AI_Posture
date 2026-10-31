@@ -32,7 +32,7 @@ export function SessionFlow() {
   const cameraOn = (state.phase === "align" || state.phase === "live") && !failed;
   const camera = useCamera(cameraOn, state.facing, state.cameraRun);
 
-  usePoseSocket({
+  const pose = usePoseSocket({
     active: state.phase === "live" && !failed,
     url: wsUrl(WS_BASE, state.exercise, state.side, state.repsTarget),
     run: state.socketRun,
@@ -115,6 +115,7 @@ export function SessionFlow() {
       scores={state.scores}
       avgScore={latest?.session_avg_score ?? null}
       videoRef={videoRef}
+      pose={pose}
       stream={camera.stream}
       facing={state.facing}
       onSwitchCamera={switchCamera}

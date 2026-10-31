@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanCue, encodeFrame, parseServerMessage, retryDelayMs, scoreBand, wsUrl, type PoseUpdate } from "./protocol";
+import { cleanCue, encodeFrame, parseKeypoints, parseServerMessage, retryDelayMs, scoreBand, wsUrl, type PoseUpdate } from "./protocol";
 import { initialState, sessionReducer, summarize, type SessionState } from "./reducer";
 
 function update(partial: Partial<PoseUpdate>): PoseUpdate {
@@ -150,6 +150,23 @@ describe("protocol", () => {
     expect(parseServerMessage(JSON.stringify(update({ rep_count: 2 })))).toMatchObject({ rep_count: 2 });
     expect(parseServerMessage("not json")).toBeNull();
     expect(parseServerMessage('{"hello":1}')).toBeNull();
+  });
+
+  it("parses the keypoints sent with each frame", () => {
+    const keypoints = Array.from({ length: 33 }, (_, i) => [i / 100, 0.5, 0.9]);
+    const parsed = parseServerMessage(JSON.stringify({ ...update({ rep_count: 1 }), keypoints })) as PoseUpdate;
+    expect(parsed.rep_count).toBe(1);
+    expect(parsed.keypoints).toHaveLength(33);
+    expect(parsed.keypoints?.[11]).toEqual([0.11, 0.5, 0.9]);
+  });
+
+  it("reads missing, null or malformed keypoints as no person, and drops only bad landmarks", () => {
+    // An older server sends no keypoints at all; the rest of the message still counts.
+    expect(parseServerMessage(JSON.stringify(update({ rep_count: 3 })))).toMatchObject({ rep_count: 3, keypoints: null });
+    expect((parseServerMessage(JSON.stringify({ ...update({}), keypoints: null })) as PoseUpdate).keypoints).toBeNull();
+    expect((parseServerMessage(JSON.stringify({ ...update({}), keypoints: "x" })) as PoseUpdate).keypoints).toBeNull();
+    expect((parseServerMessage(JSON.stringify({ ...update({}), keypoints: [[1, "a", 1], null] })) as PoseUpdate).keypoints).toBeNull();
+    expect(parseKeypoints([[0.1, 0.2, 0.9], [0.3], null, [0.4, 0.5, 0.6, 7], [NaN, 0, 1]])).toEqual([[0.1, 0.2, 0.9], null, null, [0.4, 0.5, 0.6], null]);
   });
 
   it("uses attempt x 3 s retry delays", () => {

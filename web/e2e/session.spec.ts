@@ -28,6 +28,55 @@ function update(partial: Record<string, unknown>) {
   });
 }
 
+/**
+ * A person standing a little left of the frame's center, as the server sends it: all 33
+ * MediaPipe landmarks as [x, y, visibility]. The face and hands are barely visible, like a real
+ * frame, so they are not drawn. It stays left of center even when a phone crops the sides.
+ */
+function standingPose(cx = 0.43): number[][] {
+  const pose = Array.from({ length: 33 }, () => [cx, 0.15, 0.2]);
+  const body: Record<number, [number, number]> = {
+    0: [0, 0.15],
+    11: [0.035, 0.27],
+    12: [-0.035, 0.27],
+    13: [0.045, 0.4],
+    14: [-0.045, 0.4],
+    15: [0.05, 0.52],
+    16: [-0.05, 0.52],
+    23: [0.025, 0.55],
+    24: [-0.025, 0.55],
+    25: [0.025, 0.72],
+    26: [-0.025, 0.72],
+    27: [0.025, 0.88],
+    28: [-0.025, 0.88],
+    31: [0.04, 0.9],
+    32: [-0.04, 0.9],
+  };
+  for (const [i, [dx, y]] of Object.entries(body)) pose[Number(i)] = [Number((cx + dx).toFixed(3)), y, 0.99];
+  return pose;
+}
+
+/** Counts the skeleton canvas's drawn pixels in its left and right halves, and the teal line pixels. */
+function skeletonInk(page: Page) {
+  return page.locator("[data-live-skeleton]").evaluate((canvas: HTMLCanvasElement) => {
+    const { data, width, height } = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
+    let left = 0;
+    let right = 0;
+    let teal = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4;
+        if (data[i + 3] === 0) continue;
+        if (x < width / 2) left++;
+        else right++;
+        // #5ED6C6, the demo skeleton's line color.
+        if (data[i + 3] === 255 && Math.abs(data[i] - 94) < 8 && Math.abs(data[i + 1] - 214) < 8 && Math.abs(data[i + 2] - 198) < 8) teal++;
+      }
+    }
+    return { left, right, teal };
+  });
+}
+
 /** Records every camera track the page opens, so tests can check they were stopped. */
 async function trackCamera(page: Page) {
   await page.addInitScript(() => {
@@ -125,6 +174,59 @@ test.describe("with a camera", () => {
     await page.getByRole("button", { name: "Do another session" }).click();
     await expect(page.getByRole("heading", { name: "Choose your exercise" })).toBeVisible();
   });
+
+  for (const view of [
+    { name: "desktop", viewport: { width: 1280, height: 800 }, reducedMotion: "no-preference" },
+    { name: "phone, reduced motion", viewport: { width: 390, height: 844 }, reducedMotion: "reduce" },
+  ] as const) {
+    test(`draws the skeleton over the camera, mirrored with the front camera (${view.name})`, async ({ page }) => {
+      await page.setViewportSize(view.viewport);
+      await page.emulateMedia({ reducedMotion: view.reducedMotion });
+      let keypoints: number[][] | null = standingPose();
+      await page.routeWebSocket(POSE_WS, (ws) => {
+        ws.onMessage(() => ws.send(update({ keypoints })));
+      });
+      await page.goto("/session");
+      await page.getByRole("button", { name: "Start" }).click();
+      await expect(page.getByRole("button", { name: "End session" }).filter({ visible: true })).toBeVisible({ timeout: 15_000 });
+
+      // The person stands left of center, so with the back camera only the left half has ink,
+      // in the demo skeleton's teal.
+      await expect
+        .poll(async () => {
+          const ink = await skeletonInk(page);
+          return ink.left > 500 && ink.right === 0 && ink.teal > 50;
+        }, { timeout: 10_000 })
+        .toBe(true);
+
+      // Turning the screen redraws at the new size and crop, and the person stays left of center.
+      await page.setViewportSize({ width: view.viewport.height, height: view.viewport.width });
+      await expect
+        .poll(async () => {
+          const ink = await skeletonInk(page);
+          const canvas = await page.locator("[data-live-skeleton]").evaluate((c: HTMLCanvasElement) => [c.width, c.height, c.clientWidth, c.clientHeight]);
+          const dpr = await page.evaluate(() => window.devicePixelRatio);
+          return ink.left > 500 && ink.right === 0 && canvas[0] === Math.round(canvas[2] * dpr) && canvas[1] === Math.round(canvas[3] * dpr);
+        }, { timeout: 10_000 })
+        .toBe(true);
+
+      // The front camera preview is a mirror, and the skeleton flips with it.
+      await page.getByRole("button", { name: "Switch camera" }).click();
+      await expect
+        .poll(async () => {
+          const ink = await skeletonInk(page);
+          return ink.right > 500 && ink.left === 0;
+        }, { timeout: 10_000 })
+        .toBe(true);
+
+      // Nobody in the frame clears it.
+      keypoints = null;
+      await expect.poll(async () => {
+        const ink = await skeletonInk(page);
+        return ink.left + ink.right;
+      }).toBe(0);
+    });
+  }
 
   test("ending early with no reps returns to the select step", async ({ page }) => {
     await trackCamera(page);
@@ -272,6 +374,7 @@ test.describe("screenshots", () => {
             hold_progress: 0.6,
             feedback: "Hold — keep it straight.",
             severity: "good",
+            keypoints: standingPose(0.5),
           }),
         );
         await expect(page.getByText("Hold, keep it straight.").filter({ visible: true })).toBeVisible();

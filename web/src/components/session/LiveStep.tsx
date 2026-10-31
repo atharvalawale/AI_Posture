@@ -4,7 +4,9 @@ import { type RefObject, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { type Exercise, type Facing, MAX_RETRIES, scoreBand, type Side } from "@/lib/session/protocol";
 import type { Connection, Cue } from "@/lib/session/reducer";
+import type { PoseFeed } from "@/lib/session/skeleton";
 import { CameraFrame, CloseButton, Sheet, SwitchCameraButton, TopBar } from "./CameraFrame";
+import { LiveSkeleton } from "./LiveSkeleton";
 import { bandFill, bandFillOnDark } from "./scoreColors";
 
 type Props = {
@@ -19,6 +21,8 @@ type Props = {
   scores: number[];
   avgScore: number | null;
   videoRef: RefObject<HTMLVideoElement | null>;
+  /** The latest pose from the server, drawn as a skeleton over the video. */
+  pose: PoseFeed;
   stream: MediaStream | null;
   facing: Facing;
   onSwitchCamera: () => void;
@@ -70,6 +74,7 @@ export function LiveStep(props: Props) {
       label="Live session"
       overlay={
         <>
+          <LiveSkeleton videoRef={props.videoRef} feed={props.pose} mirrored={props.facing === "user"} />
           <TopBar>
             <div className="flex gap-2">
               <CloseButton label="End session" onClick={props.onStop} className="lg:hidden" />

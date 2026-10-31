@@ -1,15 +1,17 @@
 "use client";
 
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import {
   encodeFrame,
   FRAME_INTERVAL_MS,
+  isServerError,
   JPEG_QUALITY,
   MAX_RETRIES,
   parseServerMessage,
   retryDelayMs,
 } from "@/lib/session/protocol";
 import type { SessionAction } from "@/lib/session/reducer";
+import { PoseFeed } from "@/lib/session/skeleton";
 
 type Options = {
   /** Connect while true. Turning it false closes the socket and stops sending. */
@@ -26,8 +28,11 @@ type Options = {
  * drawn straight from the video element, so they are never mirrored, even with the front camera.
  * Retries up to MAX_RETRIES times with attempt x 3 s delays. Everything stops in the cleanup,
  * which also runs when the route is hidden by Activity.
+ * Returns the feed of the latest keypoints for the skeleton. It empties while there is no live
+ * connection, so a stale pose never stays on screen.
  */
-export function usePoseSocket({ active, url, run, videoRef, dispatch }: Options) {
+export function usePoseSocket({ active, url, run, videoRef, dispatch }: Options): PoseFeed {
+  const [feed] = useState(() => new PoseFeed());
   const dispatchRef = useRef(dispatch);
   useEffect(() => {
     dispatchRef.current = dispatch;
@@ -102,11 +107,13 @@ export function usePoseSocket({ active, url, run, videoRef, dispatch }: Options)
         if (!message) return;
         // The server closes the socket right after the complete message. That close is expected.
         if ("complete" in message && message.complete) finished = true;
+        if (!isServerError(message)) feed.set(message.keypoints ?? null);
         send({ type: "message", message });
       };
       // An error is always followed by close, so retries are handled in one place.
       socket.onclose = () => {
         stopFrames();
+        if (ws === socket) feed.set(null);
         if (disposed || finished || ws !== socket) return;
         if (attempt < MAX_RETRIES) {
           attempt += 1;
@@ -124,11 +131,14 @@ export function usePoseSocket({ active, url, run, videoRef, dispatch }: Options)
       disposed = true;
       clearTimeout(retryTimer);
       stopFrames();
+      feed.set(null);
       if (ws) {
         ws.onopen = ws.onmessage = ws.onclose = null;
         if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) ws.close();
         ws = null;
       }
     };
-  }, [active, url, run, videoRef]);
+  }, [active, url, run, videoRef, feed]);
+
+  return feed;
 }

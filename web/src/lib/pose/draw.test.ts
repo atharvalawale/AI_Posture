@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import fixture from "../../../public/media/squat.pose.json";
-import { EDGES, JOINTS, drawSkeleton, type PoseClip } from "./index";
+import { EDGES, JOINTS, drawBones, drawSkeleton, type PoseClip } from "./index";
 
 const clip = fixture as PoseClip;
 
@@ -63,5 +63,15 @@ describe("drawSkeleton", () => {
     drawSkeleton(ctx, clip, 3, { ox: 0, oy: 0, w: 160, h: 300 });
     expect(widths[0]).toBe(4.5);
     expect(widths[1]).toBe(2);
+  });
+});
+
+describe("drawBones", () => {
+  it("skips joints and bones with a missing landmark", () => {
+    const { ctx, calls } = fakeContext();
+    // Without the left knee (25): two bones (hip to knee, knee to ankle) and one joint go.
+    drawBones(ctx, (k) => (k === 25 ? null : [k, k]), 2);
+    expect(calls.filter((c) => c === "lineTo")).toHaveLength((EDGES.length - 2) * 2);
+    expect(calls.filter((c) => c === "arc")).toHaveLength(JOINTS.length - 1);
   });
 });

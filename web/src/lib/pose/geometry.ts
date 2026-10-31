@@ -32,3 +32,11 @@ export function coverBox(boxW: number, boxH: number, mediaW: number, mediaH: num
   const h = mediaH * scale;
   return { ox: (boxW - w) * posX, oy: (boxH - h) * posY, w, h };
 }
+
+/** Like `coverBox`, for `object-fit: contain`: all of the media fits inside the box. */
+export function containBox(boxW: number, boxH: number, mediaW: number, mediaH: number, posX = 0.5, posY = 0.5): Box {
+  const scale = Math.min(boxW / mediaW, boxH / mediaH);
+  const w = mediaW * scale;
+  const h = mediaH * scale;
+  return { ox: (boxW - w) * posX, oy: (boxH - h) * posY, w, h };
+}

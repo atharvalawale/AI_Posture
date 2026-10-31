@@ -8,6 +8,47 @@ const OUTLINE = "rgba(6,20,22,.45)";
 const JOINT = "#FFFFFF";
 const RING = "#0B5E57";
 
+/** A point in canvas units, or null when that landmark is not known. */
+export type CanvasPoint = [number, number] | null;
+
+/**
+ * Draws the bones and joints with the demo style: a teal line over a dark outline, white joint
+ * dots with a dark ring. `at` maps a MediaPipe landmark id to canvas units. Bones with a missing
+ * end and missing joints are skipped, so a partly visible person still draws what is known.
+ */
+export function drawBones(ctx: CanvasRenderingContext2D, at: (landmark: number) => CanvasPoint, lw: number): void {
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const [color, width] of [
+    [OUTLINE, lw + 2.5],
+    [LINE, lw],
+  ] as const) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    for (const [a, b] of EDGES) {
+      const pa = at(a);
+      const pb = at(b);
+      if (!pa || !pb) continue;
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+    }
+    ctx.stroke();
+  }
+
+  for (const k of JOINTS) {
+    const p = at(k);
+    if (!p) continue;
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], lw * 1.35, 0, Math.PI * 2);
+    ctx.fillStyle = JOINT;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = RING;
+    ctx.stroke();
+  }
+}
+
 /**
  * Draws the skeleton for time `t` into `ctx`, with the video frame mapped to `box`
  * (see `coverBox`). Coordinates are in the context's current units, so callers set
@@ -21,35 +62,7 @@ export function drawSkeleton(ctx: CanvasRenderingContext2D, clip: PoseClip, t: n
     return [box.ox + p[0] * box.w, box.oy + p[1] * box.h];
   };
   const lw = Math.max(2, box.w / 160);
-
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  for (const [color, width] of [
-    [OUTLINE, lw + 2.5],
-    [LINE, lw],
-  ] as const) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    for (const [a, b] of EDGES) {
-      const pa = at(a);
-      const pb = at(b);
-      ctx.moveTo(pa[0], pa[1]);
-      ctx.lineTo(pb[0], pb[1]);
-    }
-    ctx.stroke();
-  }
-
-  for (const k of JOINTS) {
-    const [x, y] = at(k);
-    ctx.beginPath();
-    ctx.arc(x, y, lw * 1.35, 0, Math.PI * 2);
-    ctx.fillStyle = JOINT;
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = RING;
-    ctx.stroke();
-  }
+  drawBones(ctx, at, lw);
 
   if (opts.arc) {
     const vertex = MEASURES[opts.arc].vertex;

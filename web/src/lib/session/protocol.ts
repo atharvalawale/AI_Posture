@@ -82,7 +82,14 @@ export type PoseUpdate = {
   complete: boolean;
   view: string | null;
   summary: Summary | null;
+  /** The pose the server found in the frame, for drawing the skeleton. Missing from older servers. */
+  keypoints?: Keypoints | null;
 };
+
+/** One MediaPipe landmark: x and y from 0 to 1 across the frame the server saw, then visibility 0..1. */
+export type Keypoint = [x: number, y: number, visibility: number];
+/** The 33 MediaPipe pose landmarks, by MediaPipe index. Null when nobody is in the frame. */
+export type Keypoints = (Keypoint | null)[];
 
 export type ServerError = { error: string };
 export type ServerMessage = PoseUpdate | ServerError;
@@ -112,7 +119,18 @@ export function parseServerMessage(raw: unknown): ServerMessage | null {
   const obj = data as Record<string, unknown>;
   if (typeof obj.error === "string") return { error: obj.error };
   if (typeof obj.rep_count !== "number") return null;
-  return data as PoseUpdate;
+  return { ...(data as PoseUpdate), keypoints: parseKeypoints(obj.keypoints) };
+}
+
+/**
+ * Checks the server's `keypoints`. A malformed landmark becomes null and the rest still draw.
+ * Anything that is not a list, or has no usable landmark, means no person.
+ */
+export function parseKeypoints(raw: unknown): Keypoints | null {
+  if (!Array.isArray(raw)) return null;
+  const finite = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n);
+  const keypoints = raw.map((p): Keypoint | null => (Array.isArray(p) && p.length >= 3 && finite(p[0]) && finite(p[1]) && finite(p[2]) ? [p[0], p[1], p[2]] : null));
+  return keypoints.some(Boolean) ? keypoints : null;
 }
 
 /**
