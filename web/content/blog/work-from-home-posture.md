@@ -48,6 +48,23 @@ Many people who work from home know this feeling. The good news is that neck pro
 
 During the COVID-19 pandemic, many researchers studied people working from home. A 2023 rapid review pulled together six of these studies. Neck pain was reported by between 20% and 77% of home workers, depending on the study. Low back pain ranged from about 20% to 74%.
 
+```chart
+{
+  "type": "ranges",
+  "title": "Pain reported while working from home in the pandemic",
+  "unit": "%",
+  "decimals": 1,
+  "ranges": [
+    {"label": "Neck pain", "low": 20.3, "high": 76.9},
+    {"label": "Low back pain", "low": 19.5, "high": 74.1}
+  ],
+  "note": "The lowest and highest share of people with pain across the six studies in the review, published between December 2019 and August 2021.",
+  "sources": [
+    {"name": "Gomez IN et al., International Journal of Osteopathic Medicine, 2023", "url": "https://europepmc.org/article/MED/36514321"}
+  ]
+}
+```
+
 That is a wide range, and the studies had weaknesses. A larger 2023 review of 25 studies found mixed results, but neck and lower back pain were still the most common complaints. The authors felt that ergonomics and the way work is organised seem to play a part.
 
 ## Is bad posture to blame?
@@ -114,6 +131,24 @@ These exercises come from NHS inform, Scotland's health information service. The
 
 Rate your pain from 0 to 10. A score of 0 to 3 is minimal and 4 to 5 is acceptable. A score of 6 or more is too much.
 
+```chart
+{
+  "type": "ranges",
+  "title": "How much pain is acceptable while you exercise",
+  "max": 10,
+  "ranges": [
+    {"label": "Minimal pain", "low": 0, "high": 3},
+    {"label": "Acceptable pain", "low": 4, "high": 5},
+    {"label": "Excessive pain", "low": 6, "high": 10}
+  ],
+  "note": "Pain rated out of 10, where 0 is no pain and 10 is the worst pain you have ever had. Aim to keep your pain within 0 to 5.",
+  "sources": [
+    {"name": "Exercises for neck problems, NHS inform", "url": "https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-neck-problems"},
+    {"name": "Exercises for back pain, NHS inform", "url": "https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/"}
+  ]
+}
+```
+
 - Try to keep your pain at 5 or below while you exercise.
 - If it goes higher, do fewer repetitions, move more slowly or rest longer between movements.
 - Your pain should be no worse the morning after.
@@ -126,6 +161,19 @@ Stretches are a good start. For office workers with ongoing neck pain, reviews s
 ## When to see a physiotherapist or doctor
 
 NHS inform says the biggest change in a neck problem usually comes in the first couple of weeks. Most improve within 8 weeks. If yours has not, talk to a healthcare professional. Back pain also usually improves within a few weeks. See a doctor or physiotherapist sooner if the pain stops you doing everyday things, or if you are worried.
+
+```chart
+{
+  "type": "stats",
+  "title": "How long a neck problem usually takes to improve",
+  "stats": [
+    {"value": 8, "unit": "weeks", "label": "Most neck problems should have improved within this time. If yours has not, talk to a healthcare professional."}
+  ],
+  "sources": [
+    {"name": "Neck problems, NHS inform", "url": "https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/neck-problems/"}
+  ]
+}
+```
 
 **Get medical help urgently if you have neck pain and:**
 

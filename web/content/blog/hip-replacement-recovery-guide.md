@@ -67,6 +67,22 @@ The American Academy of Orthopaedic Surgeons (AAOS) and NHS hospitals suggest th
 
 Squatting and floor sitting bend the hip a lot. In a study of 30 healthy Indian adults, squatting with heels flat needed about 95 degrees of hip bend on average. It varied a lot between people. Many hospitals ask you not to bend your new hip past 90 degrees in the early weeks.
 
+```chart
+{
+  "title": "Hip bend for a flat-footed squat and the limit after surgery",
+  "unit": "°",
+  "bars": [
+    {"label": "Squatting with heels flat", "value": 95},
+    {"label": "NHS limit while recovering", "value": 90}
+  ],
+  "note": "The squat figure is the average maximum hip bend in 30 healthy Indian adults, plus or minus 27 degrees between people.",
+  "sources": [
+    {"name": "Hemmerich A et al., J Orthop Res, 2006", "url": "https://pubmed.ncbi.nlm.nih.gov/16514664/"},
+    {"name": "Recovering from a hip replacement (NHS)", "url": "https://www.nhs.uk/tests-and-treatments/hip-replacement/recovering-from-a-hip-replacement/"}
+  ]
+}
+```
+
 The NHS advises against low toilet seats. Raised toilet seats are available. Before surgery, plan for this:
 
 - If you only have an Indian-style toilet, ask your physio about a raised seat or a portable commode chair.
@@ -74,6 +90,20 @@ The NHS advises against low toilet seats. Raised toilet seats are available. Bef
 - Use a chair for meals, prayer and watching TV for now.
 
 Will you squat or sit cross-legged again? A 2022 study from Thailand followed 240 people after hip replacement. About 1 in 5 (22 percent) could sit on the floor at 6 months. The strongest link was being able to sit on the floor before surgery.
+
+```chart
+{
+  "type": "meters",
+  "title": "Floor sitting 6 months after hip replacement",
+  "meters": [
+    {"label": "Could sit on the floor", "value": 21.66}
+  ],
+  "note": "52 of 240 people in Thailand, all operated through the back of the hip (posterolateral approach).",
+  "sources": [
+    {"name": "Nawatthakul A et al., Orthopedic Reviews, 2022", "url": "https://orthopedicreviews.openmedicalpublishing.org/article/37072-the-ability-and-factors-related-with-floor-sitting-after-total-hip-arthroplasty-with-a-posterolateral-approach"}
+  ]
+}
+```
 
 A 2026 study from China followed 152 older adults who were used to squat toilets. After hip replacement for a hip fracture, they were asked to use sitting toilets. On average, they got more used to sitting toilets over 6 months, and their quality of life scores went up. So the switch is possible, even if it feels strange at first.
 
@@ -97,6 +127,21 @@ You may get up on the same day as your surgery. Physios help you walk, first wit
 - **Swelling.** Leg swelling can last 3 months or more. Rest on your bed for an hour in the afternoon if your leg is very swollen.
 - **Walking.** Take short walks often, rather than one long walk. Put your heel down first. Try to make both steps the same length. Pain at night can mean you overdid it.
 - **Stitches.** A nurse usually removes stitches or clips after about 10 days.
+
+```chart
+{
+  "type": "stats",
+  "title": "Swelling and stitches after you go home",
+  "stats": [
+    {"value": 3, "unit": "months", "label": "Leg swelling may last this long, or more"},
+    {"value": 10, "unit": "days", "label": "About when a nurse takes out your stitches or clips"}
+  ],
+  "sources": [
+    {"name": "Royal Berkshire NHS Foundation Trust, 2025", "url": "https://www.royalberkshire.nhs.uk/media/1mbbrjjx/advice-and-exercises-after-a-total-hip-replacement-thr_aug25.pdf"},
+    {"name": "Recovering from a hip replacement (NHS)", "url": "https://www.nhs.uk/tests-and-treatments/hip-replacement/recovering-from-a-hip-replacement/"}
+  ]
+}
+```
 
 ## Exercises for the first weeks
 
@@ -192,7 +237,39 @@ These rough guides come from NHS hospitals. Your pace may differ.
 - **6 months:** Back to most activities, except high-impact sports.
 - **1 year:** The Royal Berkshire leaflet expects you to be fully recovered by now.
 
+```chart
+{
+  "type": "timeline",
+  "title": "The first 8 weeks at home, stage by stage",
+  "unit": "weeks",
+  "phases": [
+    {"label": "Walking at home", "from": 0, "to": 2},
+    {"label": "Some go without aids", "from": 2, "to": 3},
+    {"label": "Longer walks outside", "from": 3, "to": 4},
+    {"label": "Static bike may start", "from": 4, "to": 6},
+    {"label": "Walking without aids", "from": 6, "to": 8}
+  ],
+  "note": "Stages from one NHS hospital's leaflet, counted from surgery. Some people go home on the day of surgery. Your own pace may differ.",
+  "sources": [
+    {"name": "Royal Berkshire NHS Foundation Trust, 2025", "url": "https://www.royalberkshire.nhs.uk/media/1mbbrjjx/advice-and-exercises-after-a-total-hip-replacement-thr_aug25.pdf"}
+  ]
+}
+```
+
 The NHS says modern hip replacements are designed to last at least 15 years.
+
+```chart
+{
+  "type": "stats",
+  "title": "How long a new hip is designed to last",
+  "stats": [
+    {"value": 15, "unit": "years", "label": "Modern hip replacement joints are designed to last at least this long"}
+  ],
+  "sources": [
+    {"name": "Complications of a hip replacement (NHS)", "url": "https://www.nhs.uk/tests-and-treatments/hip-replacement/complications-of-a-hip-replacement/"}
+  ]
+}
+```
 
 ## When to call your surgeon or physiotherapist
 

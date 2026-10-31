@@ -204,6 +204,12 @@ describe("figure types", () => {
     expect(() => parseChartSpec(json({ type: "meters", title: "x", meters: [{ label: "x".repeat(23), value: 1 }], sources }))).toThrow();
   });
 
+  it("prints minutes and hours, singular for one", () => {
+    const html = render({ type: "stats", title: "x", stats: [{ value: 24, unit: "hours", label: "a" }, { value: 1, unit: "minutes", label: "b" }], sources });
+    expect(html).toContain(">24 hours</p>");
+    expect(html).toContain(">1 minute</p>");
+  });
+
   it("checks rounding on every type", () => {
     expect(() => parseChartSpec(json({ type: "stats", title: "x", decimals: 0, stats: [{ value: 9.7, label: "a" }], sources }))).toThrow(/would be rounded/);
   });

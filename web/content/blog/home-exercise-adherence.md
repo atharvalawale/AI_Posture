@@ -48,6 +48,23 @@ Here is what the research does say:
 - A 2010 systematic review of physiotherapy outpatients quoted an older study suggesting non-adherence could be as high as 70%.
 - A 2017 systematic review of home-based physical therapies also said non-adherence can reach 70%.
 
+```chart
+{
+  "title": "Upper estimates of non-adherence to physiotherapy exercise",
+  "type": "stats",
+  "stats": [
+    {"value": 50, "unit": "%", "label": "Highest estimate of non-adherence to home exercise cited in a 2018 review of rehabilitation"},
+    {"value": 70, "unit": "%", "label": "Highest estimate of non-adherence quoted in two systematic reviews, from 2010 and 2017"}
+  ],
+  "note": "Each number is the highest estimate a review quotes, not a measured average. The studies behind them measured adherence in different ways, so the numbers cannot be compared.",
+  "sources": [
+    {"name": "Argent R et al., JMIR mHealth and uHealth, 2018", "url": "https://europepmc.org/article/MED/29496655"},
+    {"name": "Jack K et al., Manual Therapy, 2010", "url": "https://europepmc.org/article/MED/20163979"},
+    {"name": "Essery R et al., Disability and Rehabilitation, 2017", "url": "https://europepmc.org/article/MED/27097761"}
+  ]
+}
+```
+
 So a large share of patients do not do all of their home programme. The true figure depends on the condition, the person and how it is measured. You may have seen very precise numbers quoted online. We could not trace them to good evidence, so we do not repeat them here.
 
 ## Does skipping exercises really slow recovery?
@@ -89,6 +106,20 @@ If your list feels too long, say so. Ask your physio which exercises matter most
 
 A 2016 review found written exercise instructions were one of the more promising ways to improve adherence. The evidence was not yet strong. In the Cochrane review, supervised sessions, refresher sessions and take-home audio or video helped. Five of six trials that tested them showed better adherence.
 
+```chart
+{
+  "title": "Ways of delivering exercise that improved adherence",
+  "type": "stats",
+  "stats": [
+    {"value": 5, "label": "of 6 trials found that supervised sessions, refresher sessions or take-home audio or video improved exercise adherence"}
+  ],
+  "note": "From a Cochrane review of 42 trials with 8,243 adults with long-term musculoskeletal pain.",
+  "sources": [
+    {"name": "Jordan JL et al., Cochrane Database of Systematic Reviews, 2010", "url": "https://europepmc.org/article/MED/20091582"}
+  ]
+}
+```
+
 Before you leave, check that you know how many repetitions to do, how long to hold, and how often. Ask if you can record a short video of yourself doing each exercise with your physio watching.
 
 ### Attach exercises to something you already do
@@ -115,6 +146,23 @@ NHS inform, Scotland's health information service, gives a simple guide for back
 
 Aim to stay between 0 and 5 while you exercise. Your pain should be no worse the next morning. If it goes above 5, do fewer repetitions, move more slowly or rest longer between movements. Stop if the exercises make your symptoms worse or cause new pain, and tell your physio. Your physio's own instructions for your condition come first.
 
+```chart
+{
+  "title": "Pain rating while exercising, from 0 to 10",
+  "type": "ranges",
+  "max": 10,
+  "ranges": [
+    {"label": "Minimal pain", "low": 0, "high": 3},
+    {"label": "Acceptable pain", "low": 4, "high": 5},
+    {"label": "Excessive pain", "low": 6, "high": 10}
+  ],
+  "note": "0 is no pain and 10 is the worst pain you have ever had. The guide for back pain exercises suggests keeping your pain within a rating of 0 to 5.",
+  "sources": [
+    {"name": "NHS inform, Exercises for back pain", "url": "https://www.nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/neck-and-back-problems-and-conditions/exercises-for-back-pain/"}
+  ]
+}
+```
+
 ### Make sure you are doing it right
 
 It is hard to keep going when you are not sure you are doing an exercise correctly. Feedback helps here. One review notes that physiotherapists who gave positive feedback and monitored progress saw higher adherence. It also suggests that seeing proof you are doing an exercise correctly may boost both confidence and adherence.
@@ -122,6 +170,21 @@ It is hard to keep going when you are not sure you are doing an exercise correct
 ### Consider an app with support from your physio
 
 In a 2017 trial, 80 people with muscle and joint problems were given a 4-week home programme. Half got a paper handout. Half got an app plus phone calls and motivational text messages. The app group reported better adherence and slightly better function. The difference was modest, and the researchers said its clinical importance was unclear.
+
+```chart
+{
+  "title": "Home exercise on an app with remote support, compared with a paper handout",
+  "type": "stats",
+  "stats": [
+    {"value": 1.3, "label": "Average difference in self-reported adherence at 4 weeks, out of 11 points, in favour of the app group"},
+    {"value": 0.9, "label": "Average difference in function at 4 weeks, out of 11 points on the Patient-Specific Functional Scale, favouring the app"}
+  ],
+  "note": "80 people with muscle and joint problems were randomly given an app with phone calls and text messages, or a paper handout. The researchers said the clinical importance of the added adherence is unclear.",
+  "sources": [
+    {"name": "Lambert TE et al., Journal of Physiotherapy, 2017", "url": "https://europepmc.org/article/MED/28662834"}
+  ]
+}
+```
 
 The lesson is that tools help most when they sit alongside a person who knows your plan.
 

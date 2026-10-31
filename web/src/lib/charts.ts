@@ -11,7 +11,7 @@ import { z } from "zod";
  * - stats: one to three headline numbers that stand alone. The number is the chart.
  * - meters: one or more shares of a whole, each a filled track out of 100%.
  * - ranges: spans from a low to a high value, such as prevalence across studies.
- * - timeline: phases of recovery on a shared time axis.
+ * - timeline: phases of recovery on a shared time axis, in minutes up to years.
  *
  * The SVGs have no viewBox, so text renders at true CSS pixel sizes on every screen. Marks are
  * percentages of the SVG width, so they stretch with the column while the labels stay readable on
@@ -26,6 +26,8 @@ const UNITS = {
   "%": { suffix: "%", spoken: " percent" },
   "°": { suffix: "°", spoken: " degrees" },
   "": { suffix: "", spoken: "" },
+  minutes: { suffix: " minutes", spoken: " minutes" },
+  hours: { suffix: " hours", spoken: " hours" },
   days: { suffix: " days", spoken: " days" },
   weeks: { suffix: " weeks", spoken: " weeks" },
   months: { suffix: " months", spoken: " months" },
@@ -34,8 +36,8 @@ const UNITS = {
 
 type Unit = keyof typeof UNITS;
 const amountUnit = z.enum(["%", "°", ""]);
-const timeUnit = z.enum(["days", "weeks", "months", "years"]);
-const anyUnit = z.enum(["%", "°", "", "days", "weeks", "months", "years"]);
+const timeUnit = z.enum(["minutes", "hours", "days", "weeks", "months", "years"]);
+const anyUnit = z.enum(["%", "°", "", "minutes", "hours", "days", "weeks", "months", "years"]);
 
 const base = {
   title: text(90),
@@ -214,7 +216,7 @@ export function formatValue(spec: Pick<ChartSpec, "decimals"> & { unit?: Unit },
 function formatSpan(spec: Pick<ChartSpec, "decimals">, unit: Unit, from: number, to: number | undefined) {
   if (to === undefined) return `From ${formatValue({ ...spec, unit }, from)}`;
   // Time spans name the unit once; amounts carry it on both ends.
-  if (unit in { days: 1, weeks: 1, months: 1, years: 1 }) return `${number(spec, from)} to ${formatValue({ ...spec, unit }, to)}`;
+  if (timeUnit.safeParse(unit).success) return `${number(spec, from)} to ${formatValue({ ...spec, unit }, to)}`;
   return `${formatValue({ ...spec, unit }, from)} to ${formatValue({ ...spec, unit }, to)}`;
 }
 
@@ -324,12 +326,13 @@ const STAT_COLUMNS = { 1: "", 2: "sm:grid-cols-2", 3: "sm:grid-cols-3" } as cons
 function renderStats(spec: Extract<ChartSpec, { type: "stats" }>) {
   const tiles = spec.stats.map(
     (st) =>
-      `<div class="border-t border-line pt-4">` +
-      `<p class="text-[40px] font-semibold leading-none tracking-[-0.02em] text-text tabular-nums">${escape(formatValue({ ...spec, unit: st.unit }, st.value))}</p>` +
-      `<p class="mt-2.5 text-[15px] leading-snug text-muted">${escape(st.label)}</p>` +
+      `<div class="border-t border-line pt-3 sm:pt-4">` +
+      `<p class="text-[32px] font-semibold leading-none tracking-[-0.02em] text-text tabular-nums sm:text-[40px]">${escape(formatValue({ ...spec, unit: st.unit }, st.value))}</p>` +
+      `<p class="mt-2 text-[15px] leading-snug text-muted sm:mt-2.5">${escape(st.label)}</p>` +
       `</div>`,
   );
-  return `<div class="mt-5 grid gap-x-8 gap-y-6 ${STAT_COLUMNS[spec.stats.length as 1 | 2 | 3]}">${tiles.join("")}</div>`;
+  // Phones stack the tiles, so they get a smaller number and tighter spacing to keep a figure short.
+  return `<div class="mt-4 grid gap-x-8 gap-y-4 sm:mt-5 sm:gap-y-6 ${STAT_COLUMNS[spec.stats.length as 1 | 2 | 3]}">${tiles.join("")}</div>`;
 }
 
 function renderBody(spec: ChartSpec) {

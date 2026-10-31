@@ -50,6 +50,19 @@ The four muscles are the supraspinatus, infraspinatus, teres minor and subscapul
 
 Rotator cuff problems are very common. One NHS physiotherapy leaflet notes that the rotator cuff may account for up to 70% of all shoulder pain problems.
 
+```chart
+{
+  "type": "stats",
+  "title": "Shoulder pain linked to the rotator cuff",
+  "stats": [
+    {"value": 70, "unit": "%", "label": "Up to this share of all shoulder pain problems may come from the rotator cuff"}
+  ],
+  "sources": [
+    {"name": "Leicestershire Partnership NHS Trust, 2026", "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2026/04/LPT-CHSMSK16-Rotator-Cuff-Related-Shoulder-Pain.pdf"}
+  ]
+}
+```
+
 Typical symptoms include:
 
 - Pain at rest and at night, especially when you lie on that shoulder
@@ -95,11 +108,74 @@ So a tear on a scan does not always mean the tear is causing your pain. This is 
 
 For most people, the first step is a physiotherapy exercise program. Nonsurgical treatment relieves pain and improves function in about 80 to 85% of patients. That figure comes from the American Academy of Orthopaedic Surgeons.
 
+```chart
+{
+  "type": "ranges",
+  "title": "Patients helped by nonsurgical treatment for a rotator cuff tear",
+  "unit": "%",
+  "ranges": [
+    {"label": "Nonsurgical treatment", "low": 80, "high": 85}
+  ],
+  "note": "The share of patients in whom nonsurgical treatment relieves pain and improves shoulder function, as given by the American Academy of Orthopaedic Surgeons.",
+  "sources": [
+    {"name": "OrthoInfo, American Academy of Orthopaedic Surgeons", "url": "https://www.orthoinfo.org/en/diseases--conditions/rotator-cuff-tears/"}
+  ]
+}
+```
+
 Research comparing surgery with exercise supports this:
 
 - **A Cochrane review from 2019** looked at nine trials with 1,007 people who had full-thickness tears. At one year, surgery gave less than one extra point of pain relief on a 0 to 10 scale. The authors were uncertain whether surgery gives a meaningful benefit. They noted the findings may not apply to tears from injury, large subscapularis tears or younger people.
+
+```chart
+{
+  "type": "stats",
+  "title": "Pain one year after rotator cuff surgery or exercise",
+  "stats": [
+    {"value": 1.6, "label": "Mean pain at one year without surgery, on a 0 to 10 scale where higher means more pain"},
+    {"value": 0.87, "label": "Points less pain at one year with surgery than without"}
+  ],
+  "note": "Pooled from 3 trials with 258 people, part of a Cochrane review of nine trials. Surgery probably gives little or no improvement in pain.",
+  "sources": [
+    {"name": "Karjalainen TV et al., Cochrane Database of Systematic Reviews, 2019", "url": "https://pubmed.ncbi.nlm.nih.gov/31813166/"}
+  ]
+}
+```
+
 - **One trial** randomised 180 shoulders in people aged 55 and over with non-traumatic tears. After one year, physiotherapy alone did as well as surgery. The authors suggested trying conservative treatment first.
+
+```chart
+{
+  "title": "Constant shoulder score one year after treatment",
+  "bars": [
+    {"label": "Physiotherapy", "value": 74.1},
+    {"label": "Acromioplasty and physiotherapy", "value": 77.2},
+    {"label": "Repair, acromioplasty and physio", "value": 77.9}
+  ],
+  "note": "180 shoulders in people above 55 with non-traumatic tears, 167 assessed at one year. There were no differences between the groups.",
+  "sources": [
+    {"name": "Kukkonen J et al., Bone & Joint Journal, 2014", "url": "https://boneandjoint.org.uk/article/10.1302/0301-620X.96B1.32168"}
+  ]
+}
+```
+
 - **Another trial** followed 103 people with small and medium tears for 10 years. Over time, the people who had early repair did better than the physiotherapy group, with less pain and better scores.
+
+```chart
+{
+  "type": "stats",
+  "title": "Early repair compared with physiotherapy after 10 years",
+  "stats": [
+    {"value": 1.8, "label": "Centimetres less pain on a 10 cm pain scale with early repair"},
+    {"value": 9.6, "label": "Points higher on the Constant shoulder score with early repair"},
+    {"value": 15.7, "label": "Points higher on the American Shoulder and Elbow Surgeons score with early repair"}
+  ],
+  "note": "103 people with tears of up to 3 cm were randomised. 91 of them attended the 10-year follow-up.",
+  "sources": [
+    {"name": "Moosmayer S et al., Journal of Bone and Joint Surgery, 2019", "url": "https://pubmed.ncbi.nlm.nih.gov/31220021/"}
+  ]
+}
+```
 
 So the answer depends on you. Surgeons usually consider surgery when:
 
@@ -116,6 +192,22 @@ So the answer depends on you. Surgeons usually consider surgery when:
 
 The rotator cuff needs time to adapt and get stronger. An NHS leaflet advises that symptoms take at least 12 weeks to improve, with further gains up to 24 weeks. You may notice little change in the first six weeks. That is normal, so do not give up.
 
+```chart
+{
+  "type": "stats",
+  "title": "How long rotator cuff-related shoulder pain takes to improve",
+  "stats": [
+    {"value": 6, "unit": "weeks", "label": "You may see no improvement in the first six weeks"},
+    {"value": 12, "unit": "weeks", "label": "It can take at least this long for symptoms to improve"},
+    {"value": 24, "unit": "weeks", "label": "Further improvement may be expected up to this point"}
+  ],
+  "note": "Timings for exercise-based treatment without surgery, from one NHS physiotherapy leaflet.",
+  "sources": [
+    {"name": "Leicestershire Partnership NHS Trust, 2026", "url": "https://www.leicspart.nhs.uk/wp-content/uploads/2026/04/LPT-CHSMSK16-Rotator-Cuff-Related-Shoulder-Pain.pdf"}
+  ]
+}
+```
+
 The same leaflet suggests doing your exercises once a day, six days a week. You need at least four days a week to see improvement. Avoid resting the arm completely. Too much rest can weaken the cuff further.
 
 ### If you have a rotator cuff repair
@@ -128,7 +220,39 @@ Rehab after surgery protects the repair while it heals. Timings vary with tear s
 - **From about week 8 to 12:** Strengthening begins.
 - **4 to 6 months:** Most patients have useful movement and enough strength for daily life. Full recovery can take longer.
 
+```chart
+{
+  "type": "timeline",
+  "title": "The first 6 weeks after arthroscopic rotator cuff repair",
+  "unit": "weeks",
+  "phases": [
+    {"label": "Strict immobilisation", "from": 0, "to": 2},
+    {"label": "Passive movement", "from": 2, "to": 6}
+  ],
+  "note": "The opening phases of a US therapists' consensus framework, counted from surgery. Active movement and strengthening follow. Your surgeon sets your exact plan.",
+  "sources": [
+    {"name": "Thigpen CA et al., Journal of Shoulder and Elbow Surgery, 2016", "url": "https://pubmed.ncbi.nlm.nih.gov/26995456/"}
+  ]
+}
+```
+
 One NHS hospital leaflet gives these rough milestones. A desk job at about 3 weeks. Driving at about 6 weeks. Lifting at about 3 months. Contact sport after more than 16 weeks.
+
+```chart
+{
+  "type": "stats",
+  "title": "Rough milestones after rotator cuff repair",
+  "stats": [
+    {"value": 3, "unit": "weeks", "label": "Return to a desk job"},
+    {"value": 6, "unit": "weeks", "label": "Driving"},
+    {"value": 3, "unit": "months", "label": "Lifting, then guided by the strength of your shoulder"}
+  ],
+  "note": "A guide from one NHS hospital leaflet, not a replacement for your surgeon's or physiotherapist's advice. Contact sport comes after more than 16 weeks.",
+  "sources": [
+    {"name": "Lancashire Teaching Hospitals NHS Foundation Trust", "url": "https://lancsteachinghospitals.nhs.uk//media/.leaflets/66db0085603172.48408655.pdf"}
+  ]
+}
+```
 
 Following your rehab plan matters. The same leaflet notes that up to a fifth of small repairs re-tear. The risk rises to between a quarter and a half for larger tears. It is higher in people who skip post-operative advice. Older age, higher body weight, diabetes and smoking also raise it.
 

@@ -44,6 +44,21 @@ The NHS says that doing your exercises early on helps the long-term strength and
 
 A US clinical guideline for physiotherapists, published in 2020, recommends that physio should start within 24 hours of surgery. It also recommends ice for early pain, and strength training that starts within the first week.
 
+```chart
+{
+  "type": "stats",
+  "title": "When physiotherapy should start after knee replacement",
+  "stats": [
+    {"value": 24, "unit": "hours", "label": "After surgery, physiotherapy should start within this time, before you leave hospital"},
+    {"value": 7, "unit": "days", "label": "After surgery, high-intensity strength training should start within this time"}
+  ],
+  "note": "Recommendations from the 2020 American Physical Therapy Association clinical practice guideline on total knee replacement.",
+  "sources": [
+    {"name": "Jette DU et al., Physical Therapy, 2020", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7462050/"}
+  ]
+}
+```
+
 The early exercises do three jobs, according to the American Academy of Orthopaedic Surgeons (AAOS). They keep blood moving in your legs to help prevent clots. They build muscle strength. They bring back knee movement.
 
 You do not need a clinic for most of this. A 2023 review of 15 studies compared home-based rehab with outpatient rehab after knee replacement. It found home-based rehab to be an effective, safe and lower-cost option.
@@ -51,6 +66,21 @@ You do not need a clinic for most of this. A 2023 review of 15 studies compared 
 ## The five exercises
 
 A common plan from one NHS hospital is 10 of each exercise, three times a day, in short sessions. Your physio may set different numbers. Follow theirs.
+
+```chart
+{
+  "type": "stats",
+  "title": "A typical exercise plan from one NHS hospital",
+  "stats": [
+    {"value": 10, "label": "Repeats of each exercise"},
+    {"value": 3, "label": "Times a day"}
+  ],
+  "note": "Short, frequent sessions through the day are better than one long session.",
+  "sources": [
+    {"name": "West Hertfordshire Teaching Hospitals NHS Trust", "url": "https://www.westhertshospitals.nhs.uk/patients-and-visitors/patient-information-leaflets/physiotherapy-after-knee-replacement"}
+  ]
+}
+```
 
 ### 1. Ankle pumps
 
@@ -121,6 +151,20 @@ Some pain, discomfort and stretching during and after your exercises is normal.
 
 The West Hertfordshire NHS leaflet gives a simple test. If pain lasts more than about 30 minutes after an exercise, or keeps getting worse, ease off. Do the exercise less forcefully or less often. If that does not help, talk to your physiotherapist.
 
+```chart
+{
+  "type": "stats",
+  "title": "When pain after an exercise means easing off",
+  "stats": [
+    {"value": 30, "unit": "minutes", "label": "If pain after an exercise lasts longer than about this, or gets worse, do it less forcefully or less often"}
+  ],
+  "note": "Some pain, discomfort and stretching during and after exercise is normal.",
+  "sources": [
+    {"name": "West Hertfordshire Teaching Hospitals NHS Trust", "url": "https://www.westhertshospitals.nhs.uk/patients-and-visitors/patient-information-leaflets/physiotherapy-after-knee-replacement"}
+  ]
+}
+```
+
 - Take your pain medicine before you exercise, as your doctor advised.
 - Use an ice pack or frozen peas wrapped in a cloth for 10 to 15 minutes. Never put ice straight on your skin. Remove it at once if the skin turns white. If you have a circulation problem, ask your doctor first.
 - Raise your leg to bring swelling down. Lying flat for an hour each morning and afternoon helps.
@@ -190,6 +234,27 @@ Everyone recovers at a different pace. These timings come from the NHS and the A
 - Wait at least 6 weeks before driving after a total knee replacement. Check with your doctor first.
 - Most people return to work at around 6 to 12 weeks, depending on the job.
 - Avoid heavy housework, such as carrying heavy shopping, for the first 3 months.
+
+```chart
+{
+  "type": "timeline",
+  "title": "When common recovery milestones usually come, in weeks after surgery",
+  "unit": "weeks",
+  "max": 12,
+  "phases": [
+    {"label": "Single stick or cane", "from": 2, "to": 3},
+    {"label": "Light ankle weights", "from": 4, "to": 6},
+    {"label": "Walking without an aid", "from": 6},
+    {"label": "Driving again", "from": 6},
+    {"label": "Return to work", "from": 6, "to": 12}
+  ],
+  "note": "Rough timings after a total knee replacement. Check with your doctor before driving. When you return to work depends on your job.",
+  "sources": [
+    {"name": "OrthoInfo, American Academy of Orthopaedic Surgeons", "url": "https://www.orthoinfo.org/en/recovery/total-knee-replacement-exercise-guide"},
+    {"name": "NHS", "url": "https://www.nhs.uk/conditions/knee-replacement/recovery/"}
+  ]
+}
+```
 
 Full recovery can take several months or longer. Keep doing your exercises until your physio tells you to stop.
 

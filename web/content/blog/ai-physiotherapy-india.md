@@ -65,11 +65,41 @@ When you exercise alone, it is hard to know if you are doing it right. Real-time
 
 Doing home exercises consistently is hard for many people. A 2017 trial compared an exercise app, backed by phone calls and motivational text messages, with a paper handout. People using the app reported better adherence. The difference was modest. It still shows that tools can help when a person stays involved.
 
+```chart
+{
+  "type": "stats",
+  "title": "Home exercise adherence with an app compared with a paper handout",
+  "stats": [
+    {"value": 1.3, "label": "Points out of 11: mean difference in self-reported adherence after 4 weeks, in favour of the app group"}
+  ],
+  "note": "80 people with arm or leg muscle and joint conditions in Australia were randomised. The app group also got phone calls and text messages. Outcomes were available for 77.",
+  "sources": [
+    {"name": "Lambert TE et al., Journal of Physiotherapy, 2017", "url": "https://europepmc.org/article/MED/28662834"}
+  ]
+}
+```
+
 ## What it cannot do
 
 ### Measure angles as precisely as a lab
 
 The same 2022 review found that joint angles from camera systems are not yet accurate enough for clinical measurement. In some studies, lower limb angles differed from lab systems by 3 to 11 degrees. With a single camera, ankle angles were sometimes out by as much as 30 degrees.
+
+```chart
+{
+  "type": "ranges",
+  "title": "How far camera-based leg joint angles differed from lab systems",
+  "unit": "°",
+  "max": 30,
+  "ranges": [
+    {"label": "Lower limb angles", "low": 3, "high": 11}
+  ],
+  "note": "Two studies filmed walking or cycling with two video cameras and compared them with marker-based lab systems. With a single camera, ankle angles in walking differed by up to 30 degrees.",
+  "sources": [
+    {"name": "Wade L et al., PeerJ, 2022", "url": "https://europepmc.org/article/MED/35237469"}
+  ]
+}
+```
 
 That is fine for spotting a clear mistake, like a knee that caves inwards. It is not good enough to replace your physio's careful measurements.
 
@@ -118,9 +148,35 @@ India has far fewer physiotherapists than it needs. World Physiotherapy estimate
 
 The World Health Organization says the need for rehabilitation in many countries is largely unmet. In some low- and middle-income countries, more than half the people who need rehabilitation do not receive it. WHO lists the reasons: few services outside cities, long waiting times, high out-of-pocket costs and too few trained staff.
 
+```chart
+{
+  "type": "stats",
+  "title": "Unmet need for rehabilitation",
+  "stats": [
+    {"value": 50, "unit": "%", "label": "More than this share of people in some low- and middle-income countries do not get the rehabilitation they require"}
+  ],
+  "sources": [
+    {"name": "World Health Organization, rehabilitation fact sheet", "url": "https://www.who.int/news-room/fact-sheets/detail/rehabilitation"}
+  ]
+}
+```
+
 Many Indian patients will recognise these problems. A daily clinic visit can mean long travel, lost wages and a family member taking time off. In many towns, there may be no physiotherapist nearby.
 
 Remote care is already familiar to many Indians. The government's eSanjeevani telemedicine service had delivered over 49 crore consultations by August 2026. World Physiotherapy's profile for India also lists telehealth as a service physiotherapists may provide.
+
+```chart
+{
+  "type": "stats",
+  "title": "Consultations on eSanjeevani, India's national telemedicine platform",
+  "stats": [
+    {"value": 49, "label": "Over this many crore consultations delivered since its launch in 2019, as on August 11, 2026"}
+  ],
+  "sources": [
+    {"name": "Press Information Bureau, Affordable and Accessible Healthcare for All", "url": "https://www.pib.gov.in/FactsheetDetails.aspx?id=150834&ModuleId=16&reg=48&lang=1"}
+  ]
+}
+```
 
 Camera-based tools can help in a few practical ways:
 

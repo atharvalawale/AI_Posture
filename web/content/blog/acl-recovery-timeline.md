@@ -44,6 +44,25 @@ ACL surgery is not the finish line. It is the start of a long rehab. Guidelines 
 
 That can feel daunting. It helps to see recovery as a series of phases, each with clear goals. This guide walks you through them, from the first days to your return to the field.
 
+```chart
+{
+  "type": "timeline",
+  "title": "Stages of the first months after ACL reconstruction",
+  "unit": "weeks",
+  "max": 24,
+  "phases": [
+    {"label": "Crutches", "from": 0, "to": 2},
+    {"label": "Build knee bend", "from": 2, "to": 6},
+    {"label": "Strength and balance", "from": 6, "to": 12},
+    {"label": "Running and jumping", "from": 12}
+  ],
+  "note": "Stages from an NHS hospital rehab guide, which uses crutches for around the first two weeks. Its timescales are for guidance only, and progress varies from person to person.",
+  "sources": [
+    {"name": "Cambridge University Hospitals NHS Foundation Trust", "url": "https://www.cuh.nhs.uk/patient-information/anterior-cruciate-ligament-acl-reconstruction-rehabilitation/"}
+  ]
+}
+```
+
 ## Why tests matter more than the calendar
 
 Many rehab plans have moved people on by date alone. Current guidelines have moved away from this.
@@ -51,6 +70,21 @@ Many rehab plans have moved people on by date alone. Current guidelines have mov
 A Dutch guideline published in the British Journal of Sports Medicine recommends goal-based phases. You move to the next phase only when you have met the goals of the current one. Your physiotherapist checks this with objective tests. The guideline recommends continuing rehab for 9 to 12 months, depending on your goals.
 
 Time still matters, though. The graft needs time to heal. In a study of 106 athletes, each month of delay in returning to sport cut the re-injury rate by 51%. This held up to 9 months after surgery. Athletes with more equal thigh strength between legs also had fewer re-injuries.
+
+```chart
+{
+  "type": "stats",
+  "title": "Timing of return to sport and re-injury",
+  "stats": [
+    {"value": 51, "unit": "%", "label": "Drop in the re-injury rate for each month that return to sport was delayed, up to 9 months after surgery"},
+    {"value": 9, "unit": "months", "label": "After surgery, the point beyond which waiting longer brought no further drop in risk"}
+  ],
+  "note": "106 patients in pivoting sports, followed for two years after ACL reconstruction.",
+  "sources": [
+    {"name": "Grindem H et al., British Journal of Sports Medicine, 2016", "url": "https://pubmed.ncbi.nlm.nih.gov/27162233/"}
+  ]
+}
+```
 
 So the best approach combines both. Wait long enough, and pass your tests before you return.
 
@@ -117,6 +151,22 @@ Do 8 to 15 repetitions. Go a little further each day.
 
 You can usually stop crutches once you have a good straight leg raise. The Cambridge guide aims for 90 degrees of bend by the end of week 2 and 120 degrees by the end of week 4.
 
+```chart
+{
+  "title": "Knee bend targets in the first four weeks",
+  "unit": "°",
+  "bars": [
+    {"label": "Week 1 (at least)", "value": 45},
+    {"label": "End of week 2", "value": 90},
+    {"label": "End of week 4", "value": 120}
+  ],
+  "note": "Degrees of knee bend (flexion) that an NHS hospital rehab guide aims for after ACL reconstruction.",
+  "sources": [
+    {"name": "Cambridge University Hospitals NHS Foundation Trust", "url": "https://www.cuh.nhs.uk/patient-information/anterior-cruciate-ligament-acl-reconstruction-rehabilitation/"}
+  ]
+}
+```
+
 Exercises grow to include bridges, sit-to-stands, heel raises and small squats. For the first 3 to 4 weeks, keep squats between straight and about 60 degrees of knee bend. Aim for 8 to 12 repetitions, 2 to 3 sets, until your muscles feel tired.
 
 Many people go back to work at about 4 to 6 weeks, depending on the job. Do not drive until your medical team says you are fit.
@@ -132,6 +182,22 @@ One key goal is a single-leg dip with good control. That is a small, slow squat 
 ## Phase 4: from about 3 months, return to running
 
 Most programs let people start running around 12 weeks after surgery. A review of 201 studies found a wide range, from 5 to 39 weeks. Fewer than one in five studies used any test beyond time.
+
+```chart
+{
+  "type": "stats",
+  "title": "When studies allowed running after ACL reconstruction",
+  "stats": [
+    {"value": 5, "unit": "weeks", "label": "Shortest time after surgery"},
+    {"value": 12, "unit": "weeks", "label": "Median time after surgery"},
+    {"value": 39, "unit": "weeks", "label": "Longest time after surgery"}
+  ],
+  "note": "Time-based criteria for return to running across 201 studies. Fewer than one in five also used clinical, strength or performance tests.",
+  "sources": [
+    {"name": "Rambaud AJM et al., British Journal of Sports Medicine, 2018", "url": "https://pubmed.ncbi.nlm.nih.gov/29720478/"}
+  ]
+}
+```
 
 The most common tests were:
 
@@ -159,6 +225,24 @@ These tests are tough. In one study, only 23% of patients passed a strict six-te
 
 A second ACL injury is a real risk, especially for young athletes. A review found an overall second ACL injury rate of 15%. In people under 25 who returned to sport, it rose to 23%. That is nearly one in four.
 
+```chart
+{
+  "title": "Second ACL injury rate after reconstruction",
+  "unit": "%",
+  "max": 100,
+  "bars": [
+    {"label": "All patients", "value": 15},
+    {"label": "Returned to sport", "value": 20},
+    {"label": "Younger than 25", "value": 21},
+    {"label": "Under 25, returned to sport", "value": 23}
+  ],
+  "note": "A new injury to the graft or to the other knee's ACL, pooled across 19 studies.",
+  "sources": [
+    {"name": "Wiggins AJ et al., American Journal of Sports Medicine, 2016", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5501245/"}
+  ]
+}
+```
+
 Returning to jumping and pivoting sports raises the risk. In the Delaware-Oslo study, athletes who went back to these sports had more than four times the re-injury rate.
 
 Most people do get back to some sport. A large review found that 81% returned to any sport after surgery. 65% returned to their pre-injury level, and 55% to competitive sport.
@@ -183,6 +267,23 @@ Most people do get back to some sport. A large review found that 81% returned to
 ## Mental readiness
 
 Your head needs to be ready, not just your knee. In one study of 164 people, only 40% had returned to their pre-injury sport. The top reasons for not returning were not trusting the knee (28%), fear of a new injury (24%) and poor knee function (22%).
+
+```chart
+{
+  "title": "Main reasons for not returning to pre-injury sport",
+  "unit": "%",
+  "max": 100,
+  "bars": [
+    {"label": "Not trusting the knee", "value": 28},
+    {"label": "Fear of a new injury", "value": 24},
+    {"label": "Poor knee function", "value": 22}
+  ],
+  "note": "164 people surveyed 1 to 7 years after ACL reconstruction, of whom 40% had returned to their pre-injury sport or activity.",
+  "sources": [
+    {"name": "Ardern CL et al., British Journal of Sports Medicine, 2014", "url": "https://pubmed.ncbi.nlm.nih.gov/25293342/"}
+  ]
+}
+```
 
 Psychological readiness had the strongest link with getting back to sport. Confidence, a sense of control and fear of re-injury all affect rehab, according to the Dutch guideline. It recommends measuring these with a questionnaire during rehab.
 
