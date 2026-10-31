@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type PointerEvent } from "react";
 import { isScrub, isTap } from "./gestures";
-import { leanToward, NO_LEAN, REST, settle, step, type Lean, type SpinState } from "./spin";
+import { followHold, holdFrom, leanToward, NO_LEAN, REST, settle, step, type Hold, type Lean, type SpinState } from "./spin";
 
 export type PhoneLean = {
   /** The current lean. Read it every frame; changes do not re-render. */
@@ -30,7 +30,7 @@ export type PhoneGestures = {
 type Press = { id: number; x0: number; y0: number; t0: number; moved: number; scrubbing: boolean };
 
 type Options = {
-  /** Switches the cursor lean off (reduced motion). Scrub and tap always work. */
+  /** Switches the cursor and gyro lean off (reduced motion). Scrub and tap always work. */
   enabled: boolean;
   onScrubStart?: () => void;
   /** Horizontal distance from the press point, in CSS pixels. */
@@ -40,9 +40,17 @@ type Options = {
   onTap?: (px: number, py: number) => void;
 };
 
+/** iOS asks before a page may read the gyro, and only from a tap. Elsewhere this does not exist. */
+type OrientationPermission = { requestPermission?: () => Promise<"granted" | "denied"> };
+
+function screenAngle() {
+  return screen.orientation?.angle ?? 0;
+}
+
 /**
  * What the visitor can do to the phone: drag sideways to scrub the clip, tap to pick a point,
- * and with a mouse, hover to make it lean toward the pointer. The phone never turns.
+ * with a mouse, hover to make it lean toward the pointer, and on a touch screen, turn their own
+ * phone to make it lean the same way. The phone never turns.
  */
 export function usePhoneGestures({ enabled, onScrubStart, onScrub, onScrubEnd, onTap }: Options): PhoneGestures {
   const state = useRef<SpinState>(REST);
@@ -77,6 +85,30 @@ export function usePhoneGestures({ enabled, onScrubStart, onScrub, onScrubEnd, o
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
+  // On touch screens the phone copies the visitor's own phone. iOS sends nothing until a tap grants motion access (see `end`).
+  const gyro = useRef(false);
+  const askGyro = useRef(false);
+  useEffect(() => {
+    if (!enabled || !window.matchMedia("(pointer: coarse)").matches) return;
+    askGyro.current = typeof (window.DeviceOrientationEvent as OrientationPermission | undefined)?.requestPermission === "function";
+    let rest: Hold | null = null;
+    let last = 0;
+    const onOrientation = (e: DeviceOrientationEvent) => {
+      if (e.beta === null || e.gamma === null) return;
+      const next = followHold(rest, holdFrom(e.beta, e.gamma, screenAngle()), last ? (e.timeStamp - last) / 1000 : 0);
+      rest = next.rest;
+      last = e.timeStamp;
+      gyro.current = true;
+      lean.current = next.lean;
+      animate();
+    };
+    window.addEventListener("deviceorientation", onOrientation);
+    return () => {
+      window.removeEventListener("deviceorientation", onOrientation);
+      gyro.current = false;
+    };
+  }, [enabled, animate]);
+
   // Back to rest when the lean is switched off.
   useEffect(() => {
     if (enabled) return;
@@ -97,7 +129,11 @@ export function usePhoneGestures({ enabled, onScrubStart, onScrub, onScrubEnd, o
         const r = e.currentTarget.getBoundingClientRect();
         callbacks.current.onTap?.((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
       }
-      if (e.pointerType !== "mouse" && lean.current !== NO_LEAN) {
+      if (e.type === "pointerup" && askGyro.current) {
+        askGyro.current = false;
+        (window.DeviceOrientationEvent as OrientationPermission).requestPermission?.().catch(() => {});
+      }
+      if (e.pointerType !== "mouse" && !gyro.current && lean.current !== NO_LEAN) {
         lean.current = NO_LEAN;
         animate();
       }
