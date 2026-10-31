@@ -7,7 +7,7 @@ type Post = { slug: string; title: string; featured: boolean; date: string; revi
 
 const dir = path.join(process.cwd(), "content/blog");
 const posts: Post[] = readdirSync(dir)
-  .filter((f) => f.endsWith(".md"))
+  .filter((f) => f.endsWith(".md") && !f.startsWith("."))
   .map((f) => matter(readFileSync(path.join(dir, f), "utf8")).data as Post)
   .sort((a, b) => b.date.localeCompare(a.date));
 const featured = posts.find((p) => p.featured)!;

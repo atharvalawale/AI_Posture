@@ -42,7 +42,7 @@ export const EXERCISES: readonly Exercise[] = [
 export const REPS_OPTIONS = [5, 10, 15] as const;
 export const SIDES: readonly Side[] = ["left", "right"];
 
-export const DEFAULT_WS_BASE = "wss://ai-posture-backend.onrender.com/ws/pose";
+export const DEFAULT_WS_BASE = "wss://fiixbee-pose-backend.onrender.com/ws/pose";
 export const WS_BASE = process.env.NEXT_PUBLIC_POSE_WS_URL ?? DEFAULT_WS_BASE;
 
 /** One frame every 200 ms, JPEG quality 0.5, as the old page did. */

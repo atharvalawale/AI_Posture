@@ -62,7 +62,7 @@ python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
 | `RESEND_FROM` | Sender, for example `FiixBE website <website@fiixbee.com>`. The domain must be verified in Resend. |
 | `RESEND_AUDIENCE_ID` | The Resend segment that newsletter sign-ups join. |
 | `CONTACT_TO` | Where contact form messages go. Defaults to `hello@fiixbee.com`. |
-| `NEXT_PUBLIC_POSE_WS_URL` | The pose backend WebSocket base URL. Defaults to `wss://ai-posture-backend.onrender.com/ws/pose`. |
+| `NEXT_PUBLIC_POSE_WS_URL` | The pose backend WebSocket base URL. Defaults to `wss://fiixbee-pose-backend.onrender.com/ws/pose`. |
 
 ## Working on the exFAT drive
 

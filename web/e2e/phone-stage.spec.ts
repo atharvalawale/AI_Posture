@@ -176,6 +176,8 @@ test("a tap near the hip switches the readout to Hip", async ({ browser }) => {
   try {
     await page.goto("/");
     await readoutLive(page);
+    // The 3D phone takes over from the 2D one, so only one live screen is left.
+    await expect(page.locator('[data-phone="2d"]')).toHaveCount(0, { timeout: 60_000 });
     await expect(page.locator("[data-readout-joint]")).toHaveText("Knee");
     await page.locator("[data-phone-handle]").focus();
     await page.keyboard.press("ArrowRight");
@@ -217,6 +219,8 @@ test("keyboard steps and cycles the joint", async ({ browser }) => {
   try {
     await page.goto("/");
     await readoutLive(page);
+    // The 3D phone takes over from the 2D one, so only one live screen is left.
+    await expect(page.locator('[data-phone="2d"]')).toHaveCount(0, { timeout: 60_000 });
     const handle = page.locator("[data-phone-handle]");
     await handle.focus();
     await expect(handle).toBeFocused();
