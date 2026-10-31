@@ -8,7 +8,7 @@ import { BEZEL, PHONE_H, PHONE_W, ScreenSurface, type ScreenId } from "@/compone
 import { ScreenStack, type StoryProgress } from "@/components/phone/ScreenStack";
 import type { LiveSession } from "@/lib/pose";
 import { BODY, PhoneModel } from "./PhoneModel";
-import { introTilt, swayAt } from "./tilt";
+import { introRunning, introTilt, swayAt } from "./tilt";
 import type { PhoneLean } from "./usePhoneGestures";
 
 const FOV = 18;
@@ -41,9 +41,10 @@ type Props = {
 
 /** Where the phone is turned to: the intro turn-in plus the scroll sway. Also says if the intro still runs. */
 function poseAt(progress: number, introStart: number) {
-  const intro = introTilt(performance.now() - introStart);
+  const elapsed = performance.now() - introStart;
+  const intro = introTilt(elapsed);
   const sway = swayAt(progress);
-  return { x: intro.x + sway.x, y: intro.y + sway.y, intro: intro.x !== 0 || intro.y !== 0 };
+  return { x: intro.x + sway.x, y: intro.y + sway.y, intro: introRunning(elapsed) };
 }
 
 /** Places the camera so the phone is exactly `phoneHeight` CSS pixels tall, like the 2D phone. */

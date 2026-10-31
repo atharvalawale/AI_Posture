@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { PhoneFrame, type ScreenId } from "@/components/phone/PhoneFrame";
 import { ScreenStack, type StoryProgress } from "@/components/phone/ScreenStack";
 import type { LiveSession } from "@/lib/pose";
-import { introTilt, swayAt } from "./tilt";
+import { introRunning, introTilt, swayAt } from "./tilt";
 import type { PhoneLean } from "./usePhoneGestures";
 
 /**
@@ -52,7 +52,7 @@ export function Phone2DStage({
       // CSS rotateX runs the other way round from three.js, rotateY the same way.
       el.style.transform = `perspective(1800px) rotateX(${(-x).toFixed(4)}rad) rotateY(${y.toFixed(4)}rad)`;
       // Every frame until the intro ends. After that, only when scroll or lean changes.
-      if (intro.x !== 0 || intro.y !== 0) schedule();
+      if (introRunning(elapsed)) schedule();
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(apply);
