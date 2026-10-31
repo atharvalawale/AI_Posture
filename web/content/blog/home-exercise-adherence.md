@@ -6,7 +6,7 @@ category: "Rehabilitation"
 date: "2026-10-21"
 readingMinutes: 7
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: true
 image:
   src: "/images/blog/home-exercise-adherence.webp"

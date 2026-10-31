@@ -6,7 +6,7 @@ category: "Technology"
 date: "2026-10-27"
 readingMinutes: 7
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/ai-physiotherapy-india.webp"

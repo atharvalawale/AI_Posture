@@ -6,7 +6,7 @@ category: "Hip rehabilitation"
 date: "2026-10-06"
 readingMinutes: 8
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/hip-replacement-recovery-guide.webp"

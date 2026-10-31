@@ -19,19 +19,21 @@ const values = [
   },
 ] as const;
 
-const team: { name: string; role?: string; body: string }[] = [
+const team: { name: string; role: string; body: string }[] = [
   {
-    name: "Shreyas Jadhav",
-    role: "Founder and CEO",
-    body: "AI and machine learning engineer focused on computer vision and pose detection. Built the engine behind FiixBE's real-time scoring.",
+    name: "Prrasnna Madane",
+    role: "CEO",
+    body: "Leads FiixBE, from our work with physiotherapists and clinics to how we reach patients across India.",
   },
   {
-    name: "Co-founder and CTO",
+    name: "Parth Shastri",
+    role: "CTO",
     body: "Full-stack engineer working on real-time systems, FastAPI, WebSocket architecture and mobile development.",
   },
   {
-    name: "Clinical advisor",
-    body: "A practising physiotherapist who guides our exercise library, scoring logic and clinical accuracy.",
+    name: "Dr. Gayatri Bodas",
+    role: "Clinical advisor",
+    body: "A practising physiotherapist who guides our exercise library, scoring logic and clinical accuracy, and reviews every article on our blog.",
   },
 ];
 
@@ -122,7 +124,7 @@ export function About() {
             <li key={m.name} className="grid gap-2 border-b border-line py-7 md:grid-cols-[1fr_1.6fr] md:gap-8">
               <div>
                 <h3 className="text-[17px] font-semibold">{m.name}</h3>
-                {m.role ? <p className="mt-0.5 text-[15px] text-muted">{m.role}</p> : null}
+                <p className="mt-0.5 text-[15px] text-muted">{m.role}</p>
               </div>
               <p className={`max-w-xl ${bodyClass}`}>{m.body}</p>
             </li>

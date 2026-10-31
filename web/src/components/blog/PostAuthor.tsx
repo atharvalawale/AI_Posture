@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogoMark } from "@/components/brand/Logo";
 
 export function PostAuthor({ reviewedBy }: { reviewedBy: string }) {
@@ -9,7 +10,15 @@ export function PostAuthor({ reviewedBy }: { reviewedBy: string }) {
       </span>
       <div className="text-[15px] leading-snug">
         <p className="font-medium text-text">FiixBE Clinical Team</p>
-        {reviewer && <p className="text-muted">Reviewed by {reviewer}</p>}
+        {reviewer && (
+          <p className="text-muted">
+            Reviewed by{" "}
+            {/* The team section on the About page gives the reviewer's role. */}
+            <Link href="/about#about-team" className="underline decoration-line underline-offset-4 transition-colors hover:text-text hover:decoration-text">
+              {reviewer}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

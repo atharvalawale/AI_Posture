@@ -6,7 +6,7 @@ category: "Shoulder recovery"
 date: "2026-09-23"
 readingMinutes: 8
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/rotator-cuff-recovery.webp"

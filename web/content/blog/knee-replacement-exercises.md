@@ -6,7 +6,7 @@ category: "Knee rehabilitation"
 date: "2026-09-15"
 readingMinutes: 8
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/knee-replacement-exercises.webp"

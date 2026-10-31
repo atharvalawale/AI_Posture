@@ -6,7 +6,7 @@ category: "Sports injuries"
 date: "2026-10-14"
 readingMinutes: 8
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/acl-recovery-timeline.webp"

@@ -6,7 +6,7 @@ category: "Posture"
 date: "2026-10-13"
 readingMinutes: 7
 author: "FiixBE Clinical Team"
-reviewedBy: ""
+reviewedBy: "Dr. Gayatri Bodas"
 featured: false
 image:
   src: "/images/blog/work-from-home-posture.webp"

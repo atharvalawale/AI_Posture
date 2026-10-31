@@ -37,6 +37,7 @@ test.describe("article pages", () => {
       await expect(page.getByText("general information, not medical advice")).toBeVisible();
       await expect(page.locator("main a[href='/session']").first()).toBeVisible();
       if (!post.reviewedBy) await expect(page.getByText(/Reviewed by/)).toHaveCount(0);
+      else await expect(page.getByRole("link", { name: post.reviewedBy })).toHaveAttribute("href", "/about#about-team");
     });
   }
 
