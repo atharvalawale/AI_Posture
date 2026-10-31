@@ -25,7 +25,8 @@ export function Button({ href, variant, size, className, children, ...rest }: Co
   const cls = buttonClass(variant, size, className);
   if (href) {
     return (
-      <Link href={href} className={cls}>
+      // data-cta: clicks are reported to analytics as cta_click (see CtaTracking).
+      <Link href={href} className={cls} data-cta="">
         {children}
       </Link>
     );

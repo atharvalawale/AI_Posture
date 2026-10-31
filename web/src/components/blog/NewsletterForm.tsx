@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
+import { track } from "@/lib/analytics";
 import { site } from "@/lib/site";
 
 type State =
@@ -34,7 +35,10 @@ export function NewsletterForm() {
         body: JSON.stringify({ email, company }),
       });
       const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (res.ok && body.ok !== false) setState({ kind: "done" });
+      if (res.ok && body.ok !== false) {
+        setState({ kind: "done" });
+        track("sign_up", { method: "newsletter" });
+      }
       else if (res.status === 400) setState({ kind: "field-error", message: body.error || "Enter a valid email address." });
       else if (res.status === 429) setState({ kind: "error", message: RATE_LIMITED });
       else setState({ kind: "error", message: FAILED });

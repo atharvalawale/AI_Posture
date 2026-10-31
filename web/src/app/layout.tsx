@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { fonts } from "./fonts";
 import "./globals.css";
 import { CookieBanner } from "@/components/consent/CookieBanner";
+import { CtaTracking } from "@/components/consent/CtaTracking";
 import { GoogleAnalytics } from "@/components/consent/GoogleAnalytics";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
           <CookieBanner />
+          <CtaTracking />
         </ThemeProvider>
         <GoogleAnalytics />
         <noscript dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} />

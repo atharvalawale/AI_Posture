@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef } from "react";
+import { track } from "@/lib/analytics";
 import { getExercise, WS_BASE, wsUrl } from "@/lib/session/protocol";
 import { initialState, sessionReducer } from "@/lib/session/reducer";
 import { AlignStep } from "./AlignStep";
@@ -44,7 +45,24 @@ export function SessionFlow() {
     window.scrollTo(0, 0);
   }, [state.phase]);
 
-  const goLive = useCallback(() => dispatch({ type: "go_live" }), []);
+  const goLive = useCallback(() => {
+    track("exercise_start", { exercise: state.exercise, side: state.side, reps_target: state.repsTarget });
+    dispatch({ type: "go_live" });
+  }, [state.exercise, state.side, state.repsTarget]);
+
+  // One event per report: exercise and side cannot change while it shows. `completed` is false when the
+  // visitor ended the session before the target.
+  const { phase, summary, completed, exercise: exerciseKey, side } = state;
+  useEffect(() => {
+    if (phase !== "report" || !summary) return;
+    track("exercise_complete", {
+      exercise: exerciseKey,
+      side,
+      reps_completed: summary.reps_completed,
+      avg_score: summary.avg_score,
+      completed,
+    });
+  }, [phase, summary, completed, exerciseKey, side]);
   const stop = useCallback(() => dispatch({ type: "stop" }), []);
   const reset = useCallback(() => dispatch({ type: "reset" }), []);
   const switchCamera = useCallback(() => dispatch({ type: "switch_camera" }), []);

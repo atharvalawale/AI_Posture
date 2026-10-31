@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { track } from "@/lib/analytics";
 import { CONTACT_SUCCESS, contactRoles, contactSchema } from "@/lib/mail/contact";
 import { site } from "@/lib/site";
 
@@ -72,7 +73,10 @@ export function ContactForm() {
         body: JSON.stringify({ ...values, company: typeof honeypot === "string" ? honeypot : "" }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (res.ok && data?.ok) setStatus({ kind: "sent" });
+      if (res.ok && data?.ok) {
+        setStatus({ kind: "sent" });
+        track("generate_lead", { lead_source: "contact_form", role: values.role });
+      }
       else if ((res.status === 400 || res.status === 429) && data?.error) setStatus({ kind: "rejected", message: data.error });
       else setStatus({ kind: "failed" });
     } catch {

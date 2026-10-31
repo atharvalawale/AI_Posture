@@ -20,6 +20,7 @@ import {
 import { HeroCopy } from "@/components/home/HeroCopy";
 import { LiveReadout } from "@/components/home/LiveReadout";
 import { PHONE_H, PHONE_W, SCREEN_H, SCREEN_W } from "@/components/phone/PhoneFrame";
+import { track } from "@/lib/analytics";
 import { hasWebGL2 } from "@/lib/device";
 import { LiveSession, coverBox, loadPoseClip, nearestJoint, type PoseClip } from "@/lib/pose";
 import { ChapterNote, PlanDetails, SummaryDetails } from "./ChapterDetails";
@@ -116,6 +117,13 @@ export function HomeStage() {
   const boxRef = useRef<HTMLDivElement>(null);
   const hintId = useId();
   const { progress, screen, pinned, goTo, onProgress } = useScrollStory(sectionRef);
+  // Analytics: how far into the story visitors get. Each screen after the first counts once per page view.
+  const [seenScreens] = useState(() => new Set([screen]));
+  useEffect(() => {
+    if (seenScreens.has(screen)) return;
+    seenScreens.add(screen);
+    track("story_screen", { screen });
+  }, [screen, seenScreens]);
   const story = useMemo(() => ({ progress, onProgress }), [progress, onProgress]);
   const reduced = useMedia(REDUCED, false);
   const desktop = useMedia(DESKTOP, true);
