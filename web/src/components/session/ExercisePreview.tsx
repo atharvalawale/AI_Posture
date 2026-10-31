@@ -57,7 +57,7 @@ export function ExercisePreview({ exercise, side }: { exercise: ExerciseKey; sid
         src={exerciseImage(exercise)}
         alt=""
         fill
-        priority
+        loading="eager"
         sizes="(min-width: 1024px) 620px, 100vw"
         className={`object-cover brightness-[.82] saturate-[.85] transition-transform duration-500 ease-out ${mirrored ? "-scale-x-100" : ""}`}
       />

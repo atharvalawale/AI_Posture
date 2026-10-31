@@ -75,6 +75,7 @@ export function SelectStep({ exercise, side, repsTarget, onChoose, onStart }: Pr
                   width={128}
                   height={128}
                   sizes="64px"
+                  loading="eager"
                   style={{ objectPosition: `${squareCropX(ex.key)} 50%` }}
                   className="h-16 w-16 shrink-0 rounded-xl object-cover opacity-80 transition-opacity group-hover:opacity-100 group-has-[:checked]:opacity-100"
                 />
