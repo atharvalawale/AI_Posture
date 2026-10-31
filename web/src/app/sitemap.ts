@@ -1,22 +1,16 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
-import { site } from "@/lib/site";
+import { absoluteUrl } from "@/lib/seo";
 
-const PAGES: { path: string; priority: number }[] = [
-  { path: "", priority: 1 },
-  { path: "/for-patients", priority: 0.8 },
-  { path: "/for-physios", priority: 0.8 },
-  { path: "/pricing", priority: 0.7 },
-  { path: "/session", priority: 0.7 },
-  { path: "/blog", priority: 0.6 },
-  { path: "/about", priority: 0.5 },
-  { path: "/contact", priority: 0.5 },
-];
+// Google ignores priority and changefreq, and only trusts lastmod when it is accurate,
+// so pages without a real modified date leave it out.
+const PAGES = ["/", "/for-patients", "/for-physios", "/pricing", "/session", "/about", "/contact"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();
   return [
-    ...PAGES.map(({ path, priority }) => ({ url: `${site.url}${path}`, priority })),
-    ...posts.map((post) => ({ url: `${site.url}/blog/${post.slug}`, lastModified: post.date, priority: 0.6 })),
+    ...PAGES.map((path) => ({ url: absoluteUrl(path) })),
+    { url: absoluteUrl("/blog"), lastModified: posts[0]?.date },
+    ...posts.map((post) => ({ url: absoluteUrl(`/blog/${post.slug}`), lastModified: post.date })),
   ];
 }

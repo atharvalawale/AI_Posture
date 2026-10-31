@@ -7,7 +7,8 @@ import { PostAuthor } from "@/components/blog/PostAuthor";
 import { PostMetaLine } from "@/components/blog/PostMetaLine";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { getAllPosts, getPost } from "@/lib/blog";
+import { getAllPosts, getPost, type PostMeta } from "@/lib/blog";
+import { absoluteUrl, JsonLd, organization, pageMetadata } from "@/lib/seo";
 
 // Typed by hand: generated route types live in each dev server's own dist folder here.
 type Props = { params: Promise<{ slug: string }> };
@@ -27,20 +28,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPost(slug);
   if (!post) return {};
   const { meta } = post;
-  return {
+  return pageMetadata({
     title: meta.title,
     description: meta.description,
-    alternates: { canonical: `/blog/${meta.slug}` },
-    openGraph: {
-      type: "article",
-      title: meta.title,
-      description: meta.description,
-      url: `/blog/${meta.slug}`,
-      publishedTime: meta.date,
-      section: meta.category,
-      images: [{ url: meta.image.src, alt: meta.image.alt }],
-    },
-    twitter: { card: "summary_large_image", title: meta.title, description: meta.description, images: [meta.image.src] },
+    path: `/blog/${meta.slug}`,
+    openGraph: { type: "article", title: meta.title, publishedTime: meta.date, section: meta.category, authors: [meta.author] },
+    // The card from opengraph-image.tsx. The post photos are too large for WhatsApp previews.
+    image: { url: `/blog/${meta.slug}/opengraph-image`, alt: meta.title },
+  });
+}
+
+function structuredData(meta: PostMeta) {
+  const url = absoluteUrl(`/blog/${meta.slug}`);
+  return {
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${url}#article`,
+        mainEntityOfPage: url,
+        headline: meta.title,
+        description: meta.description,
+        image: [absoluteUrl(meta.image.src)],
+        datePublished: meta.date,
+        articleSection: meta.category,
+        inLanguage: "en-IN",
+        author: { "@type": "Organization", name: meta.author, url: absoluteUrl("/about") },
+        publisher: organization,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Blog", item: absoluteUrl("/blog") },
+          { "@type": "ListItem", position: 3, name: meta.title, item: url },
+        ],
+      },
+    ],
   };
 }
 
@@ -52,6 +75,7 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <article className="pb-24 pt-10 md:pt-16">
+      <JsonLd data={structuredData(meta)} />
       <Container>
         <div className="mx-auto max-w-[760px]">
           <Link href="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-text">

@@ -13,6 +13,11 @@ export default defineConfig({
   timeout: DEV ? 120_000 : 30_000,
   use: {
     baseURL: `http://localhost:${PORT}`,
+    // Answer the cookie banner up front so it does not cover the page. e2e/site.spec.ts tests the banner itself.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: "fiixbe-analytics-consent", value: "denied" }] }],
+    },
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

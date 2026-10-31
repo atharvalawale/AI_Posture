@@ -40,13 +40,22 @@ test.describe("article pages", () => {
     });
   }
 
-  test("sets the post image as the OpenGraph image", async ({ page }) => {
+  test("shares a small PNG card and describes the article for search", async ({ page }) => {
     await page.goto(`/blog/${featured.slug}`);
-    await expect(page.locator("meta[property='og:image']").first()).toHaveAttribute(
-      "content",
-      new RegExp(`/images/blog/${featured.slug}\\.webp$`),
-    );
+    const og = await page.locator("meta[property='og:image']").first().getAttribute("content");
+    expect(og).toContain(`/blog/${featured.slug}/opengraph-image`);
+    const image = await page.request.get(new URL(og!).pathname + new URL(og!).search);
+    expect(image.headers()["content-type"]).toBe("image/png");
+    // WhatsApp drops link previews whose image is over about 300 KB.
+    expect((await image.body()).length).toBeLessThan(300_000);
     await expect(page).toHaveTitle(new RegExp(featured.title.slice(0, 20)));
+
+    const data = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    const [article, breadcrumbs] = data["@graph"];
+    expect(article["@type"]).toBe("BlogPosting");
+    expect(article.headline).toBe(featured.title);
+    expect(article.datePublished).toBe(featured.date);
+    expect(breadcrumbs["@type"]).toBe("BreadcrumbList");
   });
 
   test("unknown slug returns 404", async ({ page }) => {

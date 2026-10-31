@@ -31,8 +31,9 @@ const nextConfig: NextConfig = {
   // Unknown blog slugs read content/blog at request time, so ship the posts with the server bundle.
   outputFileTracingIncludes: {
     "/blog/[slug]": ["./content/blog/**"],
-    // The share image reads its fonts from disk at request time.
+    // The share images read their fonts from disk at request time.
     "/opengraph-image": ["./src/app/_og/**"],
+    "/blog/[slug]/opengraph-image": ["./src/app/_og/**", "./content/blog/**"],
   },
   async redirects() {
     return [

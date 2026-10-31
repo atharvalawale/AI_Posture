@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { Container } from "@/components/ui/Container";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact",
   description: `Questions about FiixBE, trying it with your patients or bringing it to your clinic? Write to us and we reply within one working day.`,
-};
+  path: "/contact",
+});
 
 const details = [
   { label: "Email", value: <a href={`mailto:${site.email}`} className="underline decoration-line underline-offset-4 hover:decoration-text">{site.email}</a> },

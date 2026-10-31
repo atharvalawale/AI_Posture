@@ -5,16 +5,12 @@ import { NewsletterForm } from "@/components/blog/NewsletterForm";
 import { PostMetaLine } from "@/components/blog/PostMetaLine";
 import { Container } from "@/components/ui/Container";
 import { getAllPosts, type PostMeta } from "@/lib/blog";
+import { pageMetadata } from "@/lib/seo";
 
 const description =
   "Researched guides on physiotherapy and recovery at home, from the FiixBE Clinical Team. Every article lists its sources.";
 
-export const metadata: Metadata = {
-  title: "Blog",
-  description,
-  alternates: { canonical: "/blog" },
-  openGraph: { title: "FiixBE blog", description, url: "/blog" },
-};
+export const metadata: Metadata = pageMetadata({ title: "Blog", description, path: "/blog", openGraph: { title: "FiixBE blog" } });
 
 export default async function BlogPage() {
   const posts = await getAllPosts();
