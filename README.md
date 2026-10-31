@@ -43,6 +43,8 @@ The backend listens on http://localhost:8000. The pose WebSocket is at `ws://loc
 
 To test the backend without the website, open `frontend/index.html` in a browser and allow camera access.
 
+To check the WebSocket replies, including the `keypoints` the website draws as a skeleton, run `python scripts/check_keypoints.py` from the `pose_backend/` folder. It starts the server on a free port, sends a frame with a person and a frame without one, and checks the replies.
+
 ## Deployment
 
 The website and the pose backend deploy separately. The website runs on Vercel. The pose backend runs on Render. The website connects to the backend over a WebSocket.
