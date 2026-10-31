@@ -56,12 +56,24 @@ def _get_pose():
 
 
 def detect_pose(frame):
+    return detect_pose_with_landmarks(frame)[0]
+
+
+def detect_pose_with_landmarks(frame):
+    """
+    Returns (keypoints, landmarks). `keypoints` is exactly what detect_pose returns: pixel
+    coordinates per named landmark, None below 0.5 visibility. `landmarks` is every MediaPipe
+    landmark (33, by MediaPipe index) as [x, y, visibility], x and y normalized 0..1 to the frame
+    and rounded to 3 decimals, for drawing the skeleton on the client. It is None when no person
+    is found or detection fails.
+    """
     try:
         pose = _get_pose()
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(rgb)
         h, w, _ = frame.shape
         keypoints = {}
+        landmarks = None
         if results.pose_landmarks:
             for name, idx in POSE_LANDMARKS.items():
                 lm = results.pose_landmarks.landmark[idx]
@@ -69,13 +81,19 @@ def detect_pose(frame):
                     keypoints[name] = (int(lm.x * w), int(lm.y * h))
                 else:
                     keypoints[name] = None
+            landmarks = compact_landmarks(results.pose_landmarks.landmark)
         else:
             for name in POSE_LANDMARKS:
                 keypoints[name] = None
-        return keypoints
+        return keypoints, landmarks
     except Exception as e:
         print(f"detect_pose error: {e}")
-        return {name: None for name in POSE_LANDMARKS}
+        return {name: None for name in POSE_LANDMARKS}, None
+
+
+def compact_landmarks(landmarks):
+    """[x, y, visibility] per landmark, rounded to 3 decimals so each frame's JSON stays small."""
+    return [[round(lm.x, 3), round(lm.y, 3), round(lm.visibility, 3)] for lm in landmarks]
 
 
 def analyze_posture(keypoints, reference_keypoints=None):

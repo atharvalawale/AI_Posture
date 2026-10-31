@@ -18,7 +18,7 @@ import app.models  # noqa: F401
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from ai_engine.pose_analyser import detect_pose
+from ai_engine.pose_analyser import detect_pose_with_landmarks
 from ai_engine.exercise.physio_exercises import EXERCISES, get_exercise
 from ai_engine.exercise.scoring import ExerciseScorer, session_summary
 
@@ -107,7 +107,7 @@ async def pose_websocket(
                     break
                 continue
 
-            keypoints = detect_pose(frame)
+            keypoints, landmarks = detect_pose_with_landmarks(frame)
             result = scorer.update(keypoints)
 
             # Debug — remove after testing
@@ -127,6 +127,9 @@ async def pose_websocket(
                 "complete":          scorer.is_complete,
                 "view":              result.view,
                 "summary":           session_summary(scorer) if scorer.is_complete else None,
+                # All 33 MediaPipe landmarks as [x, y, visibility], x and y 0..1 of the frame,
+                # for drawing the skeleton. None when no person is found.
+                "keypoints":         landmarks,
             }
 
             try:
