@@ -142,11 +142,17 @@ describe("PhysioDashboard", () => {
     expect(formScore()).toBe("100");
 
     expect(container.querySelector('img[src*="shoulder_raises"]')).not.toBeNull();
-    expect(screen.getByText("Thursday")).toBeInTheDocument();
-    expect(screen.getAllByText("Missed")).toHaveLength(4);
+    // His week shows twice, each copy hidden by CSS at the other's widths: under his photo from 640 px, and at the foot
+    // of the details on phones. Both list the same days.
+    const weeks = container.querySelectorAll<HTMLElement>("[data-week-list]");
+    expect(weeks).toHaveLength(2);
+    expect(weeks[0].textContent).toBe(weeks[1].textContent);
+    const week = within(weeks[0]);
+    expect(week.getByText("Thursday")).toBeInTheDocument();
+    expect(week.getAllByText("Missed")).toHaveLength(4);
     // Today is Sunday, and his session this morning is the photo above his week.
     expect(screen.getByText("Shoulder raises, this morning")).toBeInTheDocument();
-    expect(screen.getByText("Sunday").nextSibling?.textContent).toBe("Done this morning");
+    expect(week.getByText("Sunday").nextSibling?.textContent).toBe("Done this morning");
     expect(screen.getByText("3 of 7")).toBeInTheDocument();
   });
 

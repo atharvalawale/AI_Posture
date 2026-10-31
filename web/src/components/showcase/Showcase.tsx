@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { useShowcase } from "./useShowcase";
 
 export type ShowcaseItem = {
@@ -49,7 +49,11 @@ export function useShowcasePanelActive() {
   return useContext(PanelActive);
 }
 
-/** A list of items beside one panel. The active item is lifted and its panel shows; hover, tap, focus and arrow keys all change it. */
+/**
+ * A list of items beside one panel. The active item is lifted and its panel shows; hover, tap, focus and arrow keys all change it.
+ * Cards on phones (below 640 px) are a swipe carousel instead: each slide is a panel with its card's text under it, and the
+ * cards become dots under the slides, so whatever the visitor picks changes right where they look.
+ */
 export function Showcase({ label, items: allItems, panels: allPanels, layout, autoAdvanceMs, className = "" }: Props) {
   // Tabs and panels come from one count, so a mismatch can never leave a dangling aria-controls.
   const count = Math.min(allItems.length, allPanels.length);
@@ -75,6 +79,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
   // Cards with a detail sit side by side from 640 to 1023 px, so they track the 640 px line too.
   const [wide, setWide] = useState(false);
   const [tablet, setTablet] = useState(false);
+  const [phone, setPhone] = useState(false);
   // The detailed card whose tab has keyboard focus. Its whole face takes the ring, since the tab is only its top.
   const [ring, setRing] = useState<number | null>(null);
   useEffect(() => {
@@ -83,6 +88,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
     const update = () => {
       setWide(lg.matches);
       setTablet(sm.matches && !lg.matches);
+      setPhone(!sm.matches);
     };
     update();
     lg.addEventListener?.("change", update);
@@ -103,6 +109,39 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
   const place = (i: number) =>
     ({ "--tab-row": 3 * i + 1, "--detail-row": 3 * i + 2, "--col": i + 1 }) as CSSProperties;
 
+  // The phone carousel: swiping makes the slide in view the active one, and a dot scrolls its slide into view.
+  const carousel = layout === "cards";
+  const track = useRef<HTMLDivElement>(null);
+  const slideAt = useCallback(() => {
+    const el = track.current;
+    if (!el) return 0;
+    if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 2) return count - 1;
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    const slides = [...el.children] as HTMLElement[];
+    let best = 0;
+    slides.forEach((slide, i) => {
+      if (Math.abs(slide.offsetLeft - pad - el.scrollLeft) < Math.abs(slides[best].offsetLeft - pad - el.scrollLeft)) best = i;
+    });
+    return best;
+  }, [count]);
+  useEffect(() => {
+    const el = track.current;
+    if (!carousel || !phone || !el || slideAt() === active) return;
+    const slide = el.children[active] as HTMLElement | undefined;
+    const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+    if (slide) el.scrollTo?.({ left: slide.offsetLeft - pad, behavior: "smooth" });
+  }, [active, carousel, phone, slideAt]);
+  const onTrackScroll = () => {
+    if (!carousel || !phone) return;
+    const i = slideAt();
+    if (i !== active) select(i);
+  };
+  // Phone-only overrides that turn the card list into a row of dots, and the panels into slides.
+  const dotRow = carousel ? "max-sm:flex max-sm:justify-center max-sm:gap-0" : "";
+  const dotTab = carousel
+    ? "max-sm:w-8 max-sm:items-center max-sm:justify-center max-sm:border-transparent max-sm:bg-transparent max-sm:p-0 max-sm:shadow-none"
+    : "";
+
   return (
     <div
       ref={rootRef as RefObject<HTMLDivElement>}
@@ -110,9 +149,9 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
       className={`grid items-start gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 ${className}`}
     >
       <div
-        className={`min-w-0 ${
+        className={`min-w-0 ${carousel ? "max-sm:mt-1" : ""} ${
           detailed
-            ? "grid grid-cols-1 grid-rows-(--rows) sm:grid-cols-[repeat(var(--count),minmax(0,1fr))] sm:grid-rows-[auto_auto] sm:gap-x-3 lg:grid-cols-1 lg:grid-rows-(--rows) lg:gap-x-0"
+            ? "grid grid-cols-1 grid-rows-(--rows) max-sm:block sm:grid-cols-[repeat(var(--count),minmax(0,1fr))] sm:grid-rows-[auto_auto] sm:gap-x-3 lg:grid-cols-1 lg:grid-rows-(--rows) lg:gap-x-0"
             : ""
         }`}
         style={
@@ -122,7 +161,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
         }
       >
         {detailed && (
-          <div aria-hidden className={`pointer-events-none ${layer}`}>
+          <div aria-hidden className={`pointer-events-none max-sm:hidden ${layer}`}>
             {items.map((item, i) => (
               <div
                 key={item.id}
@@ -140,7 +179,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
           role="tablist"
           aria-label={label}
           aria-orientation={(row && !wide) || (detailed && tablet) ? "horizontal" : "vertical"}
-          className={detailed ? layer : row ? "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1" : "grid gap-3"}
+          className={`${detailed ? layer : row ? "grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1" : "grid gap-3"} ${dotRow}`}
         >
           {items.map((item, i) => {
             const on = active === i;
@@ -158,7 +197,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                     : detailed
                       ? "items-start px-5 pt-4 pb-3"
                       : "items-start px-5 py-4"
-                } ${
+                } ${dotTab} ${
                   detailed
                     ? "border-transparent"
                     : on
@@ -176,9 +215,12 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
                     {i + 1}
                   </span>
                 ) : (
-                  item.icon && <span aria-hidden className="mt-0.5 shrink-0 text-accent">{item.icon}</span>
+                  item.icon && <span aria-hidden className={`mt-0.5 shrink-0 text-accent ${carousel ? "max-sm:hidden" : ""}`}>{item.icon}</span>
                 )}
-                <span className="min-w-0">
+                {carousel && (
+                  <span aria-hidden className="hidden size-2 rounded-full bg-line transition-colors in-aria-selected:bg-text max-sm:block" />
+                )}
+                <span className={`min-w-0 ${carousel ? "max-sm:sr-only" : ""}`}>
                   {row && item.shortTitle ? (
                     <>
                       <span className="block text-[17px] font-semibold text-text sm:hidden">{item.shortTitle}</span>
@@ -195,7 +237,7 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
           })}
         </div>
         {detailed && (
-          <div className={`pointer-events-none ${layer}`}>
+          <div className={`pointer-events-none max-sm:hidden ${layer}`}>
             {items.map((item, i) => (
               <div
                 key={item.id}
@@ -216,9 +258,18 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
         {row && <p className="mt-3 min-h-[2lh] text-[15px] text-balance text-muted sm:hidden">{items[active].body}</p>}
       </div>
 
-      <div className="order-first grid min-w-0 lg:order-none">
+      <div
+        ref={track}
+        onScroll={onTrackScroll}
+        className={`order-first grid min-w-0 lg:order-none ${
+          carousel
+            ? "max-sm:-mx-6 max-sm:flex max-sm:snap-x max-sm:snap-mandatory max-sm:gap-3 max-sm:overflow-x-auto max-sm:scroll-px-6 max-sm:px-6 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden"
+            : ""
+        }`}
+      >
         {panels.map((panel, i) => {
           const on = active === i;
+          const item = items[i];
           return (
             <div
               key={items[i]?.id ?? i}
@@ -227,10 +278,25 @@ export function Showcase({ label, items: allItems, panels: allPanels, layout, au
               aria-labelledby={tabId(i)}
               ref={on ? activePanel : undefined}
               tabIndex={on && panelNeedsStop ? 0 : undefined}
-              inert={!on}
-              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-[opacity,visibility] duration-300 motion-reduce:transition-none ${on ? "visible opacity-100" : "invisible opacity-0"}`}
+              // On the phone carousel every slide stays reachable: the visitor swipes between them.
+              inert={!on && !(carousel && phone)}
+              className={`col-start-1 row-start-1 rounded-xl ${focus} transition-[opacity,visibility] duration-300 motion-reduce:transition-none ${on ? "visible opacity-100" : "invisible opacity-0"} ${
+                carousel ? "max-sm:visible max-sm:w-[86%] max-sm:shrink-0 max-sm:snap-start max-sm:opacity-100" : ""
+              }`}
             >
-              <PanelActive value={on}>{panel}</PanelActive>
+              {/* A panel may fill its cell (h-full). In a slide it keeps its own height, so the caption sits under it. */}
+              <div className={carousel ? "h-full max-sm:h-auto" : "contents"}>
+                <PanelActive value={on}>{panel}</PanelActive>
+              </div>
+              {carousel && item && (
+                // The card's text, under its panel. Only on phones, where the cards themselves become dots.
+                <div data-active data-slide-caption className="mt-4 flex flex-col items-start px-1 sm:hidden">
+                  <p className="text-[17px] font-semibold text-text">{item.title}</p>
+                  <p className="mt-1 text-[15px] text-pretty text-muted">{item.body}</p>
+                  {item.note && <p className="mt-1 text-[13px] text-muted">{item.note}</p>}
+                  {item.detail && <div className="mt-3 flex w-full flex-col items-start">{item.detail}</div>}
+                </div>
+              )}
             </div>
           );
         })}

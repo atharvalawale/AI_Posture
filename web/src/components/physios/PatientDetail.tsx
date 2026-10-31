@@ -21,6 +21,9 @@ type Props = {
   className?: string;
 };
 
+/** On phones each part sits in the dashboard's column, so it keeps the panel's side padding itself. */
+const PHONE = "max-sm:mx-5";
+
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /** One flag per rep short of the target, or one saying every rep reached it, then the patient's other flags. */
@@ -34,7 +37,10 @@ export function flagsFor(patient: SamplePatient, values: number[] | null, target
   return [...(short.length ? short : [{ text: "Every rep reached your target", note: `${target}°`, ok: true }]), ...patient.flags];
 }
 
-/** Name and week, the three numbers a physio checks first, the reps against the target, and what is worth a look. */
+/**
+ * Name and week, the three numbers a physio checks first, the reps against the target, and what is worth a look.
+ * On phones its parts join the dashboard's column (`contents`), with the rep chart first, right under the replay it plays.
+ */
 export function PatientDetail({ patient, values, target, onTarget, activeRep, onRep, failed = false, className = "" }: Props) {
   const { measure } = patient;
   const form = values ? formScore(values, target, measure.direction) : null;
@@ -43,9 +49,9 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
   const toggle = onRep && ((i: number) => onRep(activeRep === i ? null : i));
 
   return (
-    <div data-patient-detail className={`grid content-start gap-6 ${className}`}>
+    <div data-patient-detail className={`grid content-start gap-6 max-sm:contents ${className}`}>
       {/* The condition always sits under the name, so a longer one never pushes the rest down for one patient only. */}
-      <div>
+      <div className={`${PHONE} max-sm:order-2`}>
         <p className="font-serif text-[26px] leading-tight tracking-[-0.01em] text-text">{patient.name}</p>
         <p className="mt-1 text-[15px] text-muted">
           {patient.condition}, week {patient.week}
@@ -53,7 +59,7 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
       </div>
 
       {/* The values shrink a little with the panel, so "2 of 10" stays on one line on a 360 px phone. */}
-      <dl className="@container grid grid-cols-3 border-y border-line">
+      <dl className={`@container grid grid-cols-3 border-y border-line ${PHONE} max-sm:order-3`}>
         {[
           ["Form score", form === null ? "--" : String(form)],
           ["This week", patient.sessions],
@@ -67,7 +73,7 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
       </dl>
 
       {/* Every patient gets the same rows here, so switching patients never moves what comes after. */}
-      <div>
+      <div className={`${PHONE} max-sm:order-1`}>
         {/* Stacked, with room kept for the count while the clip loads, so every patient's rows line up. */}
         <div className="grid min-h-[50px] content-start gap-1">
           <p className="text-[15px] text-muted">{measure.label}</p>
@@ -107,14 +113,14 @@ export function PatientDetail({ patient, values, target, onTarget, activeRep, on
         </div>
       </div>
 
-      <div>
+      <div className={`${PHONE} max-sm:order-4`}>
         <TargetSlider label={`Your target for ${first}`} value={target} onChange={onTarget} min={measure.slider[0]} max={measure.slider[1]} />
         <p className="mt-1 text-[13px] text-pretty text-muted">
           Change it here and {first}&apos;s phone shows the new target at the next session.
         </p>
       </div>
 
-      <div>
+      <div className={`${PHONE} max-sm:order-5`}>
         <p className="mb-2.5 text-[15px] text-muted">Worth a look</p>
         <ul className="grid gap-2">
           {flags.map((f) => {

@@ -211,12 +211,14 @@ describe("Showcase card details", () => {
   ];
   const renderDetailed = () =>
     render(<Showcase label="Sides" items={detailed} panels={[<p key="a">Panel A</p>, <p key="b">Panel B</p>]} layout="cards" />);
+  // Each detail shows twice: on its card from 640 px, and in the phone carousel's caption under its slide.
+  const cardLink = (name: string) => screen.getAllByRole("link", { name }).find((a) => !a.closest("[data-slide-caption]"))!;
 
   it("keeps each detail, with its link, outside the tablist", () => {
     renderDetailed();
     const tablist = screen.getByRole("tablist");
     for (const name of ["First link", "Second link"]) {
-      const link = screen.getByRole("link", { name });
+      const link = cardLink(name);
       expect(tablist.contains(link)).toBe(false);
     }
     expect([...tablist.children].every((el) => el.getAttribute("role") === "tab")).toBe(true);
@@ -224,7 +226,7 @@ describe("Showcase card details", () => {
 
   it("marks the active card's detail, and a tap or a mouse move on a detail picks its card", () => {
     renderDetailed();
-    const detailOf = (name: string) => screen.getByRole("link", { name }).parentElement!;
+    const detailOf = (name: string) => cardLink(name).parentElement!;
     expect(detailOf("First link").hasAttribute("data-active")).toBe(true);
     expect(detailOf("Second link").hasAttribute("data-active")).toBe(false);
     fireEvent.click(detailOf("Second link"));
@@ -236,6 +238,16 @@ describe("Showcase card details", () => {
     fireEvent.pointerMove(detailOf("First link"), { pointerType: "mouse" });
     expect(tab("First").getAttribute("aria-selected")).toBe("true");
   });
+  it("puts each card's title, line and detail under its panel for the phone carousel", () => {
+    renderDetailed();
+    const panels = screen.getAllByRole("tabpanel", { hidden: true });
+    detailed.forEach((item, i) => {
+      const caption = panels[i].querySelector<HTMLElement>("[data-slide-caption]")!;
+      expect(caption.textContent).toBe(`${item.title}${item.body}${item.title} link`);
+      expect(caption.className).toContain("sm:hidden");
+    });
+  });
+
   it("rings the whole card face, not just the tab, when its tab has keyboard focus", () => {
     const { container } = renderDetailed();
     const faces = () => [...container.querySelectorAll<HTMLElement>("[data-card-face]")];
@@ -254,8 +266,9 @@ describe("Showcase without card details", () => {
   it("renders the cards layout as before: tabs only, no faces, no details, no placement styles", () => {
     const { container } = render(<Showcase label="Plain" items={items} panels={panels} layout="cards" />);
     const tablist = screen.getByRole("tablist");
-    expect(tablist.className).toBe("grid gap-3");
-    expect(tablist.parentElement!.className.trim()).toBe("min-w-0");
+    // A list from 640 px, a row of dots under the carousel on phones.
+    expect(tablist.className).toBe("grid gap-3 max-sm:flex max-sm:justify-center max-sm:gap-0");
+    expect(tablist.parentElement!.className.trim()).toBe("min-w-0 max-sm:mt-1");
     expect(tablist.parentElement!.children).toHaveLength(1);
     expect(container.querySelector("[data-card-face]")).toBeNull();
     for (const t of screen.getAllByRole("tab")) expect(t.getAttribute("style")).toBeNull();

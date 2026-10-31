@@ -6,7 +6,7 @@ import { LiveSession, clipDuration } from "@/lib/pose";
 import { MAYA, PATIENTS, TODAY, type SamplePatient } from "@/lib/sample";
 import { PatientDetail, flagsFor } from "./PatientDetail";
 import { MorningQueue, PatientList, type QueueItem } from "./PatientList";
-import { SessionReplay } from "./SessionReplay";
+import { SessionReplay, WeekList } from "./SessionReplay";
 import { repsOf, usePatientReps } from "./usePatientReps";
 
 type Id = SamplePatient["id"];
@@ -61,7 +61,8 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
         footer={<MorningQueue done={inToday} total={PATIENTS.length} items={queue} />}
         className="border-b border-line p-2.5 sm:p-3 lg:border-r lg:border-b-0"
       />
-      <div className="sm:grid sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:contents">
+      {/* On phones one column: the replay, then the rep chart right under it (see PatientDetail), then the week. */}
+      <div className="max-sm:flex max-sm:flex-col max-sm:gap-6 sm:grid sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:contents">
         <SessionReplay
           patient={patient}
           session={session}
@@ -80,6 +81,7 @@ export function PhysioDashboard({ className = "" }: { className?: string }) {
           failed={failed}
           className="p-5 sm:p-6"
         />
+        <WeekList days={patient.days} padding="px-5 pb-4" className="order-6 -mt-2 sm:hidden" />
       </div>
     </div>
   );

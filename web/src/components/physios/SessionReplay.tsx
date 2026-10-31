@@ -25,10 +25,13 @@ type Props = {
   className?: string;
 };
 
-/** The patient's week, a day per row: done or missed. Today is done this morning, and its dot is ringed. */
-function WeekList({ days }: { days: DayMark[] }) {
+/**
+ * The patient's week, a day per row: done or missed. Today is done this morning, and its dot is ringed.
+ * Under the photo from 640 px. On phones the dashboard shows it at the foot of the details instead (`padding`).
+ */
+export function WeekList({ days, padding = "px-4 pt-3 pb-4 sm:px-5 sm:pt-4", className = "" }: { days: DayMark[]; padding?: string; className?: string }) {
   return (
-    <div className="px-4 pt-3 pb-4 sm:px-5 sm:pt-4">
+    <div data-week-list className={`${padding} ${className}`}>
       <p className="text-[15px] text-muted">This week</p>
       <ul className="mt-1.5">
         {days.map((d, i) => (
@@ -64,14 +67,9 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
       // The poster is also the background, so the replay still shows Maya where the video is hidden (without JavaScript).
       style={footage ? { backgroundImage: "url(/media/squat-poster.jpg)", backgroundPosition: `${FOOTAGE_POSITION[0] * 100}% ${FOOTAGE_POSITION[1] * 100}%` } : undefined}
     >
-      {/* On phones the footage takes the same height as a photo and its week below it, so the details under the replay
-          stay put when the physio switches patients. From 640 px the replay stretches beside the details instead. */}
-      {footage && (
-        <div aria-hidden="true" className="invisible sm:hidden">
-          <div className="aspect-[4/3]" />
-          <WeekList days={patient.days} />
-        </div>
-      )}
+      {/* On phones the footage takes the same 4:3 as a photo, so the rep chart right under the replay stays put when the
+          physio switches patients. From 640 px the replay stretches beside the details instead. */}
+      {footage && <div aria-hidden="true" className="invisible aspect-[4/3] sm:hidden" />}
       {/* The video stays mounted while another patient shows, so switching back to Maya is instant. */}
       <video
         ref={videoRef}
@@ -104,7 +102,7 @@ export function SessionReplay({ patient, session, reps, duration, activeRep, cla
             {/* Low on the photo, clear of the patient's face. */}
             <p className={`absolute bottom-3 left-3 rounded-lg px-2.5 py-1.5 text-[13px] ${OVERLAY}`}>{patient.exercise}, this morning</p>
           </div>
-          <WeekList days={patient.days} />
+          <WeekList days={patient.days} className="max-sm:hidden" />
         </>
       ) : (
         <>
