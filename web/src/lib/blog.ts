@@ -8,6 +8,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { z } from "zod";
+import { rehypeCharts } from "./charts";
 
 const CONTENT_DIR = path.join(process.cwd(), "content/blog");
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -65,7 +66,21 @@ function readPost(slug: string) {
   return parsePost(readFileSync(path.join(CONTENT_DIR, `${slug}.md`), "utf8"), slug);
 }
 
-const markdown = unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeSlug).use(rehypeStringify);
+/**
+ * Renders a post body to HTML. Raw HTML in the Markdown is dropped by remark-rehype as before.
+ * The only raw HTML in the output is the chart figures that rehypeCharts builds from validated specs.
+ */
+export async function renderMarkdown(body: string, options: { file: string; sourceUrls: string[] }): Promise<string> {
+  const html = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypeCharts, options)
+    .use(rehypeSlug)
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .process(body);
+  return String(html);
+}
 
 /** Every post, newest first. */
 export async function getAllPosts(): Promise<PostMeta[]> {
@@ -80,7 +95,7 @@ export async function getPost(slug: string): Promise<Post | null> {
   "use cache";
   if (!SLUG.test(slug) || !existsSync(path.join(CONTENT_DIR, `${slug}.md`))) return null;
   const { meta, body } = readPost(slug);
-  const html = String(await markdown.process(body));
+  const html = await renderMarkdown(body, { file: `content/blog/${slug}.md`, sourceUrls: meta.sources.map((s) => s.url) });
   return { meta, html };
 }
 

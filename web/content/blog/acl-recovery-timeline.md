@@ -163,6 +163,23 @@ Returning to jumping and pivoting sports raises the risk. In the Delaware-Oslo s
 
 Most people do get back to some sport. A large review found that 81% returned to any sport after surgery. 65% returned to their pre-injury level, and 55% to competitive sport.
 
+```chart
+{
+  "title": "Return to sport after ACL reconstruction",
+  "unit": "%",
+  "max": 100,
+  "bars": [
+    {"label": "Any sport", "value": 81},
+    {"label": "Pre-injury level of sport", "value": 65},
+    {"label": "Competitive sport", "value": 55}
+  ],
+  "note": "Average share of people, across 69 studies with 7,556 people.",
+  "sources": [
+    {"name": "Ardern CL et al., British Journal of Sports Medicine, 2014", "url": "https://pubmed.ncbi.nlm.nih.gov/25157180/"}
+  ]
+}
+```
+
 ## Mental readiness
 
 Your head needs to be ready, not just your knee. In one study of 164 people, only 40% had returned to their pre-injury sport. The top reasons for not returning were not trusting the knee (28%), fear of a new injury (24%) and poor knee function (22%).

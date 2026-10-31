@@ -142,6 +142,24 @@ Daily life in many Indian homes includes floor sitting, kneeling for prayer or a
 
 In a study of 30 healthy Indian adults, squatting with the heels raised needed about 157 degrees of knee bend. That is well beyond the 115 degrees most new knees reach.
 
+```chart
+{
+  "title": "How far the knee bends, in degrees",
+  "unit": "°",
+  "bars": [
+    {"label": "Goal before leaving hospital", "value": 90},
+    {"label": "Expected average after surgery", "value": 115},
+    {"label": "Squatting with heels raised", "value": 157}
+  ],
+  "note": "The squatting figure is the average maximum knee bend of 30 healthy Indian adults.",
+  "sources": [
+    {"name": "West Hertfordshire Teaching Hospitals NHS Trust", "url": "https://www.westhertshospitals.nhs.uk/patients-and-visitors/patient-information-leaflets/physiotherapy-after-knee-replacement"},
+    {"name": "OrthoInfo, American Academy of Orthopaedic Surgeons", "url": "https://www.orthoinfo.org/en/treatment/total-knee-replacement/"},
+    {"name": "Hemmerich A et al., Journal of Orthopaedic Research, 2006", "url": "https://pubmed.ncbi.nlm.nih.gov/16514664/"}
+  ]
+}
+```
+
 The NHS advises you not to kneel on the new knee until your doctor says it is safe. The AAOS says kneeling is sometimes uncomfortable but not harmful. Ask your surgeon what is right for your knee before you try any of these positions.
 
 ## Early recovery phases

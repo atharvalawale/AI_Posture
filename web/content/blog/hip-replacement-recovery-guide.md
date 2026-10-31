@@ -164,6 +164,22 @@ These usually last about 6 weeks, sometimes longer. Some hospitals also ask you 
 
 The evidence here is changing. A 2020 review of 7 studies and 6,900 patients looked at the posterior approach (surgery from the back of the hip). Dislocation rates were 2.2 percent with precautions and 2.0 percent without. That difference was not significant. Still, many hospitals continue to use them. Do not drop any rule unless your surgeon says so.
 
+```chart
+{
+  "title": "Hip dislocation, with and without precautions",
+  "unit": "%",
+  "decimals": 1,
+  "bars": [
+    {"label": "With hip precautions", "value": 2.2},
+    {"label": "Without hip precautions", "value": 2.0}
+  ],
+  "note": "Hip replacements done through the back of the hip (posterior approach), in 7 studies with 6,900 patients. The difference was not statistically significant.",
+  "sources": [
+    {"name": "Crompton J et al., Acta Orthopaedica, 2020", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8023879/"}
+  ]
+}
+```
+
 ## A realistic recovery timeline
 
 These rough guides come from NHS hospitals. Your pace may differ.

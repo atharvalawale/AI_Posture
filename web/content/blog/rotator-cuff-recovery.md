@@ -73,6 +73,22 @@ Tears happen in two main ways. An acute tear follows a sudden event, like a fall
 
 Rotator cuff changes become very common with age, even in people with no pain at all. A review pooling 30 studies found cuff abnormalities in about 10% of people aged 20 or under. That rose to 62% in people aged 80 or over. The rise was similar whether or not people had symptoms.
 
+```chart
+{
+  "title": "Shoulders with a rotator cuff abnormality, by age",
+  "unit": "%",
+  "max": 100,
+  "bars": [
+    {"label": "Aged 20 or under", "value": 9.7},
+    {"label": "Aged 80 or over", "value": 62}
+  ],
+  "note": "Pooled from 30 studies with 6,112 shoulders, with and without symptoms.",
+  "sources": [
+    {"name": "Teunis T et al., Journal of Shoulder and Elbow Surgery, 2014", "url": "https://pubmed.ncbi.nlm.nih.gov/25441568/"}
+  ]
+}
+```
+
 So a tear on a scan does not always mean the tear is causing your pain. This is why one NHS leaflet says most people do not need a scan at all.
 
 ## Exercise or surgery: what the evidence says

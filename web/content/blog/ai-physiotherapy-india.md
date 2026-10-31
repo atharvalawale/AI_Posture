@@ -101,6 +101,21 @@ These studies looked at live sessions with a clinician, not AI alone. That diffe
 
 India has far fewer physiotherapists than it needs. World Physiotherapy estimates there are about 52,000 practising physiotherapists in India. That is roughly 0.36 for every 10,000 people. In Australia, the figure is about 17 for every 10,000.
 
+```chart
+{
+  "title": "Practising physiotherapists for every 10,000 people",
+  "decimals": 2,
+  "bars": [
+    {"label": "India", "value": 0.36},
+    {"label": "Australia", "value": 16.85}
+  ],
+  "note": "Both figures come from the country data table on World Physiotherapy's India profile.",
+  "sources": [
+    {"name": "World Physiotherapy, India member organisation profile", "url": "https://world.physio/membership/india"}
+  ]
+}
+```
+
 The World Health Organization says the need for rehabilitation in many countries is largely unmet. In some low- and middle-income countries, more than half the people who need rehabilitation do not receive it. WHO lists the reasons: few services outside cities, long waiting times, high out-of-pocket costs and too few trained staff.
 
 Many Indian patients will recognise these problems. A daily clinic visit can mean long travel, lost wages and a family member taking time off. In many towns, there may be no physiotherapist nearby.
