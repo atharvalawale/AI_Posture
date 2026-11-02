@@ -33,3 +33,16 @@ uploads/
 
 # pycache in subfolders
 **/__pycache__/
+
+# macOS AppleDouble files (this repo lives on an exFAT drive)
+._*
+
+# Brainstorm mockups and prototypes
+.superpowers/
+
+# Next.js app: keep its images (root rules above ignore *.jpg/*.png)
+!web/public/**
+!web/src/app/apple-icon.png
+
+# Again after the negation above, so AppleDouble files under web/public stay ignored
+._*

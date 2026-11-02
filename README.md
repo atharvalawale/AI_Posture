@@ -1,132 +1,126 @@
+# FiixBE
 
----
+FiixBE helps patients do physiotherapy exercises at home. The phone camera tracks each rep, measures joint angles and reports the session to the physiotherapist.
 
-## 🧠 AI Exercise Posture Detection — Local Setup (FastAPI + MediaPipe + WebSocket)
+This repository holds the website, the pose backend and the pose analysis engine.
 
-This app uses your webcam to capture video, sends each frame to a FastAPI backend using WebSocket, and analyzes posture in real-time using **MediaPipe Pose**.
+## Project structure
 
----
+| Path | Contents |
+|---|---|
+| `web/` | The website at [fiixbee.com](https://fiixbee.com): marketing pages, blog and the web exercise session. Next.js 16, React 19, TypeScript, Tailwind CSS v4. |
+| `pose_backend/` | The FastAPI backend. It receives camera frames over WebSocket and returns pose landmarks, rep counts and scores. It also handles sign-in and session logs. |
+| `ai_engine/` | The pose analysis engine that the backend uses: MediaPipe pose detection, exercise definitions and scoring. |
+| `frontend/` | A webcam test page for the pose backend. Use it to test the backend without the website. |
+| `docs/` | Design specs and implementation plans. |
+| `requirements.txt` | Python dependencies for `pose_backend/` and `ai_engine/`. |
 
-## 📁 Project Structure
+## Website
 
-```
-ai-exercise-app/
-├── main.py                      # FastAPI backend
-├── requirements.txt             # Python dependencies
-├── ai_engine/
-│   ├── __init__.py
-│   └── pose_analyzer.py         # Pose detection logic using MediaPipe
-├── static/
-│   └── index.html               # WebSocket + webcam test client
-└── uploads/ (optional)          # Store frames or logs if needed
-```
+The website needs Node.js 24.
 
----
+1. Go to the `web/` folder.
+2. Run `npm install`.
+3. Copy `.env.example` to `.env.local` and fill in the values.
+4. Run `npm run dev`.
+5. Open http://localhost:3000.
 
-## 🛠️ Requirements
+`NEXT_PUBLIC_POSE_WS_URL` sets the pose backend that the web session uses. To use a local backend, set it to `ws://localhost:8000/ws/pose`.
 
-* Python 3.10 or 3.11 (❗**Do NOT use Python 3.13** — `mediapipe` doesn't support it yet)
-* pip
+`web/README.md` has the test commands and a map of the code.
 
----
+## Pose backend
 
-## ✅ Setup Instructions
+The backend needs Python 3.10. MediaPipe does not support Python 3.13.
 
-### 🔹 Step 1: Clone or Download the Project
+1. Create a virtual environment with Python 3.10 and activate it.
+2. From the repository root, run `pip install -r requirements.txt`.
+3. Create `pose_backend/.env` with `SECRET_KEY` and `GOOGLE_CLIENT_ID`.
+4. Go to the `pose_backend/` folder.
+5. Run `uvicorn app.main:app --reload`.
 
-```bash
-cd path/to/your/projects
-mkdir ai-exercise-app && cd ai-exercise-app
-# Add files: main.py, requirements.txt, ai_engine/ and static/
-```
+The backend listens on http://localhost:8000. The pose WebSocket is at `ws://localhost:8000/ws/pose`.
 
----
+To test the backend without the website, open `frontend/index.html` in a browser and allow camera access.
 
-### 🔹 Step 2: Create and Activate a Virtual Environment
+To check the WebSocket replies, including the `keypoints` the website draws as a skeleton, run `python scripts/check_keypoints.py` from the `pose_backend/` folder. It starts the server on a free port, sends a frame with a person and a frame without one, and checks the replies.
 
-```bash
-# Windows
-py -3.10 -m venv ai_posture_env
-.\ai_posture_env\Scripts\activate
-```
+## Deployment
 
----
+The website and the pose backend deploy separately. The website runs on Vercel. The pose backend runs on Render. The website connects to the backend over a WebSocket.
 
-### 🔹 Step 3: Install Python Dependencies
+| Part | Host | Project or service | Public URL |
+|---|---|---|---|
+| Website | Vercel | `fiixbee` | https://www.fiixbee.com |
+| Pose backend | Render | `fiixbee-pose-backend` | https://fiixbee-pose-backend.onrender.com |
 
-```bash
-pip install -r requirements.txt
-```
+### Deploy the website to Vercel
 
-If you're missing the file, create `requirements.txt`:
+Vercel does not deploy from git for this project. Deploy with the Vercel CLI.
 
-```txt
-fastapi
-uvicorn
-mediapipe
-opencv-python
-websockets
-aiofiles
-python-multipart
-```
+1. Install the Vercel CLI with `npm install -g vercel`, or use `npx vercel`.
+2. Go to the `web/` folder.
+3. Run `vercel link` and select the project `fiixbee`. Do this one time only.
+4. Run `vercel deploy --prod`.
+5. Open https://www.fiixbee.com and make sure that the 3D phone and the live session load.
 
----
+To deploy a preview instead, run `vercel deploy` without `--prod`.
 
-### 🔹 Step 4: Start the Backend Server
+The website reads these environment variables in Vercel (Project settings > Environment Variables):
 
-```bash
-uvicorn main:app --reload
-```
+| Variable | Value | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_POSE_WS_URL` | `wss://fiixbee-pose-backend.onrender.com/ws/pose` | The pose backend for `/session`. Next.js puts this value into the browser code at build time. After you change it, deploy again. |
+| `RESEND_API_KEY` | A Resend API key | Sends the contact form email. A key with "Sending access" can send email only. Newsletter sign-ups need a key with "Full access". |
+| `RESEND_AUDIENCE_ID` | A Resend segment ID | Optional. Newsletter sign-ups join this segment. |
+| `RESEND_FROM` | `FiixBE website <website@fiixbee.com>` | Optional. The domain must be verified in Resend. |
+| `CONTACT_TO` | `hello@fiixbee.com` | Optional. The inbox that receives contact form messages. |
 
-Expected output:
+`web/.env.example` describes each variable.
 
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
+### Deploy the pose backend to Render
 
----
+The Render service `fiixbee-pose-backend` builds from the public GitHub repository `atharvalawale/AI_Posture`. It deploys automatically after each push to its branch. It rebuilds only when a file in `pose_backend/`, `ai_engine/` or `requirements.txt` changes.
 
-### 🔹 Step 5: Open the Frontend WebCam Client
+To deploy a backend change:
 
-In your browser, open:
+1. Commit the change.
+2. Push it to the branch that the service deploys from. The branch is `feat/nextjs-website` until the website pull request merges.
+3. Open the service in the Render dashboard and wait until the deploy status is "Live". A full build takes about 2 minutes.
+4. Open https://fiixbee-pose-backend.onrender.com/exercises. Make sure that it returns the list of exercises.
+5. Open https://www.fiixbee.com/session and do a few reps. Make sure that the skeleton and the angle follow you.
 
-```
-http://localhost:8000/static/index.html
-```
+After the website pull request merges, change the branch to `main`. In the Render dashboard, open the service and go to Settings > Build & Deploy > Branch.
 
-* Allow camera access
-* It will capture a frame every 300ms, send it to backend, and receive landmark data
+To deploy without a new commit, open the service in the Render dashboard and select Manual Deploy > Deploy latest commit.
 
----
+The service uses these settings:
 
-## 📡 How It Works
+| Setting | Value |
+|---|---|
+| Runtime | Python |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `cd pose_backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health check path | `/exercises` |
+| Region | Singapore |
+| Plan | Free |
 
-1. `index.html` accesses your webcam and sends frames via WebSocket
-2. `main.py` receives base64 frames, decodes them, and uses `pose_analyzer.py` for pose detection
-3. FastAPI sends back whether pose landmarks were detected
+The service reads these environment variables:
 
----
+| Variable | Value | Notes |
+|---|---|---|
+| `PYTHON_VERSION` | `3.10.14` | MediaPipe 0.10.14 does not support Python 3.13. |
+| `SECRET_KEY` | A long random string | Signs the sign-in tokens. Generate one with `python3 -c "import secrets; print(secrets.token_urlsafe(48))"`. |
+| `GOOGLE_CLIENT_ID` | A Google OAuth client ID | Optional. Only Google sign-in needs it. The live session does not. |
+| `DATABASE_URL` | A database URL | Optional. The default is the SQLite file `pose_backend/physio.db`. On Render, this file resets after each deploy. |
 
-## 🧪 Debug Tips
+On the free plan, Render stops the service after 15 minutes without traffic. The next visitor then waits up to about a minute while the service starts. The website retries the connection up to 5 times. To keep the service running all the time, change the plan to a paid instance type in Settings > Instance Type.
 
-* If the WebSocket closes immediately, check console logs in FastAPI
-* Add `print()` in your WebSocket handler to inspect incoming data
-* Make sure image data is base64-only (`data:image/jpeg;base64,...` → strip header)
+### Move the backend to a new URL
 
----
+If the backend URL changes, update these places:
 
-## 🚀 Next Steps
-
-* Display landmarks on frontend (using Canvas)
-* Integrate pose score or feedback (e.g., “raise arm higher”)
-* Stream from Android camera to backend (instead of browser)
-
----
-
-## 📞 Contact
-
-Built by Shreyas Jadhav 💪
-For posture-based AI feedback apps using Python, FastAPI, and ML.
-
----
-
+1. `NEXT_PUBLIC_POSE_WS_URL` in Vercel, then deploy the website again.
+2. `DEFAULT_WS_BASE` in `web/src/lib/session/protocol.ts`. The website uses it when the variable is not set.
+3. `NEXT_PUBLIC_POSE_WS_URL` in `web/.env.example`.
+4. The tables in this section.

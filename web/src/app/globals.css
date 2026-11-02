@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light is the base. Dark overrides it. Components use tokens only. */
+:root {
+  /* The site header's height, its 1 px bottom border included. Everything that sits below it uses this. */
+  --header-h: 65px;
+  --bg: #f6f6f3;
+  --surface: #ffffff;
+  --surface-2: #eff1ee;
+  --line: #e1e4e0;
+  --text: #101617;
+  --muted: #5c6866;
+  --accent: #0f6e7c;
+  --on-accent: #ffffff;
+  --danger: #b42318;
+  --warn: #b54708;
+  --device: #0a0a0a;
+  --device-edge: #c9cecc;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0f10;
+  --surface: #131a1c;
+  --surface-2: #1a2326;
+  --line: #243033;
+  --text: #eef2f1;
+  --muted: #8d9b99;
+  --accent: #6fd0c3;
+  --on-accent: #06231f;
+  --danger: #f97066;
+  --warn: #fdb022;
+  --device: #0a0a0a;
+  --device-edge: #2c3638;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-device: var(--device);
+  --color-device-edge: var(--device-edge);
+  --font-serif: var(--ff-serif), Georgia, serif;
+  --font-sans: var(--ff-sans), system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ff-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Overlay animations for the exercise preview. With reduced motion they jump to the end. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-["] {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+  }
+}
